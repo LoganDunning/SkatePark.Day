@@ -1,17 +1,22 @@
 {
+  "id": "/",
   "name": "SkatePark.Day",
   "short_name": "SkatePark.Day",
   "description": "Find the perfect day for skateboarding based on weather conditions",
   "start_url": "/",
+  "scope": "/",
   "display": "standalone",
   "background_color": "#667eea",
   "theme_color": "#667eea",
   "orientation": "portrait",
+  "categories": ["sports", "weather", "lifestyle"],
+  "lang": "en-US",
   "icons": [
     {
       "src": "favicon.svg",
       "sizes": "any",
-      "type": "image/svg+xml"
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
     }
   ]
 }
