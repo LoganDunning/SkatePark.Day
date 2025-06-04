@@ -281,10 +281,15 @@ class SkateParkDay {
             day.reasons.push('Perfect temperature');
         }
 
-        const windPenalty = Math.min(day.maxHourlyWind * 2, 40);
-        score -= windPenalty;
-        if (day.maxHourlyWind > 10) {
+        // More gradual wind penalties
+        if (day.maxHourlyWind > 15) {
+            const windPenalty = Math.min((day.maxHourlyWind - 15) * 3, 40);
+            score -= windPenalty;
             day.reasons.push('Windy');
+        } else if (day.maxHourlyWind > 10) {
+            const windPenalty = Math.min(day.maxHourlyWind * 1.5, 15);
+            score -= windPenalty;
+            day.reasons.push('Breezy');
         }
 
         if (day.precipitation > 0.1) {
