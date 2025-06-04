@@ -127,15 +127,15 @@ class SkateParkDay {
             return day;
         });
 
-        // Filter out rainy days from being #1, then find the best
-        const nonRainyDays = this.days.filter(day => day.precipitation <= 0.1);
+        // Filter out significantly rainy days (>1mm) from being #1, then find the best
+        const lowRainDays = this.days.filter(day => day.precipitation <= 1.0);
         
-        if (nonRainyDays.length > 0) {
-            this.bestDay = nonRainyDays.reduce((best, current) => 
+        if (lowRainDays.length > 0) {
+            this.bestDay = lowRainDays.reduce((best, current) => 
                 current.score > best.score ? current : best
             );
         } else {
-            // If all days have rain, pick the least rainy one
+            // If all days have significant rain, pick the least rainy one
             this.bestDay = this.days.reduce((best, current) => 
                 current.score > best.score ? current : best
             );
