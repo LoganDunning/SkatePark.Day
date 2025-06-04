@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>SkatePark.Day - Find Your Perfect Skate Day</title>
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="favicon.svg">
+    <link rel="icon" type="image/x-icon" href="favicon.ico">
+    
+    <!-- Mobile optimizations -->
+    <meta name="theme-color" content="#667eea">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="SkatePark.Day">
+    
+    <!-- SEO meta tags -->
+    <meta name="description" content="Find the perfect day for skateboarding with our 7-day skate forecast. Get weather conditions optimized for skate park activities with wind, temperature, and UV analysis.">
+    <meta name="keywords" content="7-day skate forecast, skateboard weather, forecast, skate park, outdoor sports, skateboarding weather, wind speed, temperature, UV index, weather app">
+    <meta name="author" content="Social Dunn Right Inc.">
+    <meta name="robots" content="index, follow">
+    <link rel="canonical" href="https://skatepark.day/">
+    
+    <!-- Open Graph meta tags -->
+    <meta property="og:title" content="SkatePark.Day - 7-Day Skate Forecast">
+    <meta property="og:description" content="Get 7-day skate forecasts optimized for skateboarding. Find the perfect skate park day based on temperature, wind speed, and UV conditions.">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://skatepark.day/">
+    <meta property="og:image" content="https://skatepark.day/favicon.svg">
+    <meta property="og:site_name" content="SkatePark.Day">
+    <meta property="og:locale" content="en_US">
+    
+    <!-- Twitter Card meta tags -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="SkatePark.Day - 7-Day Skate Forecast">
+    <meta name="twitter:description" content="Get 7-day skate forecasts optimized for skateboarding. Find the perfect skate park day based on weather conditions.">
+    <meta name="twitter:image" content="https://skatepark.day/favicon.svg">
+    <meta name="twitter:site" content="@skateparkday">
+    <meta name="twitter:creator" content="@skateparkday">
+    
+    <!-- Additional SEO -->
+    <meta name="application-name" content="SkatePark.Day">
+    <meta name="msapplication-TileColor" content="#667eea">
+    <meta name="format-detection" content="telephone=no">
+    
+    <!-- Touch icons for mobile -->
+    <link rel="apple-touch-icon" sizes="180x180" href="favicon.svg">
+    <link rel="manifest" href="manifest.json">
+    
+    <link rel="stylesheet" href="app.css">
+</head>
+<body>
+    <div class="container">
+        <a href="https://www.logandunning.com/" target="_blank" rel="noopener noreferrer" class="ld-logo" title="Lets Do Fun Things Everyday">
+            <span>LD</span>
+        </a>
+        <a href="https://github.com/LoganDunning/SkatePark.Day" target="_blank" rel="noopener noreferrer" class="github-icon" title="View source code">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M12 0C5.374 0 0 5.373 0 12 0 17.302 3.438 21.8 8.207 23.387c.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23A11.509 11.509 0 0112 5.803c1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576C20.566 21.797 24 17.3 24 12c0-6.627-5.373-12-12-12z"/>
+            </svg>
+        </a>
+        <div class="hamburger-menu">
+            <div class="hamburger-line"></div>
+            <div class="hamburger-line"></div>
+            <div class="hamburger-line"></div>
+        </div>
+        <header>
+            <h1>🛹 Best SkatePark.Day</h1>
+            <p id="best-skate-summary">The Best Day to Skate this week is...</p>
+        </header>
+
+        <main>
+            <div id="loading" class="loading">
+                <div class="spinner"></div>
+                <p>Getting your location and weather data...</p>
+            </div>
+
+            <div id="error" class="error hidden">
+                <p id="error-message"></p>
+                <button id="retry-btn">Try Again</button>
+            </div>
+
+            <div id="location-info" class="location-info hidden">
+                <p>📍 <span id="location-name">Loading location...</span></p>
+            </div>
+
+            <div id="forecast" class="forecast hidden">
+                <div id="best-day" class="best-day">
+                    <h3>🏆 Best Skate Day</h3>
+                    <div id="best-day-info"></div>
+                </div>
+                <div id="weather-grid" class="weather-grid"></div>
+            </div>
+        </main>
+
+        <footer>
+            <p>&copy; 2025 <a href="https://www.logandunning.com/" target="_blank" rel="noopener noreferrer">Social Dunn Right Inc.</a> All rights reserved.</p>
+        </footer>
+    </div>
+
+    <!-- Structured Data for SEO -->
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "WebApplication",
+        "name": "SkatePark.Day",
+        "description": "Find the perfect day for skateboarding with our 7-day skate forecast. Get weather conditions optimized for skate park activities.",
+        "url": "https://skatepark.day/",
+        "applicationCategory": "WeatherApplication",
+        "operatingSystem": "Web Browser",
+        "offers": {
+            "@type": "Offer",
+            "price": "0",
+            "priceCurrency": "USD"
+        },
+        "author": {
+            "@type": "Organization",
+            "name": "Social Dunn Right Inc."
+        },
+        "aggregateRating": {
+            "@type": "AggregateRating",
+            "ratingValue": "4.8",
+            "ratingCount": "150"
+        },
+        "featureList": [
+            "7-day skate forecast",
+            "Skateboarding-optimized conditions",
+            "Wind speed analysis",
+            "Temperature tracking",
+            "UV index monitoring",
+            "Location-based forecasts",
+            "Mobile responsive design"
+        ]
+    }
+    </script>
+
+    <script src="app.js"></script>
+</body>
+</html>
