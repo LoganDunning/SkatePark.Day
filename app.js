@@ -263,9 +263,10 @@ class SkateParkDay {
         let score = 100;
         day.reasons = [];
 
-        if (day.maxHourlyWind > 15) {
+        // Only treat wind above 25km/h as a complete write-off
+        if (day.maxHourlyWind > 25) {
             score = 0;
-            day.reasons.push('High wind (write-off)');
+            day.reasons.push('Extreme wind (write-off)');
             return score;
         }
 
