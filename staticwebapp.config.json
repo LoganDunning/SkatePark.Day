@@ -1,0 +1,25 @@
+{
+	"navigationFallback": {
+		"rewrite": "/index.html",
+		"exclude": [
+			"/css/*",
+			"/dist/*",
+			"/img/*",
+			"/js/*",
+			"/lib/*"
+		]
+	},
+  "globalHeaders": {
+    "cache-control": "no-cache",
+    "clear-site-data": "\"cache\"",
+    "x-frame-options": "SAMEORIGIN",
+    "x-content-type-options": "nosniff",
+    "x-xss-protection": "1; mode=block",
+    "x-permitted-cross-domain-policies": "none",
+    "x-dns-prefetch-control": "off",
+    "content-security-policy": "frame-ancestors 'self'; upgrade-insecure-requests",
+    "strict-transport-security": "max-age=31536000; includeSubDomains; preload",
+    "referrer-policy": "no-referrer",
+    "permissions-policy": "camera=*, fullscreen=*, geolocation=*, microphone=*, payment=*"
+  }
+}
