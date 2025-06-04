@@ -170,8 +170,9 @@ class SkateParkDay {
             // UV penalties
             if (maxUV > 8) blockScore -= 10;
             
-            // Rain penalties
-            if (totalPrecip > 0.1) blockScore -= 30;
+            // Rain penalties - any rain disqualifies the time block
+            if (totalPrecip > 0.1) blockScore = 0;
+            else if (totalPrecip > 0) blockScore -= 40;
             
             blockScore = Math.max(0, Math.min(100, blockScore));
             
@@ -224,9 +225,12 @@ class SkateParkDay {
             day.reasons.push('Windy');
         }
 
-        if (day.precipitation > 0.5) {
-            score -= 40;
+        if (day.precipitation > 0.1) {
+            score -= 60;
             day.reasons.push('Rain expected');
+        } else if (day.precipitation > 0) {
+            score -= 30;
+            day.reasons.push('Light rain possible');
         }
 
         if (day.uvIndex > 8) {
@@ -238,15 +242,15 @@ class SkateParkDay {
         }
 
         if (day.sunshine > 25200) { // 7+ hours
-            score += 15;
+            score += 10;
             day.reasons.push('Sunny day');
         }
 
         const cloudiness = this.getCloudiness(day.weatherCode);
         if (cloudiness === 'clear') {
-            score += 10;
+            score += 5;
         } else if (cloudiness === 'cloudy') {
-            score -= 10;
+            score -= 5;
         }
 
         return Math.min(Math.max(0, score), 100);
@@ -305,8 +309,9 @@ class SkateParkDay {
         const day = this.bestDay;
         
         let dayName;
-        const today = new Date().toDateString();
-        const tomorrow = new Date(Date.now() + 86400000).toDateString();
+        const now = new Date();
+        const today = new Date(now.getFullYear(), now.getMonth(), now.getDate()).toDateString();
+        const tomorrow = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1).toDateString();
         
         if (day.date.toDateString() === today) {
             dayName = 'Today';
@@ -327,8 +332,9 @@ class SkateParkDay {
         const day = this.bestDay;
         
         let dayName;
-        const today = new Date().toDateString();
-        const tomorrow = new Date(Date.now() + 86400000).toDateString();
+        const now = new Date();
+        const today = new Date(now.getFullYear(), now.getMonth(), now.getDate()).toDateString();
+        const tomorrow = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1).toDateString();
         
         if (day.date.toDateString() === today) {
             dayName = 'Today';
