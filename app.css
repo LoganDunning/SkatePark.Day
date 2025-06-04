@@ -63,19 +63,19 @@ body::before {
     position: absolute;
     top: 20px;
     right: 60px;
-    opacity: 0.15;
-    color: rgba(224, 230, 237, 0.6);
+    opacity: 0.2;
+    color: rgba(224, 230, 237, 0.5);
     z-index: 1;
     transition: opacity 0.3s ease;
     display: flex;
     align-items: center;
     justify-content: center;
     width: 30px;
-    height: 30px;
+    height: 24px;
 }
 
 .github-icon:hover {
-    opacity: 0.3;
+    opacity: 0.4;
 }
 
 .hamburger-menu {
