@@ -98,7 +98,7 @@ class SkateParkDay {
             const maxHourlyWind = Math.max(...dayHourlyWinds);
             
             const day = {
-                date: new Date(date),
+                date: new Date(date + 'T00:00:00'),
                 tempMax: daily.temperature_2m_max[index],
                 tempMin: daily.temperature_2m_min[index],
                 windMax: daily.wind_speed_10m_max[index],
