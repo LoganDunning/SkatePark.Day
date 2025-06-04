@@ -33,7 +33,7 @@ class SkateParkDay {
                     resolve();
                 },
                 (error) => {
-                    console.log('GPS denied, falling back to IP location');
+                    // Silently fall back to IP location
                     this.getLocationFromIP().then(resolve).catch(reject);
                 },
                 { timeout: 10000, enableHighAccuracy: true }
@@ -127,9 +127,19 @@ class SkateParkDay {
             return day;
         });
 
-        this.bestDay = this.days.reduce((best, current) => 
-            current.score > best.score ? current : best
-        );
+        // Filter out rainy days from being #1, then find the best
+        const nonRainyDays = this.days.filter(day => day.precipitation <= 0.1);
+        
+        if (nonRainyDays.length > 0) {
+            this.bestDay = nonRainyDays.reduce((best, current) => 
+                current.score > best.score ? current : best
+            );
+        } else {
+            // If all days have rain, pick the least rainy one
+            this.bestDay = this.days.reduce((best, current) => 
+                current.score > best.score ? current : best
+            );
+        }
         
         console.log('Best day selected:', this.bestDay.date.toDateString(), 'Score:', this.bestDay.score, 'Rain:', this.bestDay.precipitation + 'mm');
         

@@ -9,6 +9,32 @@
 			"/lib/*"
 		]
 	},
+  "routes": [
+    {
+      "route": "/manifest.json",
+      "headers": {
+        "cache-control": "public, max-age=86400",
+        "x-frame-options": "SAMEORIGIN",
+        "x-content-type-options": "nosniff"
+      }
+    },
+    {
+      "route": "/robots.txt",
+      "headers": {
+        "cache-control": "public, max-age=86400",
+        "x-frame-options": "SAMEORIGIN",
+        "x-content-type-options": "nosniff"
+      }
+    },
+    {
+      "route": "/sitemap.xml",
+      "headers": {
+        "cache-control": "public, max-age=86400",
+        "x-frame-options": "SAMEORIGIN",
+        "x-content-type-options": "nosniff"
+      }
+    }
+  ],
   "globalHeaders": {
     "cache-control": "no-cache",
     "clear-site-data": "\"cache\"",
