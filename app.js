@@ -202,6 +202,33 @@ class SkateParkDay {
         };
         return `${formatHour(start)}-${formatHour(end)}`;
     }
+    
+    getRainTiming(day) {
+        if (!day.hourlyData || day.precipitation <= 0) return '';
+        
+        const rainHours = [];
+        day.hourlyData.precipitation.forEach((precip, index) => {
+            if (precip > 0.1) {
+                const hour = index;
+                if (hour >= 6 && hour <= 22) { // Only show daylight hours
+                    const formatHour = (h) => {
+                        if (h === 12) return '12pm';
+                        if (h > 12) return `${h - 12}pm`;
+                        return `${h}am`;
+                    };
+                    rainHours.push(formatHour(hour));
+                }
+            }
+        });
+        
+        if (rainHours.length === 0) return '';
+        if (rainHours.length <= 3) return ` around ${rainHours.join(', ')}`;
+        
+        // If many hours, show range
+        const firstHour = rainHours[0];
+        const lastHour = rainHours[rainHours.length - 1];
+        return ` from ${firstHour} to ${lastHour}`;
+    }
 
     calculateDayScore(day) {
         let score = 100;
@@ -429,7 +456,7 @@ class SkateParkDay {
                 </div>
             </div>
             
-            ${day.precipitation > 0 ? `<div style="font-size: 0.7rem; color: rgba(224,230,237,0.7); margin-bottom: 8px; text-align: center;">💧 ${day.precipitation}mm rain expected</div>` : ''}
+            ${day.precipitation > 0 ? `<div style="font-size: 0.7rem; color: rgba(224,230,237,0.7); margin-bottom: 8px; text-align: center;">💧 ${day.precipitation}mm rain expected${this.getRainTiming(day)}</div>` : ''}
             
             ${timeBlocksHtml}
         `;
@@ -521,7 +548,7 @@ class SkateParkDay {
                         </div>
                     </div>
                     
-                    ${day.precipitation > 0 ? `<div style="font-size: 0.7rem; color: rgba(255,255,255,0.7); margin-top: 8px;">💧 ${day.precipitation}mm</div>` : ''}
+                    ${day.precipitation > 0 ? `<div style="font-size: 0.7rem; color: rgba(255,255,255,0.7); margin-top: 8px;">💧 ${day.precipitation}mm${this.getRainTiming(day)}</div>` : ''}
                 </div>
             `;
         }).join('');
