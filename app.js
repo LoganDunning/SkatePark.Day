@@ -213,6 +213,25 @@ class SkateParkDay {
         return `${formatHour(start)}-${formatHour(end)}`;
     }
     
+    isHeavyRainDay(day) {
+        if (!day.hourlyData || day.precipitation <= 3) return false;
+        
+        // Count consecutive hours with significant rain
+        let consecutiveRainHours = 0;
+        let maxConsecutiveHours = 0;
+        
+        day.hourlyData.precipitation.forEach((precip) => {
+            if (precip > 0.1) {
+                consecutiveRainHours++;
+                maxConsecutiveHours = Math.max(maxConsecutiveHours, consecutiveRainHours);
+            } else {
+                consecutiveRainHours = 0;
+            }
+        });
+        
+        return day.precipitation > 3 && maxConsecutiveHours > 2;
+    }
+
     getRainTiming(day) {
         if (!day.hourlyData || day.precipitation <= 0) return '';
         
@@ -475,9 +494,22 @@ class SkateParkDay {
     renderWeatherGrid() {
         const grid = document.getElementById('weather-grid');
         
-        // Sort days by score to find rankings
+        // Sort days by score to find rankings, but filter heavy rain days from #2 spot
         const sortedDays = [...this.days].sort((a, b) => b.score - a.score);
-        const secondBestDay = sortedDays[1];
+        
+        // Find second best day, excluding heavy rain days
+        let secondBestDay = null;
+        for (const day of sortedDays) {
+            if (day !== this.bestDay && !this.isHeavyRainDay(day)) {
+                secondBestDay = day;
+                break;
+            }
+        }
+        
+        // If no suitable second day found, just use the actual second highest score
+        if (!secondBestDay && sortedDays.length > 1) {
+            secondBestDay = sortedDays[1];
+        }
         
         grid.innerHTML = this.days.map((day, index) => {
             let dayName;
