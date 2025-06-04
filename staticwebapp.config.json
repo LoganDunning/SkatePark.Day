@@ -27,7 +27,49 @@
 		"content-security-policy": "frame-ancestors 'self'; upgrade-insecure-requests",
 		"strict-transport-security": "max-age=31536000; includeSubDomains; preload",
 		"referrer-policy": "no-referrer",
-		"permissions-policy": "camera=*, fullscreen=*, geolocation=*, microphone=*, payment=*"
+		"permissions-policy": "camera=*, fullscreen=*, geolocation=*, microphone=*, payment=*",
+		"cache-control": "no-cache, no-store, must-revalidate",
+		"pragma": "no-cache",
+		"expires": "0"
 	},
+	"routes": [
+		{
+			"route": "/manifest.json",
+			"headers": {
+				"content-type": "application/manifest+json",
+				"cache-control": "public, max-age=86400"
+			}
+		},
+		{
+			"route": "/favicon.svg",
+			"headers": {
+				"cache-control": "public, max-age=86400"
+			}
+		},
+		{
+			"route": "/img/*",
+			"headers": {
+				"cache-control": "public, max-age=86400"
+			}
+		},
+		{
+			"route": "/*.js",
+			"headers": {
+				"cache-control": "no-cache, no-store, must-revalidate"
+			}
+		},
+		{
+			"route": "/*.css",
+			"headers": {
+				"cache-control": "no-cache, no-store, must-revalidate"
+			}
+		},
+		{
+			"route": "/index.html",
+			"headers": {
+				"cache-control": "no-cache, no-store, must-revalidate"
+			}
+		}
+	],
 	"trailingSlash": "never"
 }
