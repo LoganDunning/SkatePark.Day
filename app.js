@@ -98,7 +98,7 @@ class SkateParkDay {
             const maxHourlyWind = Math.max(...dayHourlyWinds);
             
             const day = {
-                date: new Date(date + 'T00:00:00'),
+                date: new Date(date + 'T12:00:00'),
                 tempMax: daily.temperature_2m_max[index],
                 tempMin: daily.temperature_2m_min[index],
                 windMax: daily.wind_speed_10m_max[index],
@@ -310,8 +310,8 @@ class SkateParkDay {
         
         let dayName;
         const now = new Date();
-        const today = new Date(now.getFullYear(), now.getMonth(), now.getDate()).toDateString();
-        const tomorrow = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1).toDateString();
+        const today = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 12, 0, 0).toDateString();
+        const tomorrow = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1, 12, 0, 0).toDateString();
         
         if (day.date.toDateString() === today) {
             dayName = 'Today';
@@ -333,8 +333,8 @@ class SkateParkDay {
         
         let dayName;
         const now = new Date();
-        const today = new Date(now.getFullYear(), now.getMonth(), now.getDate()).toDateString();
-        const tomorrow = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1).toDateString();
+        const today = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 12, 0, 0).toDateString();
+        const tomorrow = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1, 12, 0, 0).toDateString();
         
         if (day.date.toDateString() === today) {
             dayName = 'Today';
