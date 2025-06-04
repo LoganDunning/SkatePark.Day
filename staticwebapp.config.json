@@ -28,9 +28,10 @@
 		"strict-transport-security": "max-age=31536000; includeSubDomains; preload",
 		"referrer-policy": "no-referrer",
 		"permissions-policy": "camera=*, fullscreen=*, geolocation=*, microphone=*, payment=*",
-		"cache-control": "no-cache, no-store, must-revalidate",
+		"cache-control": "no-cache, no-store, must-revalidate, max-age=0",
 		"pragma": "no-cache",
-		"expires": "0"
+		"expires": "0",
+		"etag": "off"
 	},
 	"routes": [
 		{
@@ -55,19 +56,25 @@
 		{
 			"route": "/*.js",
 			"headers": {
-				"cache-control": "no-cache, no-store, must-revalidate"
+				"cache-control": "no-cache, no-store, must-revalidate, max-age=0",
+				"pragma": "no-cache",
+				"expires": "0"
 			}
 		},
 		{
 			"route": "/*.css",
 			"headers": {
-				"cache-control": "no-cache, no-store, must-revalidate"
+				"cache-control": "no-cache, no-store, must-revalidate, max-age=0",
+				"pragma": "no-cache",
+				"expires": "0"
 			}
 		},
 		{
 			"route": "/index.html",
 			"headers": {
-				"cache-control": "no-cache, no-store, must-revalidate"
+				"cache-control": "no-cache, no-store, must-revalidate, max-age=0",
+				"pragma": "no-cache",
+				"expires": "0"
 			}
 		}
 	],
