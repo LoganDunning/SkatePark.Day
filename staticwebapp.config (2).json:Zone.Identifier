@@ -1,0 +1,4 @@
+[ZoneTransfer]
+ZoneId=3
+ReferrerUrl=https://dev.azure.com/EnableApp/_git/EnableApp?path=/AppMain.Public/staticwebapp.config.json
+HostUrl=https://dev.azure.com/EnableApp/c106a891-d8dc-433e-8f69-da08096ad31a/_apis/git/repositories/ab2cca52-381a-4bda-a8b3-b95e2a00fcd1/items?path=/AppMain.Public/staticwebapp.config.json&versionDescriptor%5BversionOptions%5D=0&versionDescriptor%5BversionType%5D=0&versionDescriptor%5Bversion%5D=main&resolveLfs=true&%24format=octetStream&api-version=5.0&download=true

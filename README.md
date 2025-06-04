@@ -116,7 +116,7 @@ The application uses the [Open-Meteo API](https://open-meteo.com/) for weather d
 
 ## Live Demo
 
-Visit the live application: [skatepark.day](https://skatepark.day)
+Visit the live application: [best.skatepark.day](https://best.skatepark.day)
 
 ---
 
