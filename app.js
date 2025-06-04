@@ -232,6 +232,18 @@ class SkateParkDay {
         return day.precipitation > 3 && maxConsecutiveHours > 2;
     }
 
+    getMainIssue(day) {
+        if (day.precipitation > 0) return null; // Rain takes priority and is shown separately
+        
+        if (day.maxHourlyWind > 25) return '💨 Extreme winds';
+        if (day.maxHourlyWind > 15) return '💨 High winds';
+        if (day.tempMax > 30) return '🥵 Over 30°C heat';
+        if (day.tempMax < 10) return '🥶 Too cold';
+        if (day.uvIndex > 8) return '☀️ High UV levels';
+        
+        return null;
+    }
+
     getRainTiming(day) {
         if (!day.hourlyData || day.precipitation <= 0) return '';
         
