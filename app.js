@@ -69,6 +69,7 @@ class SkateParkDay {
 
         try {
             const userTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+            console.log('Using timezone:', userTimezone, 'for location:', this.location.lat, this.location.lon);
             const response = await fetch(
                 `https://api.open-meteo.com/v1/forecast?latitude=${this.location.lat}&longitude=${this.location.lon}&daily=temperature_2m_max,temperature_2m_min,wind_speed_10m_max,wind_gusts_10m_max,precipitation_sum,weather_code,uv_index_max,sunshine_duration&hourly=wind_speed_10m,temperature_2m,uv_index,precipitation,weather_code&timezone=${encodeURIComponent(userTimezone)}&forecast_days=7`
             );
@@ -78,6 +79,7 @@ class SkateParkDay {
             }
             
             this.weatherData = await response.json();
+            console.log('Weather data received:', this.weatherData.daily.time, this.weatherData.daily.precipitation_sum);
             this.updateLocationDisplay();
         } catch (error) {
             throw new Error('Failed to fetch weather data');
@@ -128,6 +130,8 @@ class SkateParkDay {
         this.bestDay = this.days.reduce((best, current) => 
             current.score > best.score ? current : best
         );
+        
+        console.log('Best day selected:', this.bestDay.date.toDateString(), 'Score:', this.bestDay.score, 'Rain:', this.bestDay.precipitation + 'mm');
         
         // Calculate best time blocks for the best day
         this.calculateBestTimeBlocks();
