@@ -51,6 +51,7 @@ class SkateParkDay {
                     lat: data.latitude,
                     lon: data.longitude,
                     city: data.city,
+                    region: data.region,
                     country: data.country_name,
                     source: 'ip'
                 };
@@ -360,18 +361,19 @@ class SkateParkDay {
     }
 
     updateLocationDisplay() {
-        // Location info is now hidden
-        // const locationElement = document.getElementById('location-name');
-        // let locationText = '';
+        const locationElement = document.getElementById('location-display');
+        let locationText = '';
         
-        // if (this.location.city && this.location.country) {
-        //     locationText = `${this.location.city}, ${this.location.country}`;
-        // } else {
-        //     locationText = `${this.location.lat.toFixed(2)}, ${this.location.lon.toFixed(2)}`;
-        // }
+        if (this.location.city && this.location.region) {
+            locationText = `📍 ${this.location.city}, ${this.location.region}`;
+        } else if (this.location.city && this.location.country) {
+            locationText = `📍 ${this.location.city}, ${this.location.country}`;
+        } else {
+            locationText = `📍 ${this.location.lat.toFixed(2)}, ${this.location.lon.toFixed(2)}`;
+        }
         
-        // locationElement.textContent = locationText;
-        // document.getElementById('location-info').classList.remove('hidden');
+        locationElement.textContent = locationText;
+        locationElement.classList.remove('hidden');
     }
 
     renderForecast() {
