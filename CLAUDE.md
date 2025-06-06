@@ -38,3 +38,9 @@ The application prioritizes weather conditions as follows:
 - Zero dependencies
 - Uses geolocation API with IP-based fallback
 - Weather API integration for 7-day forecasting
+
+## Commit Message Guidelines
+
+- Do not include "Generated with Claude Code" or similar AI attribution in commit messages
+- Keep commit messages focused on the actual changes made
+- Use standard conventional commit format without AI tool references

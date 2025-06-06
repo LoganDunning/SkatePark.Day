@@ -621,8 +621,24 @@ class SkateParkDay {
         document.getElementById('error').classList.remove('hidden');
         
         document.getElementById('retry-btn').onclick = () => {
-            location.reload();
+            this.retryWithLocationRequest();
         };
+    }
+
+    async retryWithLocationRequest() {
+        document.getElementById('error').classList.add('hidden');
+        document.getElementById('loading').classList.remove('hidden');
+        
+        try {
+            this.location = null;
+            this.weatherData = null;
+            await this.getLocation();
+            await this.getWeatherData();
+            this.calculateBestDay();
+            this.renderForecast();
+        } catch (error) {
+            this.showError(error.message);
+        }
     }
 }
 
