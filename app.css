@@ -630,7 +630,6 @@ footer a:hover {
     header h1 {
         font-size: 1.6rem;
         font-weight: 500;
-        margin-right: 80px;
     }
     
     .weather-grid {
@@ -655,7 +654,6 @@ footer a:hover {
     header h1 {
         font-size: 1rem;
         font-weight: 300;
-        margin-right: 100px;
     }
     
     header p {
