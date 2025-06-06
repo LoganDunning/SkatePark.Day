@@ -55,12 +55,21 @@ class SkateParkDay {
                     country: data.country_name,
                     source: 'ip'
                 };
-            } else {
-                throw new Error('Could not determine location');
+                return;
             }
         } catch (error) {
-            throw new Error('Unable to get location data');
+            console.log('Primary IP service failed, trying fallback');
         }
+        
+        // Fallback to a default location (San Francisco) if IP location fails
+        this.location = {
+            lat: 37.7749,
+            lon: -122.4194,
+            city: 'San Francisco',
+            region: 'CA',
+            country: 'United States',
+            source: 'default'
+        };
     }
 
     async getWeatherData() {
