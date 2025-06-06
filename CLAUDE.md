@@ -44,3 +44,4 @@ The application prioritizes weather conditions as follows:
 - Do not include "Generated with Claude Code" or similar AI attribution in commit messages
 - Keep commit messages focused on the actual changes made
 - Use standard conventional commit format without AI tool references
+- Push to remote repository after each individual edit/commit
