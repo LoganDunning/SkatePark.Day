@@ -5,6 +5,23 @@ class SkateParkDay {
         this.init();
     }
 
+    getSavedLocation() {
+        try {
+            const saved = localStorage.getItem('skatepark-location');
+            return saved ? JSON.parse(saved) : null;
+        } catch (error) {
+            return null;
+        }
+    }
+
+    saveLocation(location) {
+        try {
+            localStorage.setItem('skatepark-location', JSON.stringify(location));
+        } catch (error) {
+            console.log('Could not save location to localStorage');
+        }
+    }
+
     async init() {
         try {
             await this.getLocation();
@@ -33,8 +50,14 @@ class SkateParkDay {
                     resolve();
                 },
                 (error) => {
-                    // Silently fall back to IP location
-                    this.getLocationFromIP().then(resolve).catch(reject);
+                    // Check for saved location first, then fall back to IP location
+                    const savedLocation = this.getSavedLocation();
+                    if (savedLocation) {
+                        this.location = savedLocation;
+                        resolve();
+                    } else {
+                        this.getLocationFromIP().then(resolve).catch(reject);
+                    }
                 },
                 { timeout: 10000, enableHighAccuracy: true }
             );
@@ -383,6 +406,89 @@ class SkateParkDay {
         
         locationElement.textContent = locationText;
         locationElement.classList.remove('hidden');
+        
+        // Add click handler for location editing
+        locationElement.onclick = () => this.showLocationEdit();
+        
+        this.setupLocationSearch();
+    }
+
+    showLocationEdit() {
+        document.getElementById('location-display').style.display = 'none';
+        document.getElementById('location-edit').style.display = 'block';
+        document.getElementById('location-search').focus();
+    }
+
+    hideLocationEdit() {
+        document.getElementById('location-display').style.display = 'block';
+        document.getElementById('location-edit').style.display = 'none';
+    }
+
+    setupLocationSearch() {
+        const searchInput = document.getElementById('location-search');
+        
+        searchInput.onblur = () => {
+            setTimeout(() => this.hideLocationEdit(), 200);
+        };
+        
+        searchInput.onkeydown = (e) => {
+            if (e.key === 'Escape') {
+                this.hideLocationEdit();
+            } else if (e.key === 'Enter') {
+                this.searchLocation(searchInput.value);
+            }
+        };
+    }
+
+    async searchLocation(query) {
+        if (!query.trim()) return;
+        
+        try {
+            // Use OpenStreetMap Nominatim for free geocoding
+            const response = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=1`);
+            const data = await response.json();
+            
+            if (data && data.length > 0) {
+                const result = data[0];
+                const newLocation = {
+                    lat: parseFloat(result.lat),
+                    lon: parseFloat(result.lon),
+                    city: this.extractCity(result),
+                    region: this.extractRegion(result),
+                    country: result.display_name.split(',').pop().trim(),
+                    source: 'manual'
+                };
+                
+                this.location = newLocation;
+                this.saveLocation(newLocation);
+                this.hideLocationEdit();
+                this.updateLocationDisplay();
+                
+                // Refresh weather data for new location
+                await this.getWeatherData();
+                this.calculateBestDay();
+                this.renderForecast();
+            }
+        } catch (error) {
+            console.log('Location search failed:', error);
+        }
+    }
+
+    extractCity(result) {
+        const parts = result.display_name.split(',');
+        return parts[0].trim();
+    }
+
+    extractRegion(result) {
+        const parts = result.display_name.split(',');
+        // Try to find state/province in the address
+        for (let i = 1; i < parts.length - 1; i++) {
+            const part = parts[i].trim();
+            if (part.length <= 3 && part.match(/^[A-Z]{2,3}$/)) {
+                return part;
+            }
+        }
+        return parts[parts.length - 2]?.trim();
     }
 
     renderForecast() {
