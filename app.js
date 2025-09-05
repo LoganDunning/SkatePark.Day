@@ -35,6 +35,14 @@ class SkateParkDay {
 
     async getLocation() {
         return new Promise((resolve, reject) => {
+            // Check for saved location first
+            const savedLocation = this.getSavedLocation();
+            if (savedLocation) {
+                this.location = savedLocation;
+                resolve();
+                return;
+            }
+
             if (!navigator.geolocation) {
                 this.getLocationFromIP().then(resolve).catch(reject);
                 return;
@@ -50,14 +58,7 @@ class SkateParkDay {
                     resolve();
                 },
                 (error) => {
-                    // Check for saved location first, then fall back to IP location
-                    const savedLocation = this.getSavedLocation();
-                    if (savedLocation) {
-                        this.location = savedLocation;
-                        resolve();
-                    } else {
-                        this.getLocationFromIP().then(resolve).catch(reject);
-                    }
+                    this.getLocationFromIP().then(resolve).catch(reject);
                 },
                 { timeout: 10000, enableHighAccuracy: true }
             );
