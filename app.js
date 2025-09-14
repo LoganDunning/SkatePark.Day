@@ -27,6 +27,7 @@ class SkateParkDay {
             await this.getLocation();
             await this.getWeatherData();
             this.calculateBestDay();
+            this.updateMetaTags();
             this.renderForecast();
         } catch (error) {
             this.showError(error.message);
@@ -468,6 +469,7 @@ class SkateParkDay {
                 // Refresh weather data for new location
                 await this.getWeatherData();
                 this.calculateBestDay();
+                this.updateMetaTags();
                 this.renderForecast();
             }
         } catch (error) {
@@ -499,6 +501,61 @@ class SkateParkDay {
         this.updateBestSkateSummary();
         this.renderBestDay();
         this.renderWeatherGrid();
+    }
+
+    updateMetaTags() {
+        if (!this.bestDay || !this.location) return;
+        
+        const day = this.bestDay;
+        let dayName;
+        const now = new Date();
+        const today = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 12, 0, 0).toDateString();
+        const tomorrow = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1, 12, 0, 0).toDateString();
+        
+        if (day.date.toDateString() === today) {
+            dayName = 'Today';
+        } else if (day.date.toDateString() === tomorrow) {
+            dayName = 'Tomorrow';
+        } else {
+            dayName = day.date.toLocaleDateString('en-US', { weekday: 'long' });
+        }
+        
+        const date = day.date.toLocaleDateString('en-US', { month: 'long', day: 'numeric' });
+        const locationText = this.location.city ? `${this.location.city}, ${this.location.region || this.location.country}` : 'your location';
+        const bestTime = this.bestTimeBlocks && this.bestTimeBlocks.length > 0 ? this.bestTimeBlocks[0].label : 'anytime';
+        const temp = Math.round(day.tempMax);
+        const score = Math.round(day.score);
+        
+        // Update page title
+        const newTitle = `${dayName} (${date}) is the best skate day in ${locationText} - best.skatepark.day`;
+        document.title = newTitle;
+        
+        // Update meta description
+        const newDescription = `The best day for skateboarding in ${locationText} is ${dayName}, ${date} at ${bestTime}. Perfect conditions: ${temp}°C, score ${score}/100. Get your 7-day skate forecast now!`;
+        
+        // Update Open Graph tags
+        const newOGTitle = `${dayName} (${date}) is the best skate day in ${locationText}`;
+        const newOGDescription = `Perfect skateboarding conditions on ${dayName}: ${temp}°C, score ${score}/100. Best time: ${bestTime}`;
+        
+        // Update Twitter Card tags
+        const newTwitterTitle = newOGTitle;
+        const newTwitterDescription = newOGDescription;
+        
+        // Update meta tags
+        this.updateMetaTag('name', 'description', newDescription);
+        this.updateMetaTag('property', 'og:title', newOGTitle);
+        this.updateMetaTag('property', 'og:description', newOGDescription);
+        this.updateMetaTag('name', 'twitter:title', newTwitterTitle);
+        this.updateMetaTag('name', 'twitter:description', newTwitterDescription);
+        
+        console.log('Meta tags updated for best day:', dayName, date);
+    }
+    
+    updateMetaTag(attribute, name, content) {
+        let metaTag = document.querySelector(`meta[${attribute}="${name}"]`);
+        if (metaTag) {
+            metaTag.setAttribute('content', content);
+        }
     }
 
     updateBestSkateSummary() {
@@ -753,6 +810,7 @@ class SkateParkDay {
             await this.getLocation();
             await this.getWeatherData();
             this.calculateBestDay();
+            this.updateMetaTags();
             this.renderForecast();
         } catch (error) {
             this.showError(error.message);
