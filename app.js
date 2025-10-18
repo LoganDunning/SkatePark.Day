@@ -475,6 +475,86 @@ class SkateParkDay {
         }
     }
 
+    updateMetaTags() {
+        if (!this.bestDay || !this.location) return;
+        
+        const day = this.bestDay;
+        let dayName;
+        const now = new Date();
+        const today = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 12, 0, 0).toDateString();
+        const tomorrow = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1, 12, 0, 0).toDateString();
+        
+        if (day.date.toDateString() === today) {
+            dayName = 'Today';
+        } else if (day.date.toDateString() === tomorrow) {
+            dayName = 'Tomorrow';
+        } else {
+            dayName = day.date.toLocaleDateString('en-US', { weekday: 'long' });
+        }
+        
+        const date = day.date.toLocaleDateString('en-US', { month: 'long', day: 'numeric' });
+        
+        // Create location string
+        let locationStr = '';
+        if (this.location.city && this.location.region) {
+            locationStr = `${this.location.city}, ${this.location.region}`;
+        } else if (this.location.city && this.location.country) {
+            locationStr = `${this.location.city}, ${this.location.country}`;
+        } else {
+            locationStr = 'your area';
+        }
+        
+        // Get best time if available
+        const bestTime = this.bestTimeBlocks && this.bestTimeBlocks.length > 0 
+            ? ` at ${this.bestTimeBlocks[0].label}` 
+            : '';
+        
+        // Update page title
+        const newTitle = `${dayName} (${date}) is the best skate day in ${locationStr} - best.skatepark.day`;
+        document.title = newTitle;
+        
+        // Create description with conditions
+        const temp = Math.round(day.tempMax);
+        const wind = Math.round(day.maxHourlyWind);
+        const score = Math.round(day.score);
+        const conditions = [];
+        
+        if (day.precipitation <= 0) conditions.push('no rain');
+        if (wind <= 10) conditions.push('low winds');
+        if (temp >= 18 && temp <= 25) conditions.push('perfect temperature');
+        
+        const conditionsStr = conditions.length > 0 ? ` with ${conditions.join(', ')}` : '';
+        const newDescription = `${dayName} (${date}) is the best day for skateboarding in ${locationStr}${bestTime}${conditionsStr}. Temperature: ${temp}°C, Wind: ${wind}km/h, Score: ${score}/100`;
+        
+        // Update meta description
+        const descriptionMeta = document.querySelector('meta[name="description"]');
+        if (descriptionMeta) {
+            descriptionMeta.setAttribute('content', newDescription);
+        }
+        
+        // Update Open Graph title and description
+        const ogTitle = document.querySelector('meta[property="og:title"]');
+        if (ogTitle) {
+            ogTitle.setAttribute('content', newTitle);
+        }
+        
+        const ogDescription = document.querySelector('meta[property="og:description"]');
+        if (ogDescription) {
+            ogDescription.setAttribute('content', newDescription);
+        }
+        
+        // Update Twitter Card title and description
+        const twitterTitle = document.querySelector('meta[name="twitter:title"]');
+        if (twitterTitle) {
+            twitterTitle.setAttribute('content', newTitle);
+        }
+        
+        const twitterDescription = document.querySelector('meta[name="twitter:description"]');
+        if (twitterDescription) {
+            twitterDescription.setAttribute('content', newDescription);
+        }
+    }
+
     extractCity(result) {
         const parts = result.display_name.split(',');
         return parts[0].trim();
@@ -499,6 +579,7 @@ class SkateParkDay {
         this.updateBestSkateSummary();
         this.renderBestDay();
         this.renderWeatherGrid();
+        this.updateMetaTags();
     }
 
     updateBestSkateSummary() {
