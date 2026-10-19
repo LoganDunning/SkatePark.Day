@@ -553,6 +553,35 @@ header p {
     border-color: rgba(75, 85, 99, 0.4);
 }
 
+.about {
+    margin-top: 60px;
+    padding: 20px;
+    color: rgba(224, 230, 237, 0.8);
+    font-size: 0.9rem;
+    line-height: 1.6;
+    background: rgba(26, 26, 46, 0.3);
+    border-radius: 12px;
+    border: 1px solid rgba(75, 85, 99, 0.2);
+}
+
+.about h2 {
+    font-size: 1.1rem;
+    margin: 20px 0 8px;
+}
+
+.about h2:first-child {
+    margin-top: 0;
+}
+
+.about h3 {
+    font-size: 0.95rem;
+    margin: 12px 0 4px;
+}
+
+.about ul {
+    padding-left: 20px;
+}
+
 footer {
     text-align: center;
     margin-top: 60px;
