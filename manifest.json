@@ -1,8 +1,8 @@
 {
   "id": "/",
-  "name": "SkatePark.Day",
+  "name": "Best Skate Park Day",
   "short_name": "SkatePark.Day",
-  "description": "Find the perfect day for skateboarding based on weather conditions",
+  "description": "Find the best skate park day this week based on weather conditions",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
