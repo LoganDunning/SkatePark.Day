@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>best.skatepark.day - Find Your Perfect Skate Day</title>
+    <title>Best Skate Park Day - 7-Day Skateboarding Weather Forecast | best.skatepark.day</title>
     
     <!-- Favicon -->
     <link rel="icon" type="image/png" href="img/favicon.png">
@@ -17,27 +17,28 @@
     <meta name="apple-mobile-web-app-title" content="best.skatepark.day">
     
     <!-- SEO meta tags -->
-    <meta name="description" content="Find the perfect day for skateboarding with our 7-day skate forecast. Get weather conditions optimized for skate park activities with wind, temperature, and UV analysis.">
-    <meta name="keywords" content="7-day skate forecast, skateboard weather, forecast, skate park, outdoor sports, skateboarding weather, wind speed, temperature, UV index, weather app">
+    <meta name="description" content="Find the best skate park day this week. Free 7-day skateboarding weather forecast that ranks every day by temperature, wind speed, rain, and UV so you know exactly when to hit the skatepark.">
+    <meta name="keywords" content="best skate park day, best skatepark day, best day to skate, best day to skateboard, skate park weather, skatepark forecast, 7-day skate forecast, skateboarding weather, skate weather, wind speed, UV index">
     <meta name="author" content="Social Dunn Right Inc.">
-    <meta name="robots" content="index, follow">
+    <meta name="robots" content="index, follow, max-image-preview:large">
     <link rel="canonical" href="https://best.skatepark.day/">
     
     <!-- Open Graph meta tags -->
-    <meta property="og:title" content="best.skatepark.day - 7-Day Skate Forecast">
-    <meta property="og:description" content="Get 7-day skate forecasts optimized for skateboarding. Find the perfect skate park day based on temperature, wind speed, and UV conditions.">
+    <meta property="og:title" content="Best Skate Park Day - 7-Day Skateboarding Weather Forecast">
+    <meta property="og:description" content="Find the best skate park day this week. A 7-day skateboarding forecast ranked by temperature, wind speed, rain, and UV.">
     <meta property="og:type" content="website">
     <meta property="og:url" content="https://best.skatepark.day/">
     <meta property="og:image" content="https://best.skatepark.day/img/SkateParkDayGitHubPreview.png">
     <meta property="og:image:width" content="1200">
     <meta property="og:image:height" content="630">
+    <meta property="og:image:alt" content="best.skatepark.day - find the best skate park day this week">
     <meta property="og:site_name" content="best.skatepark.day">
     <meta property="og:locale" content="en_US">
     
     <!-- Twitter Card meta tags -->
     <meta name="twitter:card" content="summary_large_image">
-    <meta name="twitter:title" content="best.skatepark.day - 7-Day Skate Forecast">
-    <meta name="twitter:description" content="Get 7-day skate forecasts optimized for skateboarding. Find the perfect skate park day based on weather conditions.">
+    <meta name="twitter:title" content="Best Skate Park Day - 7-Day Skateboarding Weather Forecast">
+    <meta name="twitter:description" content="Find the best skate park day this week, ranked by temperature, wind speed, rain, and UV.">
     <meta name="twitter:image" content="https://best.skatepark.day/img/SkateParkDayGitHubPreview.png">
     <meta name="twitter:site" content="@skateparkday">
     <meta name="twitter:creator" content="@skateparkday">
@@ -50,7 +51,7 @@
     <!-- Touch icons for mobile -->
     <link rel="manifest" href="manifest.json">
     
-    <link rel="stylesheet" href="app.css?v=2025060401">
+    <link rel="stylesheet" href="app.css?v=2026101901">
 </head>
 <body>
     <div class="container">
@@ -68,7 +69,7 @@
             <div class="hamburger-line"></div>
         </div>
         <header>
-            <h1>🛹 best<span class="muted-text">.</span>skatepark<span class="muted-text">.</span>day</h1>
+            <h1><span class="visually-hidden">Best Skate Park Day: </span>🛹 best<span class="muted-text">.</span>skatepark<span class="muted-text">.</span>day</h1>
             <p id="best-skate-summary">The Best Day to Skate this week is...</p>
             <p id="location-display" class="location-display hidden"></p>
             <div id="location-edit" class="location-edit">
@@ -100,6 +101,18 @@
             </div>
         </main>
 
+        <section class="about" aria-labelledby="about-heading">
+            <h2 id="about-heading">How we find the best skate park day</h2>
+            <p>best.skatepark.day checks the 7-day weather forecast for your location and ranks every day to find the best skate park day of the week. Temperature and wind speed matter most, followed by sun and UV.</p>
+            <ul>
+                <li><strong>Temperature:</strong> warm but not over 30°C (86°F).</li>
+                <li><strong>Wind:</strong> hourly wind under 15 km/h. Anything above that is a write-off.</li>
+                <li><strong>Rain:</strong> dry days only. Wet ramps and bowls aren't safe.</li>
+                <li><strong>Sun &amp; UV:</strong> plenty of sun with low UV and low cloud.</li>
+            </ul>
+            <p>It's free, works on any phone or computer, and needs no sign-up. Allow location access or search for a city to get the best day to skate near you.</p>
+        </section>
+
         <footer>
             <p>&copy; 2025 <a href="https://www.logandunning.com/" target="_blank" rel="noopener noreferrer">Social Dunn Right Inc.</a> All rights reserved.</p>
         </footer>
@@ -110,9 +123,11 @@
     {
         "@context": "https://schema.org",
         "@type": "WebApplication",
-        "name": "best.skatepark.day",
-        "description": "Find the perfect day for skateboarding with our 7-day skate forecast. Get weather conditions optimized for skate park activities.",
+        "name": "Best Skate Park Day",
+        "alternateName": ["best.skatepark.day", "Best Skatepark Day", "SkatePark.Day"],
+        "description": "Find the best skate park day this week. A free 7-day skateboarding weather forecast ranked by temperature, wind speed, rain, and UV.",
         "url": "https://best.skatepark.day/",
+        "image": "https://best.skatepark.day/img/SkateParkDayGitHubPreview.png",
         "applicationCategory": "WeatherApplication",
         "operatingSystem": "Web Browser",
         "offers": {
@@ -124,11 +139,6 @@
             "@type": "Organization",
             "name": "Social Dunn Right Inc."
         },
-        "aggregateRating": {
-            "@type": "AggregateRating",
-            "ratingValue": "4.8",
-            "ratingCount": "150"
-        },
         "featureList": [
             "7-day skate forecast",
             "Skateboarding-optimized conditions",
@@ -138,6 +148,15 @@
             "Location-based forecasts",
             "Mobile responsive design"
         ]
+    }
+    </script>
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "WebSite",
+        "name": "Best Skate Park Day",
+        "alternateName": ["best.skatepark.day", "Best Skatepark Day"],
+        "url": "https://best.skatepark.day/"
     }
     </script>
 
