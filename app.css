@@ -233,3 +233,11 @@ a{color:inherit}
   #forecast-section.section{padding-top:10px}
   .best-day{padding:10px 14px;margin-bottom:10px}
 }
+
+/* Location typeahead */
+.location-edit{position:relative}
+.location-suggestions{position:absolute;z-index:30;left:0;top:calc(100% + 4px);width:min(320px,100%);margin:0;padding:0;list-style:none;background:var(--panel);border:1px solid var(--line)}
+.location-suggestions li{display:flex;justify-content:space-between;gap:12px;padding:10px 14px;cursor:pointer;border-top:1px solid var(--line);font-size:.9rem;transition:background var(--t)}
+.location-suggestions li:first-child{border-top:0}
+.location-suggestions li[aria-selected="true"],.location-suggestions li:hover{background:var(--faint)}
+.suggestion-meta{font-family:var(--mono);font-size:.68rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);align-self:center;white-space:nowrap}
