@@ -101,8 +101,10 @@ a{color:inherit}
 .day-card.no-skate{opacity:.5}
 .day-card.no-skate:hover{opacity:.8}
 .day-card-medal{position:absolute;top:14px;left:20px;font-family:var(--mono);font-size:.6rem;letter-spacing:.2em;text-transform:uppercase;color:var(--ink)}
-.day-card-medal.gold::after{content:'🥇 Best'}
-.day-card-medal.silver::after{content:'🥈 Runner-up';color:var(--muted)}
+.day-card-medal::before{content:'';display:inline-block;width:1.1em;height:1.1em;vertical-align:-.25em;margin-right:.4em;background:currentColor;-webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M8 3l2.5 6M16 3l-2.5 6'/%3E%3Ccircle cx='12' cy='15' r='5.5'/%3E%3Cpath d='M12 12.5v5'/%3E%3C/svg%3E") center/contain no-repeat;mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M8 3l2.5 6M16 3l-2.5 6'/%3E%3Ccircle cx='12' cy='15' r='5.5'/%3E%3Cpath d='M12 12.5v5'/%3E%3C/svg%3E") center/contain no-repeat}
+.day-card-medal.gold::after{content:'Best'}
+.day-card-medal.silver{color:var(--muted)}
+.day-card-medal.silver::after{content:'Runner-up'}
 .day-name{font-family:var(--mono);font-size:.72rem;letter-spacing:.2em;text-transform:uppercase;font-weight:600;margin-bottom:4px}
 .day-date{font-size:.82rem;color:var(--muted);margin-bottom:18px}
 .weather-icon{font-size:2rem;margin-bottom:10px;line-height:1}
@@ -111,7 +113,7 @@ a{color:inherit}
 .conditions{font-size:.8rem;color:var(--muted);margin-bottom:16px;min-height:1.2em}
 .metrics{display:flex;flex-direction:column;gap:8px;margin-top:12px}
 .metric{display:flex;align-items:center;gap:8px;font-size:.75rem}
-.metric-icon{font-size:.8rem;width:16px;text-align:center;flex-shrink:0;filter:grayscale(1);opacity:.85}
+.metric-icon{font-size:.8rem;width:16px;text-align:center;flex-shrink:0;opacity:.85;display:inline-flex;align-items:center;justify-content:center}
 .metric-bar{flex:1;height:2px;background:var(--line);overflow:hidden;position:relative}
 .metric-fill{height:100%;background:var(--ink);transition:width .3s ease}
 .metric-fill.wind,.metric-fill.uv{background:var(--muted)}
@@ -160,9 +162,6 @@ a{color:inherit}
 @media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}*{transition:none!important}}
 
 /* ---------- Compact, fit-to-screen layout: best day above the fold ---------- */
-.weather-icon{filter:grayscale(1) contrast(1.1)}
-#best-day-info > div:first-child > div:nth-child(2){filter:grayscale(1)}
-#best-day-info .metric-icon,#best-day-info .time-block .metric-icon{filter:grayscale(1)}
 .hero{padding:clamp(28px,6vh,72px) 0 clamp(24px,4vh,48px)}
 .hero-mark{margin-bottom:clamp(12px,2.5vh,26px)}
 .hero-mark svg{width:clamp(48px,7vh,72px);height:auto}
@@ -194,8 +193,8 @@ a{color:inherit}
   .day-card{padding:10px 4px 9px;text-align:center}
   .day-card.best,.day-card.second-best{padding-top:24px}
   .day-card-medal{top:6px;left:0;right:0;text-align:center;font-size:.75rem;letter-spacing:0}
-  .day-card-medal.gold::after{content:'🥇'}
-  .day-card-medal.silver::after{content:'🥈'}
+  .day-card-medal::before{margin-right:0;width:1.2em;height:1.2em}
+  .day-card-medal.gold::after,.day-card-medal.silver::after{content:''}
   .day-name{font-size:.58rem;letter-spacing:.08em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .day-date{font-size:.62rem;margin-bottom:6px;white-space:nowrap}
   .weather-icon{font-size:1.25rem;margin-bottom:4px}
@@ -233,3 +232,8 @@ a{color:inherit}
   #forecast-section.section{padding-top:10px}
   .best-day{padding:10px 14px;margin-bottom:10px}
 }
+
+/* Inline SVG icons */
+.icon{display:inline-block;width:1em;height:1em;vertical-align:-.15em;flex-shrink:0}
+.weather-icon .icon{width:1.25em;height:1.25em;stroke-width:1.25}
+.kicker .icon{width:1.3em;height:1.3em;vertical-align:-.3em;margin-right:.35em}
