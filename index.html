@@ -1,16 +1,17 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="dark">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>Best Skate Park Day - 7-Day Skateboarding Weather Forecast | best.skatepark.day</title>
     
     <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="favicon.svg">
     <link rel="icon" type="image/png" href="img/favicon.png">
     <link rel="apple-touch-icon" sizes="180x180" href="img/favicon.png">
     
     <!-- Mobile optimizations -->
-    <meta name="theme-color" content="#667eea">
+    <meta name="theme-color" content="#0B0B0C">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
@@ -44,39 +45,61 @@
     
     <!-- Additional SEO -->
     <meta name="application-name" content="best.skatepark.day">
-    <meta name="msapplication-TileColor" content="#667eea">
+    <meta name="msapplication-TileColor" content="#0B0B0C">
     <meta name="format-detection" content="telephone=no">
     
     <!-- Touch icons for mobile -->
     <link rel="manifest" href="manifest.json">
     
-    <link rel="stylesheet" href="app.css?v=2026101901">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300..700&display=swap">
+    <link rel="stylesheet" href="app.css?v=2026110101">
 </head>
-<body>
-    <div class="container">
-        <a href="https://www.logandunning.com/" target="_blank" rel="noopener noreferrer" class="ld-logo" title="Lets Do Fun Things Everyday">
-            <span title="Lets Do Fun Things Everyday">LD</span>
-        </a>
-        <a href="https://github.com/LoganDunning/SkatePark.Day" target="_blank" rel="noopener noreferrer" class="github-icon" title="View source code on GitHub">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M12 0C5.374 0 0 5.373 0 12 0 17.302 3.438 21.8 8.207 23.387c.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23A11.509 11.509 0 0112 5.803c1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576C20.566 21.797 24 17.3 24 12c0-6.627-5.373-12-12-12z"/>
-            </svg>
-        </a>
-        <div class="hamburger-menu">
-            <div class="hamburger-line"></div>
-            <div class="hamburger-line"></div>
-            <div class="hamburger-line"></div>
+<body id="top">
+    <script>document.documentElement.setAttribute('data-theme','dark');</script>
+    <header class="site-header">
+        <div class="site-header-inner">
+            <a href="https://best.skatepark.day/" class="brand" aria-label="best.skatepark.day home">
+                <svg class="brand-mark" viewBox="0 0 42 32" width="34" height="26" aria-hidden="true"><g fill="none" stroke-linecap="butt"><path class="bd-b" stroke="currentColor" stroke-width="1.9" d="M4 3v26h8.5a6.75 6.75 0 0 0 0-13.5H4M4 3h7.5a6.25 6.25 0 0 1 0 12.5"/><path class="bd-d" stroke="currentColor" stroke-width="1.1" opacity=".62" d="M23 3v19M23 3h3a13 13 0 0 1 0 26h-1.5"/></g></svg>
+                <span class="brand-name"><b>Best</b> SkatePark Day</span>
+            </a>
+            <div class="header-actions">
+                <button type="button" class="theme-toggle" id="theme-toggle" aria-label="Toggle dark or light theme">
+                    <span class="theme-toggle-label">Light</span>
+                </button>
+                <button type="button" class="hamburger-menu" id="menu-toggle" aria-expanded="false" aria-controls="site-menu">
+                    <span class="menu-label">Menu</span>
+                    <span class="hamburger-lines" aria-hidden="true"><span class="hamburger-line"></span><span class="hamburger-line"></span><span class="hamburger-line"></span></span>
+                </button>
+            </div>
         </div>
-        <header>
-            <h1>🛹 best<span class="muted-text">.</span>skatepark<span class="muted-text">.</span>day</h1>
-            <p id="best-skate-summary">The Best Day to Skate this week is...</p>
+        <nav class="site-menu" id="site-menu" aria-label="Site menu">
+            <a href="#forecast-section"><span class="menu-num">01</span>Forecast</a>
+            <a href="#about-heading"><span class="menu-num">02</span>How it works</a>
+            <a href="#faq-heading"><span class="menu-num">03</span>FAQ</a>
+            <a href="https://github.com/LoganDunning/SkatePark.Day" target="_blank" rel="noopener noreferrer" class="github-icon"><span class="menu-num">04</span>Source on GitHub ↗</a>
+            <a href="https://www.logandunning.com/" target="_blank" rel="noopener noreferrer" class="ld-logo" title="Lets Do Fun Things Everyday"><span class="menu-num">05</span>Logan Dunning ↗</a>
+        </nav>
+    </header>
+
+    <div class="container">
+        <section class="hero">
+            <div class="hero-mark" aria-hidden="true"><svg viewBox="0 0 42 32" width="84" height="64"><g fill="none" stroke-linecap="butt"><path class="bd-b" stroke="currentColor" stroke-width="1.9" d="M4 3v26h8.5a6.75 6.75 0 0 0 0-13.5H4M4 3h7.5a6.25 6.25 0 0 1 0 12.5"/><path class="bd-d" stroke="currentColor" stroke-width="1.1" opacity=".62" d="M23 3v19M23 3h3a13 13 0 0 1 0 26h-1.5"/></g></svg></div>
+            <p class="kicker">Social Dunn Right Inc · 7-Day Skate Forecast</p>
+            <h1><span class="best-word">best</span><span class="muted-text">.</span>skatepark<span class="muted-text">.</span>day</h1>
+            <p id="best-skate-summary" class="lede">The Best Day to Skate this week is...</p>
             <p id="location-display" class="location-display hidden"></p>
             <div id="location-edit" class="location-edit">
                 <input type="text" id="location-search" class="location-search" placeholder="Search for a city..." autocomplete="off">
             </div>
-        </header>
+            <div class="hero-actions">
+                <a href="#forecast-section" class="btn btn-solid">See the forecast</a>
+                <a href="#about-heading" class="btn">How it works</a>
+            </div>
+        </section>
 
-        <main>
+        <main id="forecast-section" class="section">
             <div id="loading" class="loading">
                 <div class="spinner"></div>
                 <p>Getting your location and weather data...</p>
@@ -93,17 +116,19 @@
 
             <div id="forecast" class="forecast hidden">
                 <div id="best-day" class="best-day">
-                    <h3>🏆 Best Skate Day</h3>
+                    <p class="kicker">🏆 Best Skate Day</p>
                     <div id="best-day-info"></div>
                 </div>
                 <div id="weather-grid" class="weather-grid"></div>
             </div>
         </main>
 
-        <section class="about" aria-labelledby="about-heading">
+        <section class="about section" aria-labelledby="about-heading">
+            <p class="kicker">01 — About</p>
             <h2 id="about-heading">Find the Best Skate Park Day This Week</h2>
             <p>best.skatepark.day checks the 7-day weather forecast for your location and picks the best skate park day of the week, which is the day with the best conditions for skateboarding at your local skatepark.</p>
 
+            <p class="kicker">02 — Method</p>
             <h2>How We Pick the Best Day to Skate</h2>
             <ul>
                 <li><strong>Temperature:</strong> warm days score highest, and anything over 30°C loses points.</li>
@@ -112,7 +137,8 @@
                 <li><strong>Sun, clouds and UV:</strong> plenty of sun with low UV is ideal.</li>
             </ul>
 
-            <h2>Frequently Asked Questions</h2>
+            <p class="kicker">03 — FAQ</p>
+            <h2 id="faq-heading">Frequently Asked Questions</h2>
             <h3>What is the best skate park day?</h3>
             <p>It's the day in the next seven with the best mix of warm temperature, low wind, no rain and comfortable sun and UV for skating outdoors.</p>
             <h3>Is best.skatepark.day free?</h3>
@@ -121,10 +147,17 @@
             <p>It asks for your location. If you say no, it estimates your area from your IP address, and you can also search for any city.</p>
         </section>
 
-        <footer>
-            <p>&copy; 2025 <a href="https://www.logandunning.com/" target="_blank" rel="noopener noreferrer">Social Dunn Right Inc.</a> All rights reserved.</p>
-        </footer>
     </div>
+        <footer class="site-footer">
+            <div class="footer-inner">
+            <div class="footer-marks">
+                <a href="https://www.logandunning.com/" target="_blank" rel="noopener noreferrer" title="Logan Dunning" class="mark-link"><svg viewBox="0 0 40 32" width="34" height="27" fill="none" stroke="currentColor" stroke-width="1.1"><path d="M5 3v26h14M19.5 3v19M19.5 3h3.5a13 13 0 0 1 0 26h-1.5"/></svg><span>Logan Dunning</span></a>
+                <a href="https://www.logandunning.com/" target="_blank" rel="noopener noreferrer" title="Social Dunn Right Inc." class="mark-link"><span class="sdr-mark">SDR</span><span>Social Dunn Right Inc.</span></a>
+            </div>
+            <p>&copy; 2025–2026 <a href="https://www.logandunning.com/" target="_blank" rel="noopener noreferrer">Social Dunn Right Inc.</a> All rights reserved.</p>
+            <p class="footer-links"><a href="https://github.com/LoganDunning/SkatePark.Day" target="_blank" rel="noopener noreferrer">GitHub</a> <a href="#top">Back to top ↑</a></p>
+            </div>
+        </footer>
 
     <!-- Structured Data for SEO -->
     <script type="application/ld+json">
@@ -196,6 +229,20 @@
     }]
     </script>
 
+    <script>
+    (function(){
+        var root=document.documentElement,btn=document.getElementById('theme-toggle'),lbl=btn.querySelector('.theme-toggle-label');
+        function cur(){return root.getAttribute('data-theme')==='light'?'light':'dark';}
+        function sync(){var t=cur();lbl.textContent=t==='dark'?'Light':'Dark';document.querySelector('meta[name="theme-color"]').content=t==='dark'?'#0B0B0C':'#F4F3EF';}
+        btn.addEventListener('click',function(){var n=cur()==='dark'?'light':'dark';root.setAttribute('data-theme',n);sync();});
+        sync();
+        var m=document.getElementById('menu-toggle'),hdr=document.querySelector('.site-header');
+        function setOpen(o){hdr.classList.toggle('menu-open',o);m.setAttribute('aria-expanded',o);}
+        m.addEventListener('click',function(){setOpen(!hdr.classList.contains('menu-open'));});
+        document.querySelectorAll('.site-menu a').forEach(function(a){a.addEventListener('click',function(){setOpen(false);});});
+        document.addEventListener('keydown',function(e){if(e.key==='Escape')setOpen(false);});
+    })();
+    </script>
     <script src="app.js?v=2025060401"></script>
 </body>
 </html>
