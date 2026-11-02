@@ -449,18 +449,173 @@ class SkateParkDay {
 
     setupLocationSearch() {
         const searchInput = document.getElementById('location-search');
-        
-        searchInput.onblur = () => {
-            setTimeout(() => this.hideLocationEdit(), 200);
+        const edit = document.getElementById('location-edit');
+        if (searchInput.dataset.ready) return;
+        searchInput.dataset.ready = '1';
+
+        let list = document.getElementById('location-suggestions');
+        if (!list) {
+            list = document.createElement('ul');
+            list.id = 'location-suggestions';
+            list.className = 'location-suggestions';
+            list.setAttribute('role', 'listbox');
+            list.hidden = true;
+            edit.appendChild(list);
+        }
+        searchInput.setAttribute('role', 'combobox');
+        searchInput.setAttribute('aria-autocomplete', 'list');
+        searchInput.setAttribute('aria-controls', 'location-suggestions');
+        searchInput.setAttribute('aria-expanded', 'false');
+
+        this.suggestions = [];
+        this.activeSuggestion = -1;
+        let timer = null;
+        let requestId = 0;
+
+        const close = () => {
+            list.hidden = true;
+            list.innerHTML = '';
+            this.suggestions = [];
+            this.activeSuggestion = -1;
+            searchInput.setAttribute('aria-expanded', 'false');
+            searchInput.removeAttribute('aria-activedescendant');
         };
-        
+
+        const highlight = (index) => {
+            const items = list.querySelectorAll('li');
+            items.forEach((li, i) => li.setAttribute('aria-selected', i === index ? 'true' : 'false'));
+            this.activeSuggestion = index;
+            if (items[index]) searchInput.setAttribute('aria-activedescendant', items[index].id);
+        };
+
+        const render = (results) => {
+            this.suggestions = results;
+            list.innerHTML = '';
+            if (!results.length) { close(); return; }
+            results.forEach((r, i) => {
+                const li = document.createElement('li');
+                li.id = `location-option-${i}`;
+                li.setAttribute('role', 'option');
+                const name = document.createElement('span');
+                name.className = 'suggestion-name';
+                name.textContent = r.name;
+                const meta = document.createElement('span');
+                meta.className = 'suggestion-meta';
+                meta.textContent = [r.admin1, r.country_code].filter(Boolean).join(', ');
+                li.append(name, meta);
+                li.onmousedown = (e) => { e.preventDefault(); this.selectSuggestion(r); close(); };
+                list.appendChild(li);
+            });
+            list.hidden = false;
+            searchInput.setAttribute('aria-expanded', 'true');
+            highlight(0);
+        };
+
+        searchInput.oninput = () => {
+            clearTimeout(timer);
+            const q = searchInput.value.trim();
+            if (q.length < 2) { close(); return; }
+            timer = setTimeout(async () => {
+                const id = ++requestId;
+                const results = await this.fetchSuggestions(q);
+                if (id === requestId && searchInput.value.trim() === q) render(results);
+            }, 250);
+        };
+
+        searchInput.onblur = () => {
+            setTimeout(() => { close(); this.hideLocationEdit(); }, 200);
+        };
+
         searchInput.onkeydown = (e) => {
-            if (e.key === 'Escape') {
+            const count = this.suggestions.length;
+            if (e.key === 'ArrowDown' && count) {
+                e.preventDefault();
+                highlight((this.activeSuggestion + 1) % count);
+            } else if (e.key === 'ArrowUp' && count) {
+                e.preventDefault();
+                highlight((this.activeSuggestion - 1 + count) % count);
+            } else if (e.key === 'Escape') {
+                close();
                 this.hideLocationEdit();
             } else if (e.key === 'Enter') {
-                this.searchLocation(searchInput.value);
+                e.preventDefault();
+                const pick = this.suggestions[this.activeSuggestion];
+                close();
+                if (pick) this.selectSuggestion(pick);
+                else this.searchLocation(searchInput.value);
             }
         };
+    }
+
+    // Reference point for ranking: the user's current location if known,
+    // otherwise the centre of southern Ontario.
+    getBiasPoint() {
+        if (this.location && isFinite(this.location.lat) && isFinite(this.location.lon)) {
+            return { lat: this.location.lat, lon: this.location.lon };
+        }
+        return { lat: 43.65, lon: -79.38 };
+    }
+
+    distanceKm(a, b) {
+        const rad = (d) => d * Math.PI / 180;
+        const dLat = rad(b.lat - a.lat);
+        const dLon = rad(b.lon - a.lon);
+        const h = Math.sin(dLat / 2) ** 2 + Math.cos(rad(a.lat)) * Math.cos(rad(b.lat)) * Math.sin(dLon / 2) ** 2;
+        return 12742 * Math.asin(Math.sqrt(h));
+    }
+
+    rankSuggestions(results, query) {
+        const origin = this.getBiasPoint();
+        const q = query.toLowerCase();
+        return results
+            .map((r) => {
+                const km = this.distanceKm(origin, { lat: r.latitude, lon: r.longitude });
+                let score = 0;
+                if (r.country_code === 'CA') score += 40;
+                if (r.country_code === 'CA' && r.admin1 === 'Ontario') score += 60;
+                score -= Math.min(km, 15000) / 150;
+                score += Math.log10((r.population || 0) + 1) * 3;
+                if (r.name.toLowerCase() === q) score += 15;
+                else if (r.name.toLowerCase().startsWith(q)) score += 5;
+                return { ...r, _score: score };
+            })
+            .sort((a, b) => b._score - a._score)
+            .slice(0, 6);
+    }
+
+    async fetchSuggestions(query) {
+        try {
+            const url = `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(query)}&count=25&language=en&format=json`;
+            const response = await fetch(url);
+            if (!response.ok) return [];
+            const data = await response.json();
+            return this.rankSuggestions(data.results || [], query);
+        } catch (error) {
+            return [];
+        }
+    }
+
+    async selectSuggestion(r) {
+        const newLocation = {
+            lat: r.latitude,
+            lon: r.longitude,
+            city: r.name,
+            region: r.admin1 || '',
+            country: r.country || r.country_code || '',
+            source: 'manual'
+        };
+        this.location = newLocation;
+        this.saveLocation(newLocation);
+        document.getElementById('location-search').value = '';
+        this.hideLocationEdit();
+        this.updateLocationDisplay();
+        try {
+            await this.getWeatherData();
+            this.calculateBestDay();
+            this.renderForecast();
+        } catch (error) {
+            this.showError(error.message);
+        }
     }
 
     async searchLocation(query) {
@@ -468,7 +623,7 @@ class SkateParkDay {
         
         try {
             // Use OpenStreetMap Nominatim for free geocoding
-            const response = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=1`);
+            const response = await fetch(`https://nominatim.openstreetmap.org/search?format=json&addressdetails=1&q=${encodeURIComponent(query)}&limit=1&viewbox=-95.2,56.9,-74.3,41.7`);
             const data = await response.json();
             
             if (data && data.length > 0) {
