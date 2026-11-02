@@ -22,8 +22,19 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
-      - name: Build data/skateparks-on.json
+      - name: Build data/skateparks-on.json (Overpass)
+        id: overpass
+        continue-on-error: true
         run: node scripts/build-skateparks.mjs
+      - name: Build data/skateparks-on.json (Geofabrik extract fallback)
+        if: steps.overpass.outcome != 'success'
+        timeout-minutes: 15
+        run: |
+          sudo apt-get update -q && sudo apt-get install -y -q osmium-tool
+          curl -fsSL --retry 3 -o /tmp/on.osm.pbf https://download.geofabrik.de/north-america/canada/ontario-latest.osm.pbf
+          osmium tags-filter /tmp/on.osm.pbf nwr/leisure=skatepark -o /tmp/parks.osm.pbf
+          osmium export /tmp/parks.osm.pbf -f geojsonseq -o /tmp/parks.geojsonseq
+          node scripts/build-skateparks.mjs /tmp/parks.geojsonseq
       - name: Commit changes
         run: |
           if git diff --quiet -- data/skateparks-on.json && git ls-files --error-unmatch data/skateparks-on.json >/dev/null 2>&1; then

@@ -51,8 +51,22 @@ async function tile([s, w, n, e], k) {
   throw new Error(`Tile ${s},${w} failed on ${ATTEMPTS} attempts`);
 }
 
+// Fallback: `node build-skateparks.mjs parks.geojsonseq` reads an osmium export of a Geofabrik OSM extract.
+function fromGeojson(file) {
+  return readFileSync(file, 'utf8').split('\n').map((l) => l.replace(/^\x1e/, '').trim()).filter(Boolean).map((l) => {
+    const f = JSON.parse(l);
+    const pts = [];
+    const walk = (c) => (typeof c[0] === 'number' ? pts.push(c) : c.forEach(walk));
+    if (f.geometry) walk(f.geometry.coordinates);
+    if (!pts.length) return null;
+    const lons = pts.map((p) => p[0]), lats = pts.map((p) => p[1]);
+    return { center: { lat: (Math.min(...lats) + Math.max(...lats)) / 2, lon: (Math.min(...lons) + Math.max(...lons)) / 2 }, tags: f.properties || {} };
+  }).filter(Boolean);
+}
+
 const elements = [];
-for (let k = 0; k < TILES.length; k++) {
+if (process.argv[2]) elements.push(...fromGeojson(process.argv[2]));
+else for (let k = 0; k < TILES.length; k++) {
   const els = await tile(TILES[k], k);
   console.log(`tile ${k + 1}/${TILES.length}: ${els.length}`);
   elements.push(...els);
