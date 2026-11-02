@@ -7,25 +7,46 @@ const MIRRORS = [
   'https://maps.mail.ru/osm/tools/overpass/api/interpreter',
   'https://overpass.kumi.systems/api/interpreter'
 ];
-const QUERY = '[out:json][timeout:180];area["ISO3166-2"="CA-ON"]->.on;nwr["leisure"="skatepark"](area.on);out center tags;';
+// Ontario bounding box, fetched in tiles so each Overpass query stays small.
+const BBOX = { s: 41.6, w: -95.2, n: 56.9, e: -74.3 };
+const TILE_LAT = 2.5, TILE_LON = 3.5;
 const r5 = (x) => Math.round(x * 1e5) / 1e5;
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
-async function fetchData() {
-  for (const url of MIRRORS) {
+async function tile(s, w, n, e, attempt = 0) {
+  const q = `[out:json][timeout:90];nwr["leisure"="skatepark"](${s},${w},${n},${e});out center tags;`;
+  for (let i = 0; i < MIRRORS.length * 2; i++) {
+    const url = MIRRORS[(attempt + i) % MIRRORS.length];
     try {
       const res = await fetch(url, {
         method: 'POST',
-        body: new URLSearchParams({ data: QUERY }),
+        body: new URLSearchParams({ data: q }),
         headers: { 'User-Agent': 'best.skatepark.day data build' },
-        signal: AbortSignal.timeout(240000)
+        signal: AbortSignal.timeout(120000)
       });
-      if (!res.ok) { console.error(url, res.status); continue; }
-      const d = await res.json();
-      if (Array.isArray(d.elements) && d.elements.length > 50) return d.elements;
-      console.error(url, 'too few elements');
-    } catch (e) { console.error(url, e.message); }
+      if (res.ok) {
+        const d = await res.json();
+        if (Array.isArray(d.elements) && !d.remark?.includes('error')) return d.elements;
+      }
+      console.error(url, res.status);
+    } catch (err) { console.error(url, err.message); }
+    await sleep(3000 * (i + 1));
   }
-  throw new Error('All Overpass mirrors failed');
+  throw new Error(`Tile ${s},${w} failed on every mirror`);
+}
+
+async function fetchData() {
+  const out = [];
+  let k = 0;
+  for (let s = BBOX.s; s < BBOX.n; s += TILE_LAT) {
+    for (let w = BBOX.w; w < BBOX.e; w += TILE_LON) {
+      const els = await tile(r5(s), r5(w), r5(Math.min(s + TILE_LAT, BBOX.n)), r5(Math.min(w + TILE_LON, BBOX.e)), k++);
+      out.push(...els);
+      await sleep(1000);
+    }
+  }
+  if (out.length < 50) throw new Error(`Only ${out.length} elements; refusing to overwrite data`);
+  return out;
 }
 
 const elements = await fetchData();
