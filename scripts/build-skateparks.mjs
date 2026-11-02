@@ -9,7 +9,7 @@ const MIRRORS = [
   'https://maps.mail.ru/osm/tools/overpass/api/interpreter',
   'https://overpass.kumi.systems/api/interpreter'
 ];
-const BUDGET_MS = 20 * 60 * 1000;       // overall budget, well under the job timeout
+const BUDGET_MS = 10 * 60 * 1000;       // overall budget, well under the job timeout
 const REQUEST_MS = 75 * 1000;           // per-request timeout
 const ATTEMPTS = 4;                     // per tile, rotating mirrors
 const started = Date.now();
@@ -29,7 +29,9 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const left = () => BUDGET_MS - (Date.now() - started);
 
 async function tile([s, w, n, e], k) {
-  const q = `[out:json][timeout:60];nwr["leisure"="skatepark"](${r5(s)},${r5(w)},${r5(n)},${r5(e)});out center tags qt;`;
+  // Most Ontario parks are mapped as leisure=pitch + sport=skateboard, so include both forms.
+  const bb = `(${r5(s)},${r5(w)},${r5(n)},${r5(e)})`;
+  const q = `[out:json][timeout:60];(nwr["leisure"="skatepark"]${bb};nwr["sport"~"(^|;)skateboard(;|$)"]${bb};);out center tags qt;`;
   for (let i = 0; i < ATTEMPTS; i++) {
     if (left() < 5000) throw new Error('Time budget exhausted');
     const url = MIRRORS[(k + i) % MIRRORS.length];

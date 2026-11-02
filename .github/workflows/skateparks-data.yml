@@ -30,10 +30,9 @@ jobs:
         if: steps.overpass.outcome != 'success'
         timeout-minutes: 15
         run: |
-          sudo apt-get update -q && sudo apt-get install -y -q osmium-tool
+          python3 -m venv /tmp/venv && /tmp/venv/bin/pip install -q osmium
           curl -fsSL --retry 3 -o /tmp/on.osm.pbf https://download.geofabrik.de/north-america/canada/ontario-latest.osm.pbf
-          osmium tags-filter /tmp/on.osm.pbf nwr/leisure=skatepark -o /tmp/parks.osm.pbf
-          osmium export /tmp/parks.osm.pbf -f geojsonseq -o /tmp/parks.geojsonseq
+          /tmp/venv/bin/python scripts/extract-skateparks-pbf.py /tmp/on.osm.pbf /tmp/parks.geojsonseq
           node scripts/build-skateparks.mjs /tmp/parks.geojsonseq
       - name: Commit changes
         run: |

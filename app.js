@@ -1364,7 +1364,7 @@ class SkateParkDay {
 }
 
 const SITE_URL = 'https://best.skatepark.day/';
-const PARK_DATA_VERSION = '2026110206';
+const PARK_DATA_VERSION = '2026110207';
 
 function escapeHtml(str) {
     return String(str).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
