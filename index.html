@@ -62,7 +62,7 @@
     <link rel="preconnect" href="https://api.open-meteo.com" crossorigin>
     <link rel="preconnect" href="https://geocoding-api.open-meteo.com" crossorigin>
     <link rel="dns-prefetch" href="https://nominatim.openstreetmap.org">
-    <link rel="stylesheet" href="app.css?v=2026110201">
+    <link rel="stylesheet" href="app.css?v=2026110202">
 </head>
 <body id="top">
     <script>document.documentElement.setAttribute('data-theme','dark');</script>
@@ -97,10 +97,14 @@
             <p class="kicker">Social Dunn Right Inc · 7-Day Skate Forecast</p>
             <h1 id="page-title"><span class="visually-hidden">Best Skate Park Day: </span><span class="best-word">best</span><span class="muted-text">.</span>skatepark<span class="muted-text">.</span>day</h1>
             <p id="best-skate-summary" class="lede">The Best Day to Skate this week is...</p>
-            <p id="location-display" class="location-display hidden"></p>
-            <div id="location-edit" class="location-edit">
-                <label for="location-search" class="visually-hidden">Search for a city</label>
-                <input type="search" id="location-search" enterkeyhint="search" class="location-search" placeholder="Search for a city..." autocomplete="off">
+            <p id="location-display" class="visually-hidden" aria-live="polite"></p>
+            <div class="location-row">
+            <div id="location-edit" class="location-edit location-bar">
+                <label for="location-search" class="visually-hidden">Location: search for a city</label>
+                <svg class="icon location-bar-icon" viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="M20 20l-4.3-4.3"/></svg>
+                <input type="search" id="location-search" enterkeyhint="search" class="location-search" placeholder="Search for a city or town" autocomplete="off">
+            </div>
+                <button type="button" id="page-share" class="page-share" aria-label="Share this forecast"><svg class="icon" viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 15V3M8 7l4-4 4 4"/><path d="M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-7"/></svg><span class="page-share-text">Share</span></button>
             </div>
             <div class="hero-actions">
                 <a href="#forecast-section" class="btn btn-solid">See the forecast</a>
@@ -280,6 +284,6 @@
         document.addEventListener('keydown',function(e){if(e.key==='Escape')setOpen(false);});
     })();
     </script>
-    <script src="app.js?v=2026110201" defer></script>
+    <script src="app.js?v=2026110202" defer></script>
 </body>
 </html>
