@@ -1,55 +1,80 @@
 // Builds data/skateparks-on.json from OpenStreetMap (Overpass). Node 18+, no dependencies.
-import { writeFileSync, mkdirSync } from 'node:fs';
+// Queries are kept light (leisure=skatepark only, centre points + tags) and the whole run has a time budget.
+import { writeFileSync, mkdirSync, readFileSync, existsSync } from 'node:fs';
 
+const OUT = 'data/skateparks-on.json';
 const MIRRORS = [
   'https://overpass-api.de/api/interpreter',
   'https://overpass.private.coffee/api/interpreter',
   'https://maps.mail.ru/osm/tools/overpass/api/interpreter',
   'https://overpass.kumi.systems/api/interpreter'
 ];
-// Ontario bounding box, fetched in tiles so each Overpass query stays small.
-const BBOX = { s: 41.6, w: -95.2, n: 56.9, e: -74.3 };
-const TILE_LAT = 2.5, TILE_LON = 3.5;
+const BUDGET_MS = 10 * 60 * 1000;       // overall budget, well under the job timeout
+const REQUEST_MS = 75 * 1000;           // per-request timeout
+const ATTEMPTS = 4;                     // per tile, rotating mirrors
+const started = Date.now();
+
+// [s, w, n, e]: populated southern Ontario in finer tiles, the north in coarse ones.
+const TILES = [];
+for (let s = 41.6; s < 46.0; s += 1.1) {
+  for (let w = -83.6; w < -74.3; w += 1.9) {
+    TILES.push([s, w, Math.min(s + 1.1, 46.0), Math.min(w + 1.9, -74.3)]);
+  }
+}
+TILES.push([46.0, -84.8, 49.0, -74.3], [46.0, -90.0, 49.0, -84.8], [46.0, -95.2, 49.0, -90.0],
+  [49.0, -95.2, 56.9, -85.0], [49.0, -85.0, 56.9, -74.3]);
+
 const r5 = (x) => Math.round(x * 1e5) / 1e5;
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+const left = () => BUDGET_MS - (Date.now() - started);
 
-async function tile(s, w, n, e, attempt = 0) {
-  const q = `[out:json][timeout:90];nwr["leisure"="skatepark"](${s},${w},${n},${e});out center tags;`;
-  for (let i = 0; i < MIRRORS.length * 2; i++) {
-    const url = MIRRORS[(attempt + i) % MIRRORS.length];
+async function tile([s, w, n, e], k) {
+  // Most Ontario parks are mapped as leisure=pitch + sport=skateboard, so include both forms.
+  const bb = `(${r5(s)},${r5(w)},${r5(n)},${r5(e)})`;
+  const q = `[out:json][timeout:60];(nwr["leisure"="skatepark"]${bb};nwr["sport"~"(^|;)skateboard(;|$)"]${bb};);out center tags qt;`;
+  for (let i = 0; i < ATTEMPTS; i++) {
+    if (left() < 5000) throw new Error('Time budget exhausted');
+    const url = MIRRORS[(k + i) % MIRRORS.length];
     try {
       const res = await fetch(url, {
         method: 'POST',
         body: new URLSearchParams({ data: q }),
         headers: { 'User-Agent': 'best.skatepark.day data build' },
-        signal: AbortSignal.timeout(120000)
+        signal: AbortSignal.timeout(Math.min(REQUEST_MS, left()))
       });
       if (res.ok) {
         const d = await res.json();
-        if (Array.isArray(d.elements) && !d.remark?.includes('error')) return d.elements;
-      }
-      console.error(url, res.status);
+        if (Array.isArray(d.elements) && !(d.remark || '').match(/error|timed out/i)) return d.elements;
+        console.error(url, 'remark:', d.remark);
+      } else console.error(url, res.status);
     } catch (err) { console.error(url, err.message); }
-    await sleep(3000 * (i + 1));
+    await sleep(2000 * (i + 1));
   }
-  throw new Error(`Tile ${s},${w} failed on every mirror`);
+  throw new Error(`Tile ${s},${w} failed on ${ATTEMPTS} attempts`);
 }
 
-async function fetchData() {
-  const out = [];
-  let k = 0;
-  for (let s = BBOX.s; s < BBOX.n; s += TILE_LAT) {
-    for (let w = BBOX.w; w < BBOX.e; w += TILE_LON) {
-      const els = await tile(r5(s), r5(w), r5(Math.min(s + TILE_LAT, BBOX.n)), r5(Math.min(w + TILE_LON, BBOX.e)), k++);
-      out.push(...els);
-      await sleep(1000);
-    }
-  }
-  if (out.length < 50) throw new Error(`Only ${out.length} elements; refusing to overwrite data`);
-  return out;
+// Fallback: `node build-skateparks.mjs parks.geojsonseq` reads an osmium export of a Geofabrik OSM extract.
+function fromGeojson(file) {
+  return readFileSync(file, 'utf8').split('\n').map((l) => l.replace(/^\x1e/, '').trim()).filter(Boolean).map((l) => {
+    const f = JSON.parse(l);
+    const pts = [];
+    const walk = (c) => (typeof c[0] === 'number' ? pts.push(c) : c.forEach(walk));
+    if (f.geometry) walk(f.geometry.coordinates);
+    if (!pts.length) return null;
+    const lons = pts.map((p) => p[0]), lats = pts.map((p) => p[1]);
+    return { center: { lat: (Math.min(...lats) + Math.max(...lats)) / 2, lon: (Math.min(...lons) + Math.max(...lons)) / 2 }, tags: f.properties || {} };
+  }).filter(Boolean);
 }
 
-const elements = await fetchData();
+const elements = [];
+if (process.argv[2]) elements.push(...fromGeojson(process.argv[2]));
+else for (let k = 0; k < TILES.length; k++) {
+  const els = await tile(TILES[k], k);
+  console.log(`tile ${k + 1}/${TILES.length}: ${els.length}`);
+  elements.push(...els);
+  await sleep(1000);
+}
+
 const seen = new Set();
 const parks = elements.map((e) => {
   const lat = e.lat ?? e.center?.lat, lon = e.lon ?? e.center?.lon;
@@ -64,6 +89,12 @@ const parks = elements.map((e) => {
   seen.add(k); return true;
 }).sort((a, b) => a.lat - b.lat || a.lon - b.lon);
 
+let prev = 0;
+if (existsSync(OUT)) { try { prev = JSON.parse(readFileSync(OUT, 'utf8')).length; } catch {} }
+if (parks.length < 50 || parks.length < prev / 2) {
+  console.error(`Only ${parks.length} parks (existing file has ${prev}); refusing to overwrite`);
+  process.exit(1);
+}
 mkdirSync('data', { recursive: true });
-writeFileSync('data/skateparks-on.json', '[\n' + parks.map((p) => JSON.stringify(p)).join(',\n') + '\n]\n');
-console.log(`Wrote ${parks.length} skate parks`);
+writeFileSync(OUT, '[\n' + parks.map((p) => JSON.stringify(p)).join(',\n') + '\n]\n');
+console.log(`Wrote ${parks.length} skate parks in ${Math.round((Date.now() - started) / 1000)}s`);

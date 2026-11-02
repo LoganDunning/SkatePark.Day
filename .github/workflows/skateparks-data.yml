@@ -16,14 +16,24 @@ concurrency:
 jobs:
   refresh:
     runs-on: ubuntu-latest
-    timeout-minutes: 90
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
-      - name: Build data/skateparks-on.json
+      - name: Build data/skateparks-on.json (Overpass)
+        id: overpass
+        continue-on-error: true
         run: node scripts/build-skateparks.mjs
+      - name: Build data/skateparks-on.json (Geofabrik extract fallback)
+        if: steps.overpass.outcome != 'success'
+        timeout-minutes: 15
+        run: |
+          python3 -m venv /tmp/venv && /tmp/venv/bin/pip install -q osmium
+          curl -fsSL --retry 3 -o /tmp/on.osm.pbf https://download.geofabrik.de/north-america/canada/ontario-latest.osm.pbf
+          /tmp/venv/bin/python scripts/extract-skateparks-pbf.py /tmp/on.osm.pbf /tmp/parks.geojsonseq
+          node scripts/build-skateparks.mjs /tmp/parks.geojsonseq
       - name: Commit changes
         run: |
           if git diff --quiet -- data/skateparks-on.json && git ls-files --error-unmatch data/skateparks-on.json >/dev/null 2>&1; then
