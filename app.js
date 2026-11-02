@@ -1,3 +1,24 @@
+const ICONS = {
+    sun: '<svg class="icon" viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>',
+    partly: '<svg class="icon" viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 3v1.5M3.5 8H5M4.8 4.8l1 1M11.2 4.8l-1 1"/><path d="M5.6 10.6A3 3 0 1 1 10.9 7.6"/><path d="M9 20h8.5a3.5 3.5 0 0 0 .5-6.96A5 5 0 0 0 8.4 14 3 3 0 0 0 9 20z"/></svg>',
+    cloud: '<svg class="icon" viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 18h10a4 4 0 0 0 .6-7.95A6 6 0 0 0 6.1 11 3.5 3.5 0 0 0 7 18z"/></svg>',
+    fog: '<svg class="icon" viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9h16M3 13h18M5 17h14M8 21h8"/></svg>',
+    drizzle: '<svg class="icon" viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 15h10a4 4 0 0 0 .6-7.95A6 6 0 0 0 6.1 8 3.5 3.5 0 0 0 7 15z"/><path d="M9 18v1M13 18v1M17 18v1"/></svg>',
+    rain: '<svg class="icon" viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 14h10a4 4 0 0 0 .6-7.95A6 6 0 0 0 6.1 7 3.5 3.5 0 0 0 7 14z"/><path d="M8 17l-1 3M12 17l-1 3M16 17l-1 3"/></svg>',
+    snow: '<svg class="icon" viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 14h10a4 4 0 0 0 .6-7.95A6 6 0 0 0 6.1 7 3.5 3.5 0 0 0 7 14z"/><path d="M8 18h.01M12 20h.01M16 18h.01M10 22h.01M14 22h.01"/></svg>',
+    storm: '<svg class="icon" viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 14h10a4 4 0 0 0 .6-7.95A6 6 0 0 0 6.1 7 3.5 3.5 0 0 0 7 14z"/><path d="M12.5 14L10 18h4l-2.5 4"/></svg>',
+    wind: '<svg class="icon" viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 8h11a3 3 0 1 0-3-3M3 12h16a3 3 0 1 1-3 3M3 16h7"/></svg>',
+    uv: '<svg class="icon" viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3.5"/><path d="M12 3v2M12 19v2M3 12h2M19 12h2M5.6 5.6l1.4 1.4M17 17l1.4 1.4M5.6 18.4L7 17M17 7l1.4-1.4"/></svg>',
+    sunHours: '<svg class="icon" viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 18h18M6 18a6 6 0 0 1 12 0M12 6V4M5.6 10.6L4.2 9.2M18.4 10.6l1.4-1.4"/></svg>',
+    target: '<svg class="icon" viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="4"/><circle cx="12" cy="12" r=".6" fill="currentColor"/></svg>',
+    clock: '<svg class="icon" viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></svg>',
+    drop: '<svg class="icon" viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3s6 6.5 6 11a6 6 0 0 1-12 0c0-4.5 6-11 6-11z"/></svg>',
+    pin: '<svg class="icon" viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 21s-6.5-6.1-6.5-11a6.5 6.5 0 0 1 13 0c0 4.9-6.5 11-6.5 11z"/><circle cx="12" cy="10" r="2.3"/></svg>',
+    trophy: '<svg class="icon" viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 4h8v5a4 4 0 0 1-8 0V4zM8 6H5a3 3 0 0 0 3 4M16 6h3a3 3 0 0 1-3 4M12 13v4M8.5 20h7M10 17h4v3h-4z"/></svg>',
+    hot: '<svg class="icon" viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 14.5V5a2 2 0 1 1 4 0v9.5a4 4 0 1 1-4 0z"/><path d="M12 11v6"/><path d="M18 5h2M18 9h2"/></svg>',
+    cold: '<svg class="icon" viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 14.5V5a2 2 0 1 1 4 0v9.5a4 4 0 1 1-4 0z"/><path d="M12 15v2"/><path d="M18 7h3M19.5 5.5v3"/></svg>',
+};
+
 class SkateParkDay {
     constructor() {
         this.location = null;
@@ -269,11 +290,11 @@ class SkateParkDay {
     getMainIssue(day) {
         if (day.precipitation > 0) return null; // Rain takes priority and is shown separately
         
-        if (day.maxHourlyWind > 25) return '💨 Extreme winds';
-        if (day.maxHourlyWind > 15) return '💨 High winds';
-        if (day.tempMax > 30) return '🥵 Over 30°C heat';
-        if (day.tempMax < 10) return '🥶 Too cold';
-        if (day.uvIndex > 8) return '☀️ High UV levels';
+        if (day.maxHourlyWind > 25) return `${ICONS.wind} Extreme winds`;
+        if (day.maxHourlyWind > 15) return `${ICONS.wind} High winds`;
+        if (day.tempMax > 30) return `${ICONS.hot} Over 30°C heat`;
+        if (day.tempMax < 10) return `${ICONS.cold} Too cold`;
+        if (day.uvIndex > 8) return `${ICONS.uv} High UV levels`;
         
         return null;
     }
@@ -377,14 +398,14 @@ class SkateParkDay {
 
     getWeatherIcon(weatherCode) {
         const icons = {
-            0: '☀️', 1: '🌤️', 2: '⛅', 3: '☁️',
-            45: '🌫️', 48: '🌫️',
-            51: '🌦️', 53: '🌦️', 55: '🌦️',
-            61: '🌧️', 63: '🌧️', 65: '🌧️',
-            71: '🌨️', 73: '🌨️', 75: '🌨️',
-            95: '⛈️', 96: '⛈️', 99: '⛈️'
+            0: ICONS.sun, 1: ICONS.partly, 2: ICONS.partly, 3: ICONS.cloud,
+            45: ICONS.fog, 48: ICONS.fog,
+            51: ICONS.drizzle, 53: ICONS.drizzle, 55: ICONS.drizzle,
+            61: ICONS.rain, 63: ICONS.rain, 65: ICONS.rain,
+            71: ICONS.snow, 73: ICONS.snow, 75: ICONS.snow,
+            95: ICONS.storm, 96: ICONS.storm, 99: ICONS.storm
         };
-        return icons[weatherCode] || '🌤️';
+        return icons[weatherCode] || ICONS.partly;
     }
 
     getScoreClass(score) {
@@ -398,14 +419,15 @@ class SkateParkDay {
         let locationText = '';
         
         if (this.location.city && this.location.region) {
-            locationText = `📍 ${this.location.city}, ${this.location.region}`;
+            locationText = `${this.location.city}, ${this.location.region}`;
         } else if (this.location.city && this.location.country) {
-            locationText = `📍 ${this.location.city}, ${this.location.country}`;
+            locationText = `${this.location.city}, ${this.location.country}`;
         } else {
-            locationText = `📍 ${this.location.lat.toFixed(2)}, ${this.location.lon.toFixed(2)}`;
+            locationText = `${this.location.lat.toFixed(2)}, ${this.location.lon.toFixed(2)}`;
         }
         
         locationElement.textContent = locationText;
+        locationElement.insertAdjacentHTML("afterbegin", ICONS.pin + " ");
         locationElement.classList.remove('hidden');
         
         // Add click handler for location editing
@@ -789,7 +811,7 @@ class SkateParkDay {
         
         const timeBlocksHtml = this.bestTimeBlocks && this.bestTimeBlocks.length > 0 
             ? `<div style="margin-top: 12px;">
-                <div style="font-size: 0.8rem; margin-bottom: 6px; opacity: 0.9;">⏰ Best times:</div>
+                <div style="font-size: 0.8rem; margin-bottom: 6px; opacity: 0.9;">${ICONS.clock} Best times:</div>
                 <div style="display: flex; gap: 6px; justify-content: center; flex-wrap: wrap;">
                     ${this.bestTimeBlocks.map((block, index) => {
                         const scorePercent = block.score;
@@ -797,7 +819,7 @@ class SkateParkDay {
                         <div class="time-block ${index === 0 ? 'best' : ''}" style="padding: 4px 8px; font-size: 0.7rem;">
                             ${block.label}
                             <div class="time-block-score" style="margin-top: 2px;">
-                                <div class="metric-icon" style="font-size: 0.6rem; width: 10px;">🎯</div>
+                                <div class="metric-icon" style="font-size: 0.6rem; width: 10px;">${ICONS.target}</div>
                                 <div class="metric-bar" style="height: 2px;">
                                     <div class="metric-fill score" style="width: ${scorePercent}%"></div>
                                 </div>
@@ -825,7 +847,7 @@ class SkateParkDay {
             
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 8px;">
                 <div class="metric" style="font-size: 0.7rem;">
-                    <div class="metric-icon" style="font-size: 0.8rem; width: 14px;">💨</div>
+                    <div class="metric-icon" style="font-size: 0.8rem; width: 14px;">${ICONS.wind}</div>
                     <div class="metric-bar" style="height: 3px;">
                         <div class="metric-fill wind" style="width: ${windPercent}%"></div>
                     </div>
@@ -833,7 +855,7 @@ class SkateParkDay {
                 </div>
                 
                 <div class="metric" style="font-size: 0.7rem;">
-                    <div class="metric-icon" style="font-size: 0.8rem; width: 14px;">☀️</div>
+                    <div class="metric-icon" style="font-size: 0.8rem; width: 14px;">${ICONS.uv}</div>
                     <div class="metric-bar" style="height: 3px;">
                         <div class="metric-fill uv" style="width: ${uvPercent}%"></div>
                     </div>
@@ -841,7 +863,7 @@ class SkateParkDay {
                 </div>
                 
                 <div class="metric" style="font-size: 0.7rem;">
-                    <div class="metric-icon" style="font-size: 0.8rem; width: 14px;">🌞</div>
+                    <div class="metric-icon" style="font-size: 0.8rem; width: 14px;">${ICONS.sunHours}</div>
                     <div class="metric-bar" style="height: 3px;">
                         <div class="metric-fill sun" style="width: ${sunPercent}%"></div>
                     </div>
@@ -849,7 +871,7 @@ class SkateParkDay {
                 </div>
                 
                 <div class="metric" style="font-size: 0.7rem;">
-                    <div class="metric-icon" style="font-size: 0.8rem; width: 14px;">🎯</div>
+                    <div class="metric-icon" style="font-size: 0.8rem; width: 14px;">${ICONS.target}</div>
                     <div class="metric-bar" style="height: 3px;">
                         <div class="metric-fill score" style="width: ${scorePercent}%"></div>
                     </div>
@@ -857,7 +879,7 @@ class SkateParkDay {
                 </div>
             </div>
             
-            ${day.precipitation > 0 ? `<div style="font-size: 0.7rem; color: var(--muted); margin-bottom: 8px; text-align: center;">💧 ${day.precipitation}mm rain expected${this.getRainTiming(day)}</div>` : ''}
+            ${day.precipitation > 0 ? `<div style="font-size: 0.7rem; color: var(--muted); margin-bottom: 8px; text-align: center;">${ICONS.drop} ${day.precipitation}mm rain expected${this.getRainTiming(day)}</div>` : ''}
             
             ${timeBlocksHtml}
         `;
@@ -930,7 +952,7 @@ class SkateParkDay {
                     
                     <div class="metrics">
                         <div class="metric">
-                            <div class="metric-icon">💨</div>
+                            <div class="metric-icon">${ICONS.wind}</div>
                             <div class="metric-bar">
                                 <div class="metric-fill wind" style="width: ${windPercent}%"></div>
                             </div>
@@ -938,7 +960,7 @@ class SkateParkDay {
                         </div>
                         
                         <div class="metric">
-                            <div class="metric-icon">☀️</div>
+                            <div class="metric-icon">${ICONS.uv}</div>
                             <div class="metric-bar">
                                 <div class="metric-fill uv" style="width: ${uvPercent}%"></div>
                             </div>
@@ -946,7 +968,7 @@ class SkateParkDay {
                         </div>
                         
                         <div class="metric">
-                            <div class="metric-icon">🌞</div>
+                            <div class="metric-icon">${ICONS.sunHours}</div>
                             <div class="metric-bar">
                                 <div class="metric-fill sun" style="width: ${sunPercent}%"></div>
                             </div>
@@ -954,7 +976,7 @@ class SkateParkDay {
                         </div>
                         
                         <div class="metric">
-                            <div class="metric-icon">🎯</div>
+                            <div class="metric-icon">${ICONS.target}</div>
                             <div class="metric-bar">
                                 <div class="metric-fill score" style="width: ${scorePercent}%"></div>
                             </div>
@@ -962,7 +984,7 @@ class SkateParkDay {
                         </div>
                     </div>
                     
-                    ${day.precipitation > 0 ? `<div style="font-size: 0.7rem; color: var(--muted); margin-top: 8px;">💧 ${day.precipitation}mm${this.getRainTiming(day)}</div>` : 
+                    ${day.precipitation > 0 ? `<div style="font-size: 0.7rem; color: var(--muted); margin-top: 8px;">${ICONS.drop} ${day.precipitation}mm${this.getRainTiming(day)}</div>` : 
                       (!isBest && !isSecondBest && this.getMainIssue(day)) ? `<div style="font-size: 0.7rem; color: var(--muted); margin-top: 8px;">${this.getMainIssue(day)}</div>` : ''}
                 </div>
             `;

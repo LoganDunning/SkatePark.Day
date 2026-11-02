@@ -2,21 +2,35 @@
   "id": "/",
   "name": "Best Skate Park Day",
   "short_name": "SkatePark.Day",
-  "description": "Find the best skate park day this week based on weather conditions",
+  "description": "Find the best skate park day this week with a 7-day skateboarding weather forecast.",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
-  "background_color": "#667eea",
-  "theme_color": "#667eea",
+  "background_color": "#0B0B0C",
+  "theme_color": "#0B0B0C",
   "orientation": "portrait",
-  "categories": ["sports", "weather", "lifestyle"],
+  "categories": [
+    "sports",
+    "weather",
+    "lifestyle"
+  ],
   "lang": "en-US",
   "icons": [
     {
       "src": "favicon.svg",
       "sizes": "any",
       "type": "image/svg+xml",
-      "purpose": "any maskable"
+      "purpose": "any"
+    },
+    {
+      "src": "img/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "img/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
     }
   ]
 }
