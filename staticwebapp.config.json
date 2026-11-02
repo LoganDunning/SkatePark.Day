@@ -1,15 +1,33 @@
 {
-	"navigationFallback": {
-		"rewrite": "/index.html",
-		"exclude": [
-			"/css/*",
-			"/dist/*",
-			"/img/*",
-			"/js/*",
-			"/lib/*"
-		]
-	},
+  "navigationFallback": {
+    "rewrite": "/index.html",
+    "exclude": [
+      "/css/*",
+      "/dist/*",
+      "/img/*",
+      "/js/*",
+      "/lib/*"
+    ]
+  },
   "routes": [
+    {
+      "route": "/app.js",
+      "headers": {
+        "cache-control": "public, max-age=31536000, immutable"
+      }
+    },
+    {
+      "route": "/app.css",
+      "headers": {
+        "cache-control": "public, max-age=31536000, immutable"
+      }
+    },
+    {
+      "route": "/img/*",
+      "headers": {
+        "cache-control": "public, max-age=604800"
+      }
+    },
     {
       "route": "/manifest.json",
       "headers": {
@@ -37,7 +55,6 @@
   ],
   "globalHeaders": {
     "cache-control": "no-cache",
-    "clear-site-data": "\"cache\"",
     "x-frame-options": "SAMEORIGIN",
     "x-content-type-options": "nosniff",
     "x-xss-protection": "1; mode=block",

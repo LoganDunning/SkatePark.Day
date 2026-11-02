@@ -44,77 +44,84 @@ class SkateParkDay {
     }
 
     async init() {
-        try {
-            await this.getLocation();
-            await this.getWeatherData();
+        const saved = this.getSavedLocation();
+        this.location = saved || { ...DEFAULT_LOCATION };
+
+        // Paint instantly from cached forecast for this location, if any
+        const cached = this.getCachedForecast(this.location);
+        if (cached) {
+            this.weatherData = cached.data;
+            this.updateLocationDisplay();
             this.calculateBestDay();
             this.renderForecast();
-        } catch (error) {
-            this.showError(error.message);
         }
+
+        try {
+            if (!cached || Date.now() - cached.ts > FORECAST_MAX_AGE) {
+                await this.getWeatherData();
+                this.calculateBestDay();
+                this.renderForecast();
+            }
+        } catch (error) {
+            if (!cached) this.showError(error.message);
+        }
+
+        // User-searched locations win; otherwise refine with geolocation in the background
+        if (!saved || saved.source !== 'manual') this.refineWithGeolocation();
     }
 
-    async getLocation() {
-        return new Promise((resolve, reject) => {
-            // Check for saved location first
-            const savedLocation = this.getSavedLocation();
-            if (savedLocation) {
-                this.location = savedLocation;
-                resolve();
-                return;
-            }
-
-            if (!navigator.geolocation) {
-                this.getLocationFromIP().then(resolve).catch(reject);
-                return;
-            }
-
+    requestGeolocation() {
+        return new Promise((resolve) => {
+            if (!navigator.geolocation) return resolve(null);
             navigator.geolocation.getCurrentPosition(
-                (position) => {
-                    this.location = {
-                        lat: position.coords.latitude,
-                        lon: position.coords.longitude,
-                        source: 'gps'
-                    };
-                    resolve();
-                },
-                (error) => {
-                    this.getLocationFromIP().then(resolve).catch(reject);
-                },
-                { timeout: 10000, enableHighAccuracy: true }
+                (p) => resolve({ lat: p.coords.latitude, lon: p.coords.longitude, source: 'gps' }),
+                () => resolve(null),
+                { enableHighAccuracy: false, timeout: 5000, maximumAge: 30 * 60 * 1000 }
             );
         });
     }
 
-    async getLocationFromIP() {
-        try {
-            const response = await fetch('https://ipapi.co/json/');
-            const data = await response.json();
-            
-            if (data.latitude && data.longitude) {
-                this.location = {
-                    lat: data.latitude,
-                    lon: data.longitude,
-                    city: data.city,
-                    region: data.region,
-                    country: data.country_name,
-                    source: 'ip'
-                };
-                return;
-            }
-        } catch (error) {
-            console.log('Primary IP service failed, trying fallback');
+    async refineWithGeolocation() {
+        const gps = await this.requestGeolocation();
+        if (!gps) return;
+        const current = this.getSavedLocation();
+        if (current && current.source === 'manual') return;
+        if (this.location && distanceKm(this.location, gps) <= 5) {
+            if (this.location.source !== 'gps') return;
+            this.saveLocation(this.location);
+            return;
         }
-        
-        // Fallback to a default location (San Francisco) if IP location fails
-        this.location = {
-            lat: 37.7749,
-            lon: -122.4194,
-            city: 'San Francisco',
-            region: 'CA',
-            country: 'United States',
-            source: 'default'
-        };
+        this.location = gps;
+        this.saveLocation(gps);
+        try {
+            await this.getWeatherData();
+            this.calculateBestDay();
+            this.renderForecast();
+        } catch (error) {
+            console.log('Could not refresh forecast for GPS location');
+        }
+    }
+
+    async getLocation() {
+        const saved = this.getSavedLocation();
+        if (saved) { this.location = saved; return; }
+        const gps = await this.requestGeolocation();
+        this.location = gps || { ...DEFAULT_LOCATION };
+        if (gps) this.saveLocation(gps);
+    }
+
+    getCachedForecast(location) {
+        try {
+            const c = JSON.parse(localStorage.getItem('skatepark-forecast'));
+            if (c && c.data && c.data.daily && distanceKm(c, location) <= 5) return c;
+        } catch (error) {}
+        return null;
+    }
+
+    cacheForecast(location, data) {
+        try {
+            localStorage.setItem('skatepark-forecast', JSON.stringify({ lat: location.lat, lon: location.lon, ts: Date.now(), data }));
+        } catch (error) {}
     }
 
     async getWeatherData() {
@@ -134,6 +141,7 @@ class SkateParkDay {
             }
             
             this.weatherData = await response.json();
+            this.cacheForecast(this.location, this.weatherData);
             console.log('Weather data received:', this.weatherData.daily.time, this.weatherData.daily.precipitation_sum);
             this.updateLocationDisplay();
         } catch (error) {
@@ -1016,6 +1024,16 @@ class SkateParkDay {
             this.showError(error.message);
         }
     }
+}
+
+const DEFAULT_LOCATION = { lat: 43.6532, lon: -79.3832, city: 'Toronto', region: 'ON', country: 'Canada', source: 'default' };
+const FORECAST_MAX_AGE = 30 * 60 * 1000;
+
+function distanceKm(a, b) {
+    const R = 6371, toRad = (d) => d * Math.PI / 180;
+    const dLat = toRad(b.lat - a.lat), dLon = toRad(b.lon - a.lon);
+    const h = Math.sin(dLat / 2) ** 2 + Math.cos(toRad(a.lat)) * Math.cos(toRad(b.lat)) * Math.sin(dLon / 2) ** 2;
+    return 2 * R * Math.asin(Math.sqrt(h));
 }
 
 document.addEventListener('DOMContentLoaded', () => {
