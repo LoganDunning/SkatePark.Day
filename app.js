@@ -702,7 +702,7 @@ class SkateParkDay {
                 </div>
             </div>
             
-            ${day.precipitation > 0 ? `<div style="font-size: 0.7rem; color: rgba(224,230,237,0.7); margin-bottom: 8px; text-align: center;">💧 ${day.precipitation}mm rain expected${this.getRainTiming(day)}</div>` : ''}
+            ${day.precipitation > 0 ? `<div style="font-size: 0.7rem; color: var(--muted); margin-bottom: 8px; text-align: center;">💧 ${day.precipitation}mm rain expected${this.getRainTiming(day)}</div>` : ''}
             
             ${timeBlocksHtml}
         `;
@@ -807,8 +807,8 @@ class SkateParkDay {
                         </div>
                     </div>
                     
-                    ${day.precipitation > 0 ? `<div style="font-size: 0.7rem; color: rgba(255,255,255,0.7); margin-top: 8px;">💧 ${day.precipitation}mm${this.getRainTiming(day)}</div>` : 
-                      (!isBest && !isSecondBest && this.getMainIssue(day)) ? `<div style="font-size: 0.7rem; color: rgba(255,255,255,0.7); margin-top: 8px;">${this.getMainIssue(day)}</div>` : ''}
+                    ${day.precipitation > 0 ? `<div style="font-size: 0.7rem; color: var(--muted); margin-top: 8px;">💧 ${day.precipitation}mm${this.getRainTiming(day)}</div>` : 
+                      (!isBest && !isSecondBest && this.getMainIssue(day)) ? `<div style="font-size: 0.7rem; color: var(--muted); margin-top: 8px;">${this.getMainIssue(day)}</div>` : ''}
                 </div>
             `;
         }).join('');
