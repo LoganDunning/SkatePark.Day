@@ -62,7 +62,7 @@
     <link rel="preconnect" href="https://api.open-meteo.com" crossorigin>
     <link rel="preconnect" href="https://geocoding-api.open-meteo.com" crossorigin>
     <link rel="dns-prefetch" href="https://nominatim.openstreetmap.org">
-    <link rel="stylesheet" href="app.css?v=2026110204">
+    <link rel="stylesheet" href="app.css?v=2026110205">
 </head>
 <body id="top">
     <script>document.documentElement.setAttribute('data-theme','dark');</script>
@@ -91,24 +91,25 @@
     <noscript><style>#splash{display:none}</style></noscript>
     <script>
     (function(){
-        var s=document.getElementById('splash'),KEY='skatepark-splash-seen',seen=false;
-        try{seen=localStorage.getItem(KEY)==='1';localStorage.setItem(KEY,'1');}catch(e){seen=true;}
-        if(seen||!s){if(s)s.remove();window.SkateSplash={finish:function(){},setProgress:function(){}};return;}
+        var s=document.getElementById('splash');
+        if(!s){window.SkateSplash={finish:function(){},setProgress:function(){}};return;}
         var svg=document.getElementById('splash-svg'),bar=document.getElementById('splash-bar'),fill=document.getElementById('splash-fill');
         var reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
-        var MIN=reduce?400:900,CAP=1450,EXIT=reduce?250:450,t0=performance.now(),pct=0,done=false,timer;
+        var SEQ=reduce?600:3100,EXIT=reduce?250:450,t0=performance.now(),pct=0,done=false,timer;
         document.documentElement.classList.add('splash-on');
         s.querySelectorAll('.splash-draw').forEach(function(el){el.style.setProperty('--len',Math.ceil(el.getTotalLength()));});
         function paint(v){pct=Math.min(100,Math.max(pct,v));fill.style.width=pct+'%';bar.setAttribute('aria-valuenow',Math.round(pct));}
         function creep(){if(done)return;paint(pct<70?pct+9+Math.random()*10:pct+(92-pct)*.25);if(pct<92)timer=setTimeout(creep,120+Math.random()*160);}
         function exit(){s.classList.add('is-exiting');document.documentElement.classList.remove('splash-on');setTimeout(function(){s.classList.add('is-done');try{svg.pauseAnimations();}catch(e){}s.remove();},EXIT);}
-        function finish(now){if(done)return;done=true;clearTimeout(timer);paint(100);setTimeout(exit,now?0:Math.max(150,MIN-(performance.now()-t0)));}
+        var exited=false;function leave(){if(exited)return;exited=true;done=true;clearTimeout(timer);paint(100);exit();}
+        function finish(now){if(now===true)return leave();if(done)return;done=true;clearTimeout(timer);paint(100);}
         if(reduce){try{svg.pauseAnimations();}catch(e){}}
         s.classList.add('is-playing');
         timer=setTimeout(creep,300);
-        setTimeout(function(){finish(true);},CAP);
-        s.addEventListener('click',function(){finish(true);});
-        s.addEventListener('keydown',function(e){if(e.key==='Enter'||e.key===' '||e.key==='Escape'){e.preventDefault();finish(true);}});
+        // Play the full sequence (draw-on, wordmark, one full board roll), then exit
+        setTimeout(leave,SEQ);
+        s.addEventListener('click',leave);
+        s.addEventListener('keydown',function(e){if(e.key==='Enter'||e.key===' '||e.key==='Escape'){e.preventDefault();leave();}});
         window.SkateSplash={finish:finish,setProgress:function(v){paint(+v||0);}};
     })();
     </script>
@@ -330,6 +331,6 @@
         document.addEventListener('keydown',function(e){if(e.key==='Escape')setOpen(false);});
     })();
     </script>
-    <script src="app.js?v=2026110204" defer></script>
+    <script src="app.js?v=2026110205" defer></script>
 </body>
 </html>

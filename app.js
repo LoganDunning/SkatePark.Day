@@ -1192,7 +1192,7 @@ class SkateParkDay {
     }
 
     showError(message) {
-        if (window.SkateSplash) window.SkateSplash.finish(true);
+        if (window.SkateSplash) window.SkateSplash.finish();
         document.getElementById('loading').classList.add('hidden');
         document.getElementById('error-message').textContent = message;
         document.getElementById('error').classList.remove('hidden');
