@@ -229,7 +229,14 @@ class SkateParkDay {
     
     calculateBestTimeBlocks() {
         if (!this.bestDay || !this.bestDay.hourlyData) return;
-        this.bestTimeBlocks = this.computeTimeBlocks(this.bestDay)
+        // Never headline a time block that has already passed today
+        if (this.days && this.bestDay === this.days[0] && this.shareBlocksFor(0).length === 0 && this.days.length > 1) {
+            const upcoming = this.days.slice(1);
+            const dry = upcoming.filter(d => d.precipitation <= 1.0);
+            this.bestDay = (dry.length ? dry : upcoming).reduce((b, c) => c.score > b.score ? c : b);
+        }
+        const idx = this.days ? this.days.indexOf(this.bestDay) : -1;
+        this.bestTimeBlocks = (idx >= 0 ? this.shareBlocksFor(idx) : this.computeTimeBlocks(this.bestDay))
             .sort((a, b) => b.score - a.score)
             .slice(0, 3);
     }

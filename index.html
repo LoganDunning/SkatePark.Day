@@ -62,7 +62,7 @@
     <link rel="preconnect" href="https://api.open-meteo.com" crossorigin>
     <link rel="preconnect" href="https://geocoding-api.open-meteo.com" crossorigin>
     <link rel="dns-prefetch" href="https://nominatim.openstreetmap.org">
-    <link rel="stylesheet" href="app.css?v=2026110203">
+    <link rel="stylesheet" href="app.css?v=2026110204">
 </head>
 <body id="top">
     <script>document.documentElement.setAttribute('data-theme','dark');</script>
@@ -96,7 +96,7 @@
         if(seen||!s){if(s)s.remove();window.SkateSplash={finish:function(){},setProgress:function(){}};return;}
         var svg=document.getElementById('splash-svg'),bar=document.getElementById('splash-bar'),fill=document.getElementById('splash-fill');
         var reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
-        var MIN=reduce?400:1100,CAP=2000,EXIT=reduce?250:600,t0=performance.now(),pct=0,done=false,timer;
+        var MIN=reduce?400:900,CAP=1450,EXIT=reduce?250:450,t0=performance.now(),pct=0,done=false,timer;
         document.documentElement.classList.add('splash-on');
         s.querySelectorAll('.splash-draw').forEach(function(el){el.style.setProperty('--len',Math.ceil(el.getTotalLength()));});
         function paint(v){pct=Math.min(100,Math.max(pct,v));fill.style.width=pct+'%';bar.setAttribute('aria-valuenow',Math.round(pct));}
@@ -330,6 +330,6 @@
         document.addEventListener('keydown',function(e){if(e.key==='Escape')setOpen(false);});
     })();
     </script>
-    <script src="app.js?v=2026110203" defer></script>
+    <script src="app.js?v=2026110204" defer></script>
 </body>
 </html>
