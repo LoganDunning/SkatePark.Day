@@ -6,7 +6,8 @@
       "/dist/*",
       "/img/*",
       "/js/*",
-      "/lib/*"
+      "/lib/*",
+      "/data/*"
     ]
   },
   "routes": [
@@ -26,6 +27,12 @@
       "route": "/img/*",
       "headers": {
         "cache-control": "public, max-age=604800"
+      }
+    },
+    {
+      "route": "/data/*",
+      "headers": {
+        "cache-control": "public, max-age=86400, stale-while-revalidate=604800"
       }
     },
     {
