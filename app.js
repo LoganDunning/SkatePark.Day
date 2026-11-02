@@ -16,6 +16,7 @@ const ICONS = {
     pin: '<svg class="icon" viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 21s-6.5-6.1-6.5-11a6.5 6.5 0 0 1 13 0c0 4.9-6.5 11-6.5 11z"/><circle cx="12" cy="10" r="2.3"/></svg>',
     trophy: '<svg class="icon" viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 4h8v5a4 4 0 0 1-8 0V4zM8 6H5a3 3 0 0 0 3 4M16 6h3a3 3 0 0 1-3 4M12 13v4M8.5 20h7M10 17h4v3h-4z"/></svg>',
     hot: '<svg class="icon" viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 14.5V5a2 2 0 1 1 4 0v9.5a4 4 0 1 1-4 0z"/><path d="M12 11v6"/><path d="M18 5h2M18 9h2"/></svg>',
+    share: '<svg class="icon" viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 15V3M8 7l4-4 4 4"/><path d="M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-7"/></svg>',
     cold: '<svg class="icon" viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 14.5V5a2 2 0 1 1 4 0v9.5a4 4 0 1 1-4 0z"/><path d="M12 15v2"/><path d="M18 7h3M19.5 5.5v3"/></svg>',
 };
 
@@ -23,6 +24,9 @@ class SkateParkDay {
     constructor() {
         this.location = null;
         this.weatherData = null;
+        const pageShare = document.getElementById('page-share');
+        if (pageShare) pageShare.onclick = () => this.sharePage();
+        this.setupLocationSearch();
         this.init();
     }
 
@@ -92,6 +96,7 @@ class SkateParkDay {
             return;
         }
         this.location = gps;
+        await this.reverseGeocode(gps);
         this.saveLocation(gps);
         try {
             await this.getWeatherData();
@@ -102,12 +107,24 @@ class SkateParkDay {
         }
     }
 
+    async reverseGeocode(loc) {
+        try {
+            const r = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&zoom=10&addressdetails=1&lat=${loc.lat}&lon=${loc.lon}`);
+            const d = await r.json();
+            if (d && d.address) {
+                loc.city = this.extractCity(d);
+                loc.region = this.extractRegion(d);
+                loc.country = d.address.country || '';
+            }
+        } catch (error) {}
+    }
+
     async getLocation() {
         const saved = this.getSavedLocation();
         if (saved) { this.location = saved; return; }
         const gps = await this.requestGeolocation();
         this.location = gps || { ...DEFAULT_LOCATION };
-        if (gps) this.saveLocation(gps);
+        if (gps) { await this.reverseGeocode(gps); this.saveLocation(gps); }
     }
 
     getCachedForecast(location) {
@@ -212,8 +229,13 @@ class SkateParkDay {
     
     calculateBestTimeBlocks() {
         if (!this.bestDay || !this.bestDay.hourlyData) return;
-        
-        const hourly = this.bestDay.hourlyData;
+        this.bestTimeBlocks = this.computeTimeBlocks(this.bestDay)
+            .sort((a, b) => b.score - a.score)
+            .slice(0, 3);
+    }
+
+    computeTimeBlocks(day) {
+        const hourly = day.hourlyData;
         const timeBlocks = [];
         
         // Create 2-hour blocks from 6am to 8pm
@@ -261,10 +283,7 @@ class SkateParkDay {
             });
         }
         
-        // Sort by score and take top 3
-        this.bestTimeBlocks = timeBlocks
-            .sort((a, b) => b.score - a.score)
-            .slice(0, 3);
+        return timeBlocks;
     }
     
     formatTimeBlock(start, end) {
@@ -435,24 +454,20 @@ class SkateParkDay {
         }
         
         locationElement.textContent = locationText;
-        locationElement.insertAdjacentHTML("afterbegin", ICONS.pin + " ");
-        locationElement.classList.remove('hidden');
-        
-        // Add click handler for location editing
-        locationElement.onclick = () => this.showLocationEdit();
+        const input = document.getElementById('location-search');
+        if (document.activeElement !== input) input.value = locationText;
+        input.dataset.current = locationText;
         
         this.setupLocationSearch();
     }
 
     showLocationEdit() {
-        document.getElementById('location-display').style.display = 'none';
-        document.getElementById('location-edit').style.display = 'block';
         document.getElementById('location-search').focus();
     }
 
     hideLocationEdit() {
-        document.getElementById('location-display').style.display = 'block';
-        document.getElementById('location-edit').style.display = 'none';
+        const input = document.getElementById('location-search');
+        input.blur();
     }
 
     setupLocationSearch() {
@@ -530,8 +545,12 @@ class SkateParkDay {
             }, 250);
         };
 
+        searchInput.onfocus = () => searchInput.select();
         searchInput.onblur = () => {
-            setTimeout(() => { close(); this.hideLocationEdit(); }, 200);
+            setTimeout(() => {
+                close();
+                if (document.activeElement !== searchInput) searchInput.value = searchInput.dataset.current || '';
+            }, 200);
         };
 
         searchInput.onkeydown = (e) => {
@@ -614,7 +633,6 @@ class SkateParkDay {
         };
         this.location = newLocation;
         this.saveLocation(newLocation);
-        document.getElementById('location-search').value = '';
         this.hideLocationEdit();
         this.updateLocationDisplay();
         try {
@@ -953,6 +971,7 @@ class SkateParkDay {
             return `
                 <div class="${cardClass}">
                     ${medalHtml}
+                    <button type="button" class="day-share-btn" data-day="${index}" aria-label="Share ${dayName}">${ICONS.share}</button>
                     <div class="day-name">${dayName}</div>
                     <div class="day-date">${fullDate}</div>
                     <div class="weather-icon">${this.getWeatherIcon(day.weatherCode)}</div>
@@ -997,6 +1016,171 @@ class SkateParkDay {
                 </div>
             `;
         }).join('');
+        grid.querySelectorAll('.day-share-btn').forEach(btn => {
+            btn.onclick = (e) => { e.stopPropagation(); this.openShareDialog(+btn.dataset.day); };
+        });
+    }
+
+    dayLabel(index) {
+        if (index === 0) return 'Today';
+        if (index === 1) return 'Tomorrow';
+        return this.days[index].date.toLocaleDateString('en-US', { weekday: 'long' });
+    }
+
+    locationLabel() {
+        const l = this.location || {};
+        return l.city ? [l.city, l.region].filter(Boolean).join(', ') : `${(+l.lat).toFixed(2)}, ${(+l.lon).toFixed(2)}`;
+    }
+
+    // Time blocks for a day; today's blocks that already ended are excluded.
+    shareBlocksFor(index) {
+        let blocks = this.computeTimeBlocks(this.days[index]);
+        if (index === 0) {
+            const h = new Date().getHours();
+            blocks = blocks.filter(b => b.endHour > h);
+        }
+        return blocks;
+    }
+
+    async findSkateparks(loc) {
+        const key = `${loc.lat.toFixed(3)},${loc.lon.toFixed(3)}`;
+        this.parkCache = this.parkCache || {};
+        if (this.parkCache[key]) return this.parkCache[key];
+        const q = `[out:json][timeout:15];nwr["leisure"="skatepark"](around:15000,${loc.lat},${loc.lon});out center 60;`;
+        const mirrors = ['https://overpass-api.de/api/interpreter', 'https://overpass.kumi.systems/api/interpreter', 'https://maps.mail.ru/osm/tools/overpass/api/interpreter'];
+        for (const url of mirrors) {
+            try {
+                const ctrl = new AbortController();
+                const t = setTimeout(() => ctrl.abort(), 8000);
+                const r = await fetch(url, { method: 'POST', body: 'data=' + encodeURIComponent(q), headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, signal: ctrl.signal });
+                clearTimeout(t);
+                if (!r.ok) continue;
+                const d = await r.json();
+                const seen = new Set();
+                const parks = (d.elements || []).map(e => {
+                    const lat = e.lat ?? (e.center && e.center.lat), lon = e.lon ?? (e.center && e.center.lon);
+                    if (lat == null) return null;
+                    const tg = e.tags || {};
+                    const name = tg.name || (tg['addr:street'] ? `Skatepark on ${tg['addr:street']}` : 'Unnamed skatepark');
+                    return { name, lat, lon, km: distanceKm(loc, { lat, lon }) };
+                }).filter(Boolean).sort((a, b) => a.km - b.km).filter(p => {
+                    const k = p.name + Math.round(p.km * 2);
+                    if (seen.has(k)) return false;
+                    seen.add(k); return true;
+                }).slice(0, 25);
+                this.parkCache[key] = parks;
+                return parks;
+            } catch (error) {}
+        }
+        return null;
+    }
+
+    ensureShareDialog() {
+        let dlg = document.getElementById('share-dialog');
+        if (dlg) return dlg;
+        dlg = document.createElement('dialog');
+        dlg.id = 'share-dialog';
+        dlg.className = 'share-dialog';
+        dlg.setAttribute('aria-labelledby', 'share-title');
+        dlg.innerHTML = `
+            <form method="dialog" class="share-form">
+                <div class="share-head">
+                    <h2 id="share-title" class="share-title">Share</h2>
+                    <button type="submit" value="cancel" class="share-close" aria-label="Close">&times;</button>
+                </div>
+                <p id="share-summary" class="share-summary"></p>
+                <label for="share-time" class="share-label">Time</label>
+                <select id="share-time" class="share-select"></select>
+                <label for="share-park" class="share-label">Skate park <span class="muted-text">(optional)</span></label>
+                <select id="share-park" class="share-select"><option value="">None</option></select>
+                <p id="share-park-status" class="share-status" aria-live="polite"></p>
+                <button type="button" id="share-go" class="btn btn-solid share-go">${ICONS.share} Share</button>
+            </form>`;
+        document.body.appendChild(dlg);
+        dlg.addEventListener('click', (e) => { if (e.target === dlg) dlg.close(); });
+        return dlg;
+    }
+
+    async openShareDialog(index) {
+        const day = this.days[index];
+        const dlg = this.ensureShareDialog();
+        const name = this.dayLabel(index);
+        const date = day.date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+        dlg.querySelector('#share-title').textContent = `Share ${name}`;
+        dlg.querySelector('#share-summary').textContent = `${date} · ${Math.round(day.tempMax)}°C · wind ${Math.round(day.maxHourlyWind)} km/h · score ${Math.round(day.score)}/100`;
+
+        const timeSel = dlg.querySelector('#share-time');
+        const blocks = this.shareBlocksFor(index);
+        timeSel.innerHTML = blocks.length
+            ? blocks.map((b, i) => `<option value="${i}">${b.label} · score ${Math.round(b.score)}</option>`).join('')
+            : '<option value="">Anytime</option>';
+        if (blocks.length) {
+            let best = 0;
+            blocks.forEach((b, i) => { if (b.score > blocks[best].score) best = i; });
+            timeSel.value = String(best);
+        }
+
+        const parkSel = dlg.querySelector('#share-park');
+        const status = dlg.querySelector('#share-park-status');
+        parkSel.innerHTML = '<option value="">None</option>';
+        status.textContent = 'Finding nearby skate parks…';
+        dlg.querySelector('#share-go').onclick = () => {
+            const b = blocks[+timeSel.value];
+            const park = this.sharedParks && this.sharedParks[+parkSel.value - 1];
+            this.shareDay(index, b, parkSel.value ? park : null);
+        };
+        if (!dlg.open) dlg.showModal();
+
+        const loc = this.location;
+        const parks = await this.findSkateparks(loc);
+        if (loc !== this.location) return;
+        this.sharedParks = parks || [];
+        if (parks && parks.length) {
+            parkSel.innerHTML = '<option value="">None</option>' + parks.map((p, i) => `<option value="${i + 1}">${escapeHtml(p.name)} · ${p.km.toFixed(1)} km</option>`).join('');
+            status.textContent = '';
+        } else {
+            status.textContent = parks ? 'No skate parks found within 15 km.' : 'Could not load nearby skate parks.';
+        }
+    }
+
+    async shareDay(index, block, park) {
+        const day = this.days[index];
+        const name = this.dayLabel(index);
+        const date = day.date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+        const lines = [
+            `Skate ${name.toLowerCase() === 'today' || name.toLowerCase() === 'tomorrow' ? name.toLowerCase() : 'on ' + name}, ${date}${block ? ' at ' + block.label : ''}${park ? ' — ' + park.name : ''}`,
+            `${Math.round(day.tempMax)}°C, wind ${Math.round(day.maxHourlyWind)} km/h, ${day.precipitation > 0 ? day.precipitation + 'mm rain' : 'no rain'}, score ${Math.round(day.score)}/100 (${this.locationLabel()})`
+        ];
+        if (park) lines.push(`Map: https://www.google.com/maps/search/?api=1&query=${park.lat},${park.lon}`);
+        await this.shareText({ title: 'best.skatepark.day', text: lines.join('\n'), url: SITE_URL });
+        const dlg = document.getElementById('share-dialog');
+        if (dlg && dlg.open) dlg.close();
+    }
+
+    sharePage() {
+        if (!this.bestDay) return this.shareText({ title: 'best.skatepark.day', text: 'Find the best day to skate this week', url: SITE_URL });
+        const i = this.days.indexOf(this.bestDay);
+        const date = this.bestDay.date.toLocaleDateString('en-US', { month: 'long', day: 'numeric' });
+        const time = this.bestTimeBlocks && this.bestTimeBlocks[0] ? ' at ' + this.bestTimeBlocks[0].label : '';
+        this.shareText({ title: 'best.skatepark.day', text: `Best day to skate this week near ${this.locationLabel()}: ${this.dayLabel(i)}, ${date}${time} (${Math.round(this.bestDay.tempMax)}°C, score ${Math.round(this.bestDay.score)}/100)`, url: SITE_URL });
+    }
+
+    async shareText(data) {
+        if (navigator.share) {
+            try { await navigator.share(data); return; } catch (error) { if (error && error.name === 'AbortError') return; }
+        }
+        const full = `${data.text}\n${data.url}`;
+        try {
+            await navigator.clipboard.writeText(full);
+            showToast('Copied to clipboard');
+        } catch (error) {
+            const ta = document.createElement('textarea');
+            ta.value = full; document.body.appendChild(ta); ta.select();
+            let ok = false;
+            try { ok = document.execCommand('copy'); } catch (e) {}
+            ta.remove();
+            showToast(ok ? 'Copied to clipboard' : 'Could not copy');
+        }
     }
 
     showError(message) {
@@ -1024,6 +1208,25 @@ class SkateParkDay {
             this.showError(error.message);
         }
     }
+}
+
+const SITE_URL = 'https://best.skatepark.day/';
+
+function escapeHtml(str) {
+    return String(str).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+}
+
+function showToast(msg) {
+    let t = document.getElementById('toast');
+    if (!t) {
+        t = document.createElement('div');
+        t.id = 'toast'; t.className = 'toast'; t.setAttribute('role', 'status'); t.setAttribute('aria-live', 'polite');
+        document.body.appendChild(t);
+    }
+    t.textContent = msg;
+    t.classList.add('show');
+    clearTimeout(showToast.timer);
+    showToast.timer = setTimeout(() => t.classList.remove('show'), 2200);
 }
 
 const DEFAULT_LOCATION = { lat: 43.6532, lon: -79.3832, city: 'Toronto', region: 'ON', country: 'Canada', source: 'default' };
