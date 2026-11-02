@@ -1050,37 +1050,89 @@ class SkateParkDay {
         return blocks;
     }
 
+    // Nearby skate parks: bundled Ontario data first, live OpenStreetMap lookups as fallback.
     async findSkateparks(loc) {
         const key = `${loc.lat.toFixed(3)},${loc.lon.toFixed(3)}`;
         this.parkCache = this.parkCache || {};
         if (this.parkCache[key]) return this.parkCache[key];
-        const q = `[out:json][timeout:15];nwr["leisure"="skatepark"](around:15000,${loc.lat},${loc.lon});out center 60;`;
-        const mirrors = ['https://overpass-api.de/api/interpreter', 'https://overpass.kumi.systems/api/interpreter', 'https://maps.mail.ru/osm/tools/overpass/api/interpreter'];
-        for (const url of mirrors) {
+        const store = 'skateparks:' + key;
+        try {
+            const c = JSON.parse(localStorage.getItem(store) || 'null');
+            if (c && Date.now() - c.t < 7 * 864e5 && c.parks.length) return (this.parkCache[key] = c.parks);
+        } catch (e) {}
+        const finish = (list, radius) => {
+            const seen = new Set();
+            const parks = list.map(p => ({ name: p.name, lat: p.lat, lon: p.lon, km: distanceKm(loc, p) }))
+                .filter(p => p.km <= radius).sort((a, b) => a.km - b.km)
+                .filter(p => { const k = p.name + Math.round(p.km * 2); if (seen.has(k)) return false; seen.add(k); return true; })
+                .slice(0, 30);
+            return parks;
+        };
+        let parks = null;
+        const inOntario = loc.lat > 41.6 && loc.lat < 57 && loc.lon > -95.2 && loc.lon < -74.3;
+        if (inOntario) {
+            const all = await this.loadOntarioParks();
+            if (all) {
+                parks = finish(all, 25);
+                if (!parks.length) parks = null;
+            }
+        }
+        if (!parks) parks = await this.liveSkateparks(loc, finish);
+        if (parks) {
+            this.parkCache[key] = parks;
+            if (parks.length) try { localStorage.setItem(store, JSON.stringify({ t: Date.now(), parks })); } catch (e) {}
+        }
+        return parks;
+    }
+
+    loadOntarioParks() {
+        if (!this.ontarioParks) {
+            this.ontarioParks = fetch('data/skateparks-on.json?v=' + PARK_DATA_VERSION)
+                .then(r => r.ok ? r.json() : null)
+                .then(d => Array.isArray(d) ? d.map(p => ({ name: p.n, lat: p.lat, lon: p.lon })) : null)
+                .catch(() => null);
+        }
+        return this.ontarioParks;
+    }
+
+    async liveSkateparks(loc, finish) {
+        // Simple GET requests (no custom headers) avoid CORS preflights; send the origin as referrer for OSM usage policy.
+        const get = async (url) => {
+            const ctrl = new AbortController();
+            const t = setTimeout(() => ctrl.abort(), 12000);
             try {
-                const ctrl = new AbortController();
-                const t = setTimeout(() => ctrl.abort(), 8000);
-                const r = await fetch(url, { method: 'POST', body: 'data=' + encodeURIComponent(q), headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, signal: ctrl.signal });
-                clearTimeout(t);
-                if (!r.ok) continue;
-                const d = await r.json();
-                const seen = new Set();
-                const parks = (d.elements || []).map(e => {
+                const r = await fetch(url, { signal: ctrl.signal, referrerPolicy: 'strict-origin-when-cross-origin' });
+                return r.ok ? await r.json() : null;
+            } catch (e) { return null; } finally { clearTimeout(t); }
+        };
+        const q = encodeURIComponent(`[out:json][timeout:20];nwr["leisure"="skatepark"](around:25000,${loc.lat},${loc.lon});out center 80;`);
+        for (const base of ['https://overpass-api.de/api/interpreter', 'https://overpass.private.coffee/api/interpreter', 'https://maps.mail.ru/osm/tools/overpass/api/interpreter']) {
+            const d = await get(`${base}?data=${q}`);
+            if (d && Array.isArray(d.elements)) {
+                return finish(d.elements.map(e => {
                     const lat = e.lat ?? (e.center && e.center.lat), lon = e.lon ?? (e.center && e.center.lon);
                     if (lat == null) return null;
                     const tg = e.tags || {};
-                    const name = tg.name || (tg['addr:street'] ? `Skatepark on ${tg['addr:street']}` : 'Unnamed skatepark');
-                    return { name, lat, lon, km: distanceKm(loc, { lat, lon }) };
-                }).filter(Boolean).sort((a, b) => a.km - b.km).filter(p => {
-                    const k = p.name + Math.round(p.km * 2);
-                    if (seen.has(k)) return false;
-                    seen.add(k); return true;
-                }).slice(0, 25);
-                this.parkCache[key] = parks;
-                return parks;
-            } catch (error) {}
+                    return { name: tg.name || (tg['addr:street'] ? `Skatepark on ${tg['addr:street']}` : 'Skatepark'), lat, lon };
+                }).filter(Boolean), 25);
+            }
+        }
+        const dLat = 0.23, dLon = 0.23 / Math.max(0.2, Math.cos(loc.lat * Math.PI / 180));
+        const vb = [loc.lon - dLon, loc.lat + dLat, loc.lon + dLon, loc.lat - dLat].map(v => v.toFixed(4)).join(',');
+        const n = await get(`https://nominatim.openstreetmap.org/search?q=skatepark&format=jsonv2&viewbox=${vb}&bounded=1&limit=30`);
+        if (Array.isArray(n)) {
+            return finish(n.map(p => ({ name: p.name || (p.display_name || 'Skatepark').split(',')[0], lat: +p.lat, lon: +p.lon })), 25);
         }
         return null;
+    }
+
+    // Custom parks the user typed in, saved with the place they were added.
+    savedParks() {
+        try { return JSON.parse(localStorage.getItem('customParks') || '[]'); } catch (e) { return []; }
+    }
+
+    setSavedParks(list) {
+        try { localStorage.setItem('customParks', JSON.stringify(list)); } catch (e) {}
     }
 
     ensureShareDialog() {
@@ -1100,14 +1152,111 @@ class SkateParkDay {
                 <label for="share-time" class="share-label">Time</label>
                 <select id="share-time" class="share-select"></select>
                 <label for="share-park" class="share-label">Skate park <span class="muted-text">(optional)</span></label>
-                <select id="share-park" class="share-select"><option value="">None</option></select>
+                <div class="park-combo">
+                    <input id="share-park" class="share-select park-input" type="text" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="share-park-list" autocomplete="off" autocapitalize="words" enterkeyhint="done" placeholder="None · type to search or add">
+                    <button type="button" id="share-park-clear" class="park-clear" aria-label="Clear skate park" hidden>&times;</button>
+                    <ul id="share-park-list" class="park-list" role="listbox" aria-label="Skate parks" hidden></ul>
+                </div>
                 <p id="share-park-status" class="share-status" aria-live="polite"></p>
                 <button type="button" id="share-go" class="btn btn-solid share-go">${ICONS.share} Share</button>
             </form>`;
         document.body.appendChild(dlg);
         dlg.addEventListener('click', (e) => { if (e.target === dlg) dlg.close(); });
+        this.setupParkCombo(dlg);
         return dlg;
     }
+
+    // Accessible combo box for the optional skate park field.
+    setupParkCombo(dlg) {
+        const input = dlg.querySelector('#share-park');
+        const list = dlg.querySelector('#share-park-list');
+        const clear = dlg.querySelector('#share-park-clear');
+        let items = [], active = -1;
+        const combo = this.parkCombo = { selected: null, nearby: [] };
+
+        const savedNear = () => {
+            const loc = this.location;
+            return this.savedParks().map((p, i) => ({ ...p, idx: i, saved: true, km: p.lat != null ? distanceKm(loc, p) : null }))
+                .filter(p => p.km != null && p.km <= 25);
+        };
+        const setActive = (i) => {
+            active = i;
+            [...list.children].forEach((li, j) => li.setAttribute('aria-selected', j === i ? 'true' : 'false'));
+            if (i >= 0 && list.children[i]) {
+                input.setAttribute('aria-activedescendant', list.children[i].id);
+                list.children[i].scrollIntoView({ block: 'nearest' });
+            } else input.removeAttribute('aria-activedescendant');
+        };
+        const close = () => { list.hidden = true; input.setAttribute('aria-expanded', 'false'); setActive(-1); };
+        const render = () => {
+            const text = input.value.trim();
+            const t = text.toLowerCase();
+            const saved = savedNear();
+            const pool = [...saved, ...combo.nearby.filter(p => !saved.some(s => s.name.toLowerCase() === p.name.toLowerCase()))];
+            items = pool.filter(p => !t || p.name.toLowerCase().includes(t));
+            if (text && !pool.some(p => p.name.toLowerCase() === t)) items.push({ add: true, name: text });
+            list.innerHTML = items.map((p, i) => `<li role="option" id="park-opt-${i}" class="park-opt${p.add ? ' park-add' : ''}" aria-selected="false" data-i="${i}">` +
+                (p.add ? `Add “${escapeHtml(p.name)}”` : `<span class="park-name">${escapeHtml(p.name)}</span><span class="park-meta">${p.saved ? '<span class="park-saved">saved</span>' : ''}${p.km != null ? p.km.toFixed(1) + ' km' : ''}</span>` +
+                (p.saved ? `<button type="button" class="park-remove" data-remove="${p.idx}" aria-label="Remove saved park ${escapeHtml(p.name)}" tabindex="-1">&times;</button>` : '')) + '</li>').join('');
+            const open = items.length > 0 && document.activeElement === input;
+            list.hidden = !open;
+            input.setAttribute('aria-expanded', open ? 'true' : 'false');
+            setActive(-1);
+        };
+        const choose = (i) => {
+            const p = items[i];
+            if (!p) return;
+            if (p.add) {
+                const loc = this.location;
+                const all = this.savedParks();
+                all.push({ name: p.name, lat: +(+loc.lat).toFixed(5), lon: +(+loc.lon).toFixed(5), city: loc.city || '' });
+                this.setSavedParks(all);
+                combo.selected = { name: p.name, custom: true, city: loc.city || '' };
+                showToast(`Saved “${p.name}”`);
+            } else combo.selected = p.saved ? { name: p.name, custom: true, city: p.city || '' } : p;
+            input.value = p.name;
+            clear.hidden = false;
+            close();
+        };
+        const remove = (idx) => {
+            const all = this.savedParks();
+            const [gone] = all.splice(idx, 1);
+            this.setSavedParks(all);
+            if (gone && combo.selected && combo.selected.name === gone.name) { combo.selected = null; input.value = ''; clear.hidden = true; }
+            showToast(`Removed “${gone ? gone.name : ''}”`);
+            render();
+            input.focus();
+        };
+        combo.render = render;
+        combo.reset = () => { combo.selected = null; input.value = ''; clear.hidden = true; close(); };
+
+        input.addEventListener('input', () => { combo.selected = null; clear.hidden = !input.value; render(); });
+        input.addEventListener('focus', render);
+        input.addEventListener('click', render);
+        input.addEventListener('blur', () => setTimeout(() => { if (document.activeElement !== input) close(); }, 150));
+        input.addEventListener('keydown', (e) => {
+            const open = !list.hidden;
+            if (e.key === 'ArrowDown') { e.preventDefault(); if (!open) render(); setActive(Math.min(items.length - 1, active + 1)); }
+            else if (e.key === 'ArrowUp') { e.preventDefault(); setActive(Math.max(0, active - 1)); }
+            else if (e.key === 'Enter') {
+                if (open && active >= 0) { e.preventDefault(); choose(active); }
+                else if (open && items.length === 1 && input.value.trim()) { e.preventDefault(); choose(0); }
+                else if (open) { e.preventDefault(); close(); }
+            } else if (e.key === 'Escape' && open) { e.preventDefault(); e.stopPropagation(); close(); }
+            else if (e.key === 'Delete' && open && active >= 0 && items[active].saved) { e.preventDefault(); remove(items[active].idx); }
+        });
+        list.addEventListener('pointerdown', (e) => e.preventDefault());
+        list.addEventListener('click', (e) => {
+            const rm = e.target.closest('[data-remove]');
+            if (rm) { remove(+rm.dataset.remove); return; }
+            const li = e.target.closest('[data-i]');
+            if (li) choose(+li.dataset.i);
+        });
+        clear.addEventListener('click', () => { combo.reset(); input.focus(); });
+        // Escape closes the list first, not the whole dialog.
+        dlg.addEventListener('cancel', (e) => { if (!list.hidden) { e.preventDefault(); close(); } });
+    }
+
 
     async openShareDialog(index) {
         const day = this.days[index];
@@ -1128,27 +1277,21 @@ class SkateParkDay {
             timeSel.value = String(best);
         }
 
-        const parkSel = dlg.querySelector('#share-park');
         const status = dlg.querySelector('#share-park-status');
-        parkSel.innerHTML = '<option value="">None</option>';
+        const combo = this.parkCombo;
+        combo.reset();
+        combo.nearby = [];
         status.textContent = 'Finding nearby skate parks…';
-        dlg.querySelector('#share-go').onclick = () => {
-            const b = blocks[+timeSel.value];
-            const park = this.sharedParks && this.sharedParks[+parkSel.value - 1];
-            this.shareDay(index, b, parkSel.value ? park : null);
-        };
+        dlg.querySelector('#share-go').onclick = () => this.shareDay(index, blocks[+timeSel.value], combo.selected);
         if (!dlg.open) dlg.showModal();
 
         const loc = this.location;
         const parks = await this.findSkateparks(loc);
         if (loc !== this.location) return;
-        this.sharedParks = parks || [];
-        if (parks && parks.length) {
-            parkSel.innerHTML = '<option value="">None</option>' + parks.map((p, i) => `<option value="${i + 1}">${escapeHtml(p.name)} · ${p.km.toFixed(1)} km</option>`).join('');
-            status.textContent = '';
-        } else {
-            status.textContent = parks ? 'No skate parks found within 15 km.' : 'Could not load nearby skate parks.';
-        }
+        combo.nearby = parks || [];
+        status.textContent = parks && parks.length ? `${parks.length} nearby · type to filter or add your own`
+            : parks ? 'No skate parks found nearby · type to add your own.' : 'Could not load nearby skate parks · type to add your own.';
+        if (document.activeElement === dlg.querySelector('#share-park')) combo.render();
     }
 
     async shareDay(index, block, park) {
@@ -1159,7 +1302,8 @@ class SkateParkDay {
             `Skate ${name.toLowerCase() === 'today' || name.toLowerCase() === 'tomorrow' ? name.toLowerCase() : 'on ' + name}, ${date}${block ? ' at ' + block.label : ''}${park ? ' — ' + park.name : ''}`,
             `${Math.round(day.tempMax)}°C, wind ${Math.round(day.maxHourlyWind)} km/h, ${day.precipitation > 0 ? day.precipitation + 'mm rain' : 'no rain'}, score ${Math.round(day.score)}/100 (${this.locationLabel()})`
         ];
-        if (park) lines.push(`Map: https://www.google.com/maps/search/?api=1&query=${park.lat},${park.lon}`);
+        if (park && park.lat != null && !park.custom) lines.push(`Map: https://www.google.com/maps/search/?api=1&query=${park.lat},${park.lon}`);
+        else if (park) lines.push(`Map: https://www.google.com/maps/search/?api=1&query=${encodeURIComponent([park.name, park.city || this.location.city].filter(Boolean).join(' '))}`);
         await this.shareText({ title: 'best.skatepark.day', text: lines.join('\n'), url: SITE_URL });
         const dlg = document.getElementById('share-dialog');
         if (dlg && dlg.open) dlg.close();
@@ -1220,6 +1364,7 @@ class SkateParkDay {
 }
 
 const SITE_URL = 'https://best.skatepark.day/';
+const PARK_DATA_VERSION = '2026110206';
 
 function escapeHtml(str) {
     return String(str).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
