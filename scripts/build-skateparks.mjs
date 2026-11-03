@@ -31,7 +31,7 @@ const left = () => BUDGET_MS - (Date.now() - started);
 async function tile([s, w, n, e], k) {
   // Most Ontario parks are mapped as leisure=pitch + sport=skateboard, so include both forms.
   const bb = `(${r5(s)},${r5(w)},${r5(n)},${r5(e)})`;
-  const q = `[out:json][timeout:60];(nwr["leisure"="skatepark"]${bb};nwr["sport"~"(^|;)skateboard(;|$)"]${bb};);out center tags qt;`;
+  const q = `[out:json][timeout:60];(nwr["leisure"="skatepark"]${bb};nwr["sport"~"(^|;)skateboard(;|$)"]${bb};node["place"~"^(city|town|village)$"]${bb};);out center tags qt;`;
   for (let i = 0; i < ATTEMPTS; i++) {
     if (left() < 5000) throw new Error('Time budget exhausted');
     const url = MIRRORS[(k + i) % MIRRORS.length];
@@ -75,14 +75,35 @@ else for (let k = 0; k < TILES.length; k++) {
   await sleep(1000);
 }
 
+// Place nodes (city/town/village) give each park a city when it has no addr:city tag.
+const isPlace = (e) => /^(city|town|village)$/.test(e.tags?.place || '') && !e.tags?.leisure && !e.tags?.sport;
+const places = elements.filter(isPlace).map((e) => ({ name: e.tags.name, lat: e.lat ?? e.center?.lat, lon: e.lon ?? e.center?.lon, rank: { city: 0, town: 1, village: 2 }[e.tags.place] }))
+  .filter((p) => p.name && p.lat != null);
+const km = (a, b) => {
+  const R = 6371, rad = Math.PI / 180, dLat = (b.lat - a.lat) * rad, dLon = (b.lon - a.lon) * rad;
+  const h = Math.sin(dLat / 2) ** 2 + Math.cos(a.lat * rad) * Math.cos(b.lat * rad) * Math.sin(dLon / 2) ** 2;
+  return 2 * R * Math.asin(Math.sqrt(h));
+};
+// Nearest place, with towns/cities counted as a little closer than villages; nothing beyond 20 km.
+function nearestCity(pt) {
+  let best = null, bestD = Infinity;
+  for (const p of places) {
+    const d = km(pt, p) - (p.rank === 0 ? 3 : p.rank === 1 ? 1 : 0);
+    if (d < bestD && km(pt, p) <= 20) { best = p; bestD = d; }
+  }
+  return best ? best.name : '';
+}
+const isInCity = (v) => (v || '').split(/[;,]/)[0].trim();
+
 const seen = new Set();
-const parks = elements.map((e) => {
+const parks = elements.filter((e) => !isPlace(e)).map((e) => {
   const lat = e.lat ?? e.center?.lat, lon = e.lon ?? e.center?.lon;
   if (lat == null || lon == null) return null;
   const t = e.tags || {};
   let n = t.name || t['name:en'] || t.official_name;
   if (!n) n = t['addr:street'] ? `Skatepark on ${t['addr:street']}` : (t['addr:city'] ? `${t['addr:city']} skatepark` : 'Skatepark');
-  return { n: n.trim(), lat: r5(lat), lon: r5(lon) };
+  const c = t['addr:city'] || isInCity(t['is_in:city'] || t.is_in) || nearestCity({ lat, lon });
+  return { n: n.trim(), lat: r5(lat), lon: r5(lon), ...(c ? { c } : {}) };
 }).filter(Boolean).filter((p) => {
   const k = `${p.n}|${p.lat.toFixed(3)}|${p.lon.toFixed(3)}`;
   if (seen.has(k)) return false;

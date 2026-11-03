@@ -1062,7 +1062,7 @@ class SkateParkDay {
         } catch (e) {}
         const finish = (list, radius) => {
             const seen = new Set();
-            const parks = list.map(p => ({ name: p.name, lat: p.lat, lon: p.lon, km: distanceKm(loc, p) }))
+            const parks = list.map(p => ({ name: p.name, lat: p.lat, lon: p.lon, city: p.city || '', prov: p.prov || '', km: distanceKm(loc, p) }))
                 .filter(p => p.km <= radius).sort((a, b) => a.km - b.km)
                 .filter(p => { const k = p.name + Math.round(p.km * 2); if (seen.has(k)) return false; seen.add(k); return true; })
                 .slice(0, 30);
@@ -1084,7 +1084,11 @@ class SkateParkDay {
             const nearOntario = loc.lat > 41.1 && loc.lat < 57.5 && loc.lon > -95.9 && loc.lon < -73.6;
             const bundled = nearOntario ? await this.loadOntarioParks() : null;
             const live = await this.liveSkateparks(loc);
-            if (live) parks = finish(dedupeParks([...live, ...(bundled || [])]), 25);
+            if (live) {
+                const place = await this.placeFor(loc);
+                live.forEach(p => { if (!p.city) { p.city = place.city; p.prov = place.prov; } });
+                parks = finish(dedupeParks([...live, ...(bundled || [])]), 25);
+            }
         }
         if (parks) {
             this.parkCache[key] = parks;
@@ -1097,10 +1101,24 @@ class SkateParkDay {
         if (!this.ontarioParks) {
             this.ontarioParks = fetch('data/skateparks-on.json?v=' + PARK_DATA_VERSION)
                 .then(r => r.ok ? r.json() : null)
-                .then(d => Array.isArray(d) ? d.map(p => ({ name: p.n, lat: p.lat, lon: p.lon })) : null)
+                .then(d => Array.isArray(d) ? d.map(p => ({ name: p.n, lat: p.lat, lon: p.lon, city: p.c || '', prov: 'ON' })) : null)
                 .catch(() => null);
         }
         return this.ontarioParks;
+    }
+
+    // City and 2-letter province/state for a location, reverse geocoded at most once per spot and cached.
+    async placeFor(loc) {
+        if (loc.city && regionCode(loc.region)) return { city: loc.city, prov: regionCode(loc.region) };
+        const key = 'place:' + (+loc.lat).toFixed(2) + ',' + (+loc.lon).toFixed(2);
+        try { const c = JSON.parse(localStorage.getItem(key) || 'null'); if (c) return c; } catch (e) {}
+        try {
+            const r = await fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&zoom=10&addressdetails=1&lat=${loc.lat}&lon=${loc.lon}`);
+            const a = (await r.json()).address || {};
+            const place = { city: a.city || a.town || a.village || a.municipality || a.county || loc.city || '', prov: regionCode(a['ISO3166-2-lvl4'] || a.state) };
+            try { localStorage.setItem(key, JSON.stringify(place)); } catch (e) {}
+            return place;
+        } catch (e) { return { city: loc.city || '', prov: regionCode(loc.region) }; }
     }
 
     // Returns raw { name, lat, lon } parks from OSM, or null when every source failed.
@@ -1169,7 +1187,7 @@ class SkateParkDay {
                 <div class="park-combo">
                     <input id="share-park" class="share-select park-input" type="text" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="share-park-list" autocomplete="off" autocapitalize="words" enterkeyhint="done" placeholder="None · type to search or add">
                     <button type="button" id="share-park-clear" class="park-clear" aria-label="Clear skate park" hidden>&times;</button>
-                    <ul id="share-park-list" class="park-list" role="listbox" aria-label="Skate parks" hidden></ul>
+                    <div id="share-park-list" class="park-list" role="listbox" aria-label="Skate parks" hidden></div>
                 </div>
                 <p id="share-park-status" class="share-status" aria-live="polite"></p>
                 <button type="button" id="share-go" class="btn btn-solid share-go">${ICONS.share} Share</button>
@@ -1180,41 +1198,58 @@ class SkateParkDay {
         return dlg;
     }
 
-    // Accessible combo box for the optional skate park field.
+    // Grouped, accessible combo box for the optional skate park field: Recent picks, then all parks A–Z.
     setupParkCombo(dlg) {
         const input = dlg.querySelector('#share-park');
         const list = dlg.querySelector('#share-park-list');
         const clear = dlg.querySelector('#share-park-clear');
         let items = [], active = -1;
         const combo = this.parkCombo = { selected: null, nearby: [] };
+        const opts = () => [...list.querySelectorAll('[role=option]')];
 
         const savedNear = () => {
             const loc = this.location;
-            return this.savedParks().map((p, i) => ({ ...p, idx: i, saved: true, km: p.lat != null ? distanceKm(loc, p) : null }))
+            return this.savedParks().map((p, i) => ({ ...p, prov: p.prov || regionCode(loc.region), idx: i, saved: true, km: p.lat != null ? distanceKm(loc, p) : null }))
                 .filter(p => p.km != null && p.km <= 25);
         };
         const setActive = (i) => {
             active = i;
-            [...list.children].forEach((li, j) => li.setAttribute('aria-selected', j === i ? 'true' : 'false'));
-            if (i >= 0 && list.children[i]) {
-                input.setAttribute('aria-activedescendant', list.children[i].id);
-                list.children[i].scrollIntoView({ block: 'nearest' });
-            } else input.removeAttribute('aria-activedescendant');
+            opts().forEach((li, j) => li.setAttribute('aria-selected', j === i ? 'true' : 'false'));
+            const el = opts()[i];
+            if (el) { input.setAttribute('aria-activedescendant', el.id); el.scrollIntoView({ block: 'nearest' }); }
+            else input.removeAttribute('aria-activedescendant');
         };
         const close = () => { list.hidden = true; input.setAttribute('aria-expanded', 'false'); setActive(-1); };
+        const row = (p, i) => {
+            if (p.add) return `<div role="option" id="park-opt-${i}" class="park-opt park-add" aria-selected="false" data-i="${i}"><span class="park-icon" aria-hidden="true">+</span><span class="park-text"><span class="park-name">Add “${escapeHtml(p.name)}”</span><span class="park-city">Save as a custom park</span></span></div>`;
+            const where = [p.city, p.prov].filter(Boolean).join(', ');
+            const meta = [where, p.km != null ? p.km.toFixed(1) + ' km' : ''].filter(Boolean).join(' · ');
+            return `<div role="option" id="park-opt-${i}" class="park-opt" aria-selected="false" data-i="${i}">` +
+                `<span class="park-icon" aria-hidden="true">${PARK_ICON}</span>` +
+                `<span class="park-text"><span class="park-name">${escapeHtml(p.name)}${p.saved ? ' <span class="park-saved">saved</span>' : ''}</span><span class="park-city">${escapeHtml(meta)}</span></span>` +
+                (p.saved ? `<button type="button" class="park-remove" data-remove="${p.idx}" aria-label="Remove saved park ${escapeHtml(p.name)}" tabindex="-1">&times;</button>` : '') + '</div>';
+        };
         const render = () => {
             const text = input.value.trim();
-            const t = text.toLowerCase();
+            const t = foldText(text);
             const saved = savedNear();
             const pool = [...saved, ...combo.nearby.filter(p => !saved.some(s => s.name.toLowerCase() === p.name.toLowerCase()))];
-            items = pool.filter(p => !t || p.name.toLowerCase().includes(t));
-            if (text && !pool.some(p => p.name.toLowerCase() === t)) items.push({ add: true, name: text });
-            list.innerHTML = items.map((p, i) => `<li role="option" id="park-opt-${i}" class="park-opt${p.add ? ' park-add' : ''}" aria-selected="false" data-i="${i}">` +
-                (p.add ? `Add “${escapeHtml(p.name)}”` : `<span class="park-name">${escapeHtml(p.name)}</span><span class="park-meta">${p.saved ? '<span class="park-saved">saved</span>' : ''}${p.km != null ? p.km.toFixed(1) + ' km' : ''}</span>` +
-                (p.saved ? `<button type="button" class="park-remove" data-remove="${p.idx}" aria-label="Remove saved park ${escapeHtml(p.name)}" tabindex="-1">&times;</button>` : '')) + '</li>').join('');
+            const matches = pool.filter(p => !t || foldText(p.name + ' ' + (p.city || '')).includes(t));
+            const picks = parkPicks();
+            const recent = matches.map(p => ({ p, at: (picks.find(h => samePark(h, p)) || {}).lastPickedAt || 0 }))
+                .filter(x => x.at).sort((a, b) => b.at - a.at).slice(0, 3).map(x => x.p);
+            const rest = sortParksAZ(matches.filter(p => !recent.includes(p)));
+            const groups = [['Recent', recent], ['All parks', rest]].filter(g => g[1].length);
+            items = groups.flatMap(g => g[1]);
+            if (text && !pool.some(p => p.name.toLowerCase() === text.toLowerCase())) items.push({ add: true, name: text });
+            let n = 0;
+            list.innerHTML = groups.map(([label, ps], gi) => `<div role="group" class="park-group" aria-labelledby="park-grp-${gi}"><div role="presentation" id="park-grp-${gi}" class="park-group-label">${label}</div>${ps.map(p => row(p, n++)).join('')}</div>`).join('') +
+                (items[n] ? row(items[n], n) : '');
             const open = items.length > 0 && document.activeElement === input;
             list.hidden = !open;
             input.setAttribute('aria-expanded', open ? 'true' : 'false');
+            // Let the list use the space below the field without scrolling the page; the list scrolls instead.
+            if (open) list.style.maxHeight = Math.max(160, Math.min(360, window.innerHeight - list.getBoundingClientRect().top - 12)) + 'px';
             setActive(-1);
         };
         const choose = (i) => {
@@ -1223,11 +1258,17 @@ class SkateParkDay {
             if (p.add) {
                 const loc = this.location;
                 const all = this.savedParks();
-                all.push({ name: p.name, lat: +(+loc.lat).toFixed(5), lon: +(+loc.lon).toFixed(5), city: loc.city || '' });
+                const saved = { name: p.name, lat: +(+loc.lat).toFixed(5), lon: +(+loc.lon).toFixed(5), city: loc.city || '', prov: regionCode(loc.region) };
+                all.push(saved);
                 this.setSavedParks(all);
-                combo.selected = { name: p.name, custom: true, city: loc.city || '' };
+                combo.selected = { name: p.name, custom: true, city: saved.city };
+                recordParkPick(saved);
                 showToast(`Saved “${p.name}”`);
-            } else combo.selected = p.saved ? { name: p.name, custom: true, city: p.city || '' } : p;
+                this.placeFor(loc).then(pl => { const cur = this.savedParks(); const s = cur.find(x => samePark(x, saved)); if (s && pl.prov) { s.city = s.city || pl.city; s.prov = pl.prov; this.setSavedParks(cur); } });
+            } else {
+                combo.selected = p.saved ? { name: p.name, custom: true, city: p.city || '' } : p;
+                recordParkPick(p);
+            }
             input.value = p.name;
             clear.hidden = false;
             close();
@@ -1252,6 +1293,8 @@ class SkateParkDay {
             const open = !list.hidden;
             if (e.key === 'ArrowDown') { e.preventDefault(); if (!open) render(); setActive(Math.min(items.length - 1, active + 1)); }
             else if (e.key === 'ArrowUp') { e.preventDefault(); setActive(Math.max(0, active - 1)); }
+            else if (e.key === 'Home' && open && active >= 0) { e.preventDefault(); setActive(0); }
+            else if (e.key === 'End' && open && active >= 0) { e.preventDefault(); setActive(items.length - 1); }
             else if (e.key === 'Enter') {
                 if (open && active >= 0) { e.preventDefault(); choose(active); }
                 else if (open && items.length === 1 && input.value.trim()) { e.preventDefault(); choose(0); }
@@ -1270,7 +1313,6 @@ class SkateParkDay {
         // Escape closes the list first, not the whole dialog.
         dlg.addEventListener('cancel', (e) => { if (!list.hidden) { e.preventDefault(); close(); } });
     }
-
 
     async openShareDialog(index) {
         const day = this.days[index];
@@ -1378,6 +1420,50 @@ class SkateParkDay {
 }
 
 const SITE_URL = 'https://best.skatepark.day/';
+const PARK_ICON = '<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9c3 0 4 2 4 5h10c0-3 1-5 4-5"/><path d="M5 17h14"/><circle cx="8" cy="19.5" r="1.3"/><circle cx="16" cy="19.5" r="1.3"/></svg>';
+
+const REGION_CODES = {
+    'alberta': 'AB', 'british columbia': 'BC', 'manitoba': 'MB', 'new brunswick': 'NB', 'newfoundland and labrador': 'NL', 'nova scotia': 'NS',
+    'northwest territories': 'NT', 'nunavut': 'NU', 'ontario': 'ON', 'prince edward island': 'PE', 'quebec': 'QC', 'québec': 'QC', 'saskatchewan': 'SK', 'yukon': 'YT',
+    'alabama': 'AL', 'alaska': 'AK', 'arizona': 'AZ', 'arkansas': 'AR', 'california': 'CA', 'colorado': 'CO', 'connecticut': 'CT', 'delaware': 'DE',
+    'district of columbia': 'DC', 'florida': 'FL', 'georgia': 'GA', 'hawaii': 'HI', 'idaho': 'ID', 'illinois': 'IL', 'indiana': 'IN', 'iowa': 'IA',
+    'kansas': 'KS', 'kentucky': 'KY', 'louisiana': 'LA', 'maine': 'ME', 'maryland': 'MD', 'massachusetts': 'MA', 'michigan': 'MI', 'minnesota': 'MN',
+    'mississippi': 'MS', 'missouri': 'MO', 'montana': 'MT', 'nebraska': 'NE', 'nevada': 'NV', 'new hampshire': 'NH', 'new jersey': 'NJ', 'new mexico': 'NM',
+    'new york': 'NY', 'north carolina': 'NC', 'north dakota': 'ND', 'ohio': 'OH', 'oklahoma': 'OK', 'oregon': 'OR', 'pennsylvania': 'PA', 'rhode island': 'RI',
+    'south carolina': 'SC', 'south dakota': 'SD', 'tennessee': 'TN', 'texas': 'TX', 'utah': 'UT', 'vermont': 'VT', 'virginia': 'VA', 'washington': 'WA',
+    'west virginia': 'WV', 'wisconsin': 'WI', 'wyoming': 'WY'
+};
+// "Ontario", "ON" or an ISO code like "CA-ON" / "US-NY" -> "ON" / "NY"; '' when unknown.
+function regionCode(region) {
+    if (!region) return '';
+    const r = String(region).trim();
+    const iso = r.match(/^(?:CA|US)-([A-Z]{2})$/i);
+    if (iso) return iso[1].toUpperCase();
+    if (/^[A-Za-z]{2}$/.test(r) && Object.values(REGION_CODES).includes(r.toUpperCase())) return r.toUpperCase();
+    return REGION_CODES[r.toLowerCase()] || '';
+}
+
+// Case- and accent-insensitive text for matching and sorting.
+function foldText(s) { return String(s || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase(); }
+const genericParkName = (n) => !n || /^skate ?park( on .*)?$/i.test(n.trim());
+// Named parks A–Z, then unnamed ones by city and distance.
+function sortParksAZ(list) {
+    const cmp = (a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' });
+    return [...list].sort((a, b) => (genericParkName(a.name) - genericParkName(b.name)) ||
+        cmp(foldText(a.name), foldText(b.name)) || cmp(foldText(a.city), foldText(b.city)) || ((a.km ?? 0) - (b.km ?? 0)));
+}
+
+// Pick history: [{ id, name, lat, lon, lastPickedAt }], most recent first.
+const parkId = (p) => `${foldText(p.name)}|${p.lat != null ? (+p.lat).toFixed(3) : ''}|${p.lon != null ? (+p.lon).toFixed(3) : ''}`;
+const samePark = (a, b) => (a.id || parkId(a)) === parkId(b);
+function parkPicks() { try { return JSON.parse(localStorage.getItem('parkPicks') || '[]'); } catch (e) { return []; } }
+function recordParkPick(p) {
+    const id = parkId(p);
+    const list = parkPicks().filter(h => h.id !== id);
+    list.unshift({ id, name: p.name, lat: p.lat ?? null, lon: p.lon ?? null, lastPickedAt: Date.now() });
+    try { localStorage.setItem('parkPicks', JSON.stringify(list.slice(0, 50))); } catch (e) {}
+}
+
 // Merges parks within ~50 m of each other, keeping the most specific name.
 function dedupeParks(list) {
     const generic = (n) => !n || /^skate ?park( on .*)?$/i.test(n);
@@ -1390,7 +1476,7 @@ function dedupeParks(list) {
     return out;
 }
 
-const PARK_DATA_VERSION = '2026110301';
+const PARK_DATA_VERSION = '2026110302';
 
 function escapeHtml(str) {
     return String(str).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
