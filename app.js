@@ -1069,7 +1069,9 @@ class SkateParkDay {
             return parks;
         };
         let parks = null;
-        const inOntario = loc.lat > 41.6 && loc.lat < 57 && loc.lon > -95.2 && loc.lon < -74.3;
+        // The Ontario bounding box also covers Buffalo, Detroit and western Quebec, so trust the region name when known.
+        const inBox = loc.lat > 41.6 && loc.lat < 57 && loc.lon > -95.2 && loc.lon < -74.3;
+        const inOntario = loc.region ? /^(ontario|on)$/i.test(loc.region.trim()) : inBox;
         if (inOntario) {
             const all = await this.loadOntarioParks();
             if (all) {
@@ -1077,7 +1079,13 @@ class SkateParkDay {
                 if (!parks.length) parks = null;
             }
         }
-        if (!parks) parks = await this.liveSkateparks(loc, finish);
+        if (!parks) {
+            // Near the Ontario border (e.g. Buffalo, Gatineau) the bundled data can still add parks.
+            const nearOntario = loc.lat > 41.1 && loc.lat < 57.5 && loc.lon > -95.9 && loc.lon < -73.6;
+            const bundled = nearOntario ? await this.loadOntarioParks() : null;
+            const live = await this.liveSkateparks(loc);
+            if (live) parks = finish(dedupeParks([...live, ...(bundled || [])]), 25);
+        }
         if (parks) {
             this.parkCache[key] = parks;
             if (parks.length) try { localStorage.setItem(store, JSON.stringify({ t: Date.now(), parks })); } catch (e) {}
@@ -1095,7 +1103,8 @@ class SkateParkDay {
         return this.ontarioParks;
     }
 
-    async liveSkateparks(loc, finish) {
+    // Returns raw { name, lat, lon } parks from OSM, or null when every source failed.
+    async liveSkateparks(loc) {
         // Simple GET requests (no custom headers) avoid CORS preflights; send the origin as referrer for OSM usage policy.
         const get = async (url) => {
             const ctrl = new AbortController();
@@ -1105,23 +1114,28 @@ class SkateParkDay {
                 return r.ok ? await r.json() : null;
             } catch (e) { return null; } finally { clearTimeout(t); }
         };
-        const q = encodeURIComponent(`[out:json][timeout:20];nwr["leisure"="skatepark"](around:25000,${loc.lat},${loc.lon});out center 80;`);
+        // Many parks are mapped as skateboard pitches rather than leisure=skatepark, so ask for both.
+        const around = `(around:25000,${loc.lat},${loc.lon})`;
+        const q = encodeURIComponent(`[out:json][timeout:20];(nwr["leisure"="skatepark"]${around};nwr["leisure"="pitch"]["sport"~"(^|;)skateboard(;|$)"]${around};);out center 120;`);
         for (const base of ['https://overpass-api.de/api/interpreter', 'https://overpass.private.coffee/api/interpreter', 'https://maps.mail.ru/osm/tools/overpass/api/interpreter']) {
             const d = await get(`${base}?data=${q}`);
             if (d && Array.isArray(d.elements)) {
-                return finish(d.elements.map(e => {
+                return dedupeParks(d.elements.map(e => {
                     const lat = e.lat ?? (e.center && e.center.lat), lon = e.lon ?? (e.center && e.center.lon);
                     if (lat == null) return null;
                     const tg = e.tags || {};
                     return { name: tg.name || (tg['addr:street'] ? `Skatepark on ${tg['addr:street']}` : 'Skatepark'), lat, lon };
-                }).filter(Boolean), 25);
+                }).filter(Boolean));
             }
         }
         const dLat = 0.23, dLon = 0.23 / Math.max(0.2, Math.cos(loc.lat * Math.PI / 180));
         const vb = [loc.lon - dLon, loc.lat + dLat, loc.lon + dLon, loc.lat - dLat].map(v => v.toFixed(4)).join(',');
-        const n = await get(`https://nominatim.openstreetmap.org/search?q=skatepark&format=jsonv2&viewbox=${vb}&bounded=1&limit=30`);
-        if (Array.isArray(n)) {
-            return finish(n.map(p => ({ name: p.name || (p.display_name || 'Skatepark').split(',')[0], lat: +p.lat, lon: +p.lon })), 25);
+        const found = await Promise.all(['skatepark', 'skate park'].map(term =>
+            get(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(term)}&format=jsonv2&viewbox=${vb}&bounded=1&limit=30`)));
+        if (found.some(Array.isArray)) {
+            return dedupeParks(found.filter(Array.isArray).flat()
+                .map(p => ({ name: p.name || (p.display_name || 'Skatepark').split(',')[0], lat: +p.lat, lon: +p.lon }))
+                .filter(p => isFinite(p.lat) && isFinite(p.lon)));
         }
         return null;
     }
@@ -1364,7 +1378,19 @@ class SkateParkDay {
 }
 
 const SITE_URL = 'https://best.skatepark.day/';
-const PARK_DATA_VERSION = '2026110207';
+// Merges parks within ~50 m of each other, keeping the most specific name.
+function dedupeParks(list) {
+    const generic = (n) => !n || /^skate ?park( on .*)?$/i.test(n);
+    const out = [];
+    for (const p of list) {
+        const dup = out.find(q => distanceKm(p, q) < 0.05);
+        if (!dup) out.push({ ...p });
+        else if (generic(dup.name) && !generic(p.name)) dup.name = p.name;
+    }
+    return out;
+}
+
+const PARK_DATA_VERSION = '2026110301';
 
 function escapeHtml(str) {
     return String(str).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
