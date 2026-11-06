@@ -188,44 +188,11 @@ a{color:inherit}
   #best-day-info > div:nth-child(2){gap:6px 14px!important;margin-bottom:4px!important}
   #best-day-info > div:nth-child(3){margin-top:6px!important}
   #best-day-info .time-block{padding:3px 7px!important}
-  /* 7-day strip: every day visible at once */
-  .weather-grid{grid-template-columns:repeat(7,minmax(0,1fr))}
-  .day-card{padding:10px 4px 9px;text-align:center}
-  .day-card.best,.day-card.second-best{padding-top:24px}
-  .day-card-medal{top:6px;left:0;right:0;text-align:center;font-size:.75rem;letter-spacing:0}
-  .day-card-medal::before{margin-right:0;width:1.2em;height:1.2em}
-  .day-card-medal.gold::after,.day-card-medal.silver::after{content:''}
-  .day-name{font-size:.58rem;letter-spacing:.08em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  .day-date{font-size:.62rem;margin-bottom:6px;white-space:nowrap}
-  .weather-icon{font-size:1.25rem;margin-bottom:4px}
-  .weather-icon img{width:24px;height:24px}
-  .temp{font-size:1rem;margin-bottom:2px}
-  .conditions{display:none}
-  .day-card .metrics{margin-top:4px;gap:0}
-  .day-card .metric{display:none}
-  .day-card .metric:last-child{display:flex;justify-content:center}
-  .day-card .metric:last-child .metric-icon,.day-card .metric:last-child .metric-bar{display:none}
-  .day-card .metric:last-child .metric-value{min-width:0;text-align:center;font-size:.62rem}
-  .day-card > div[style]{display:none}
-  .skate-score{margin-top:4px;font-size:.5rem;padding:3px 4px;letter-spacing:.06em}
-}
-@media (min-width:641px) and (max-width:1024px){
-  .day-card{padding:16px 8px 14px}
-  .day-card.best,.day-card.second-best{padding-top:32px}
-  .day-name{font-size:.68rem}
-  .day-date{font-size:.72rem}
-  .weather-icon{font-size:1.7rem}
-  .temp{font-size:1.4rem}
-  .day-card .metric:last-child .metric-value{font-size:.7rem}
-  .skate-score{font-size:.58rem;padding:4px 6px}
 }
 @media (max-width:640px){
   .hero .kicker{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  .day-name{font-size:.52rem;letter-spacing:.02em;text-overflow:clip}
-  #best-day-info > div:nth-child(2){display:none!important}
   #best-day-info > div:first-child > div:first-child > div:first-child{font-size:1.3rem!important}
 }
-@media (max-width:380px){.day-date{display:none}}
 @media (max-width:1024px) and (max-height:620px){
   .hero{padding:10px 0 6px}
   .hero .kicker{display:none}
@@ -268,7 +235,6 @@ h2.kicker{font-weight:400;line-height:inherit}
   .location-bar .location-search{padding-top:9px;padding-bottom:9px;font-size:16px}
   .page-share-text{display:none}
   .page-share{padding:0 12px}
-  .day-card .day-share-btn{position:static;display:flex;width:100%;min-width:40px;height:40px;margin:2px 0 -8px;font-size:.8rem;border:0}
 }
 .share-dialog{margin:auto;max-height:calc(100vh - 32px);overflow:auto;width:min(420px,calc(100vw - 32px));padding:0;border:1px solid var(--line);background:var(--panel);color:var(--ink);font-family:var(--sans)}
 .share-dialog:has(.park-list:not([hidden])){overflow:visible}
@@ -350,4 +316,70 @@ html.splash-on body{overflow:hidden}
   .is-playing .splash-wheel{animation:none}
   .is-playing .splash-word span{animation-delay:calc(var(--i) * 30ms);animation-duration:.25s}
   .is-playing .splash-mark{animation-duration:.3s}
+}
+
+/* Weather qualification: shared, visible on every screen, using the actual score rules. */
+.day-qualification{scroll-margin-top:72px;border-top:1px solid var(--line);margin-top:18px;padding-top:16px}
+.qualification-heading{display:flex;justify-content:space-between;align-items:baseline;gap:12px;flex-wrap:wrap}
+.qualification-heading h3{font-size:1rem;font-weight:500;letter-spacing:-.01em}
+.qualification-heading > span{font-family:var(--mono);font-size:.64rem;text-transform:uppercase;letter-spacing:.12em;color:var(--muted)}
+.qualification-help,.qualification-note{font-size:.75rem;color:var(--muted);margin-top:6px;max-width:760px}
+.qualification-note{font-size:.68rem;margin-top:12px}
+.factor-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px 24px;margin-top:16px}
+.day-factor{min-width:0}
+.factor-heading{display:flex;align-items:baseline;justify-content:space-between;gap:8px;font-size:.78rem;flex-wrap:wrap}
+.factor-heading > span{color:var(--muted)}
+.factor-heading strong{font-family:var(--mono);font-size:.75rem;font-weight:400}
+.factor-meter{height:6px;margin-top:7px;background:var(--line);overflow:hidden}
+.factor-meter > span{display:block;height:100%;background:var(--ink);transition:width var(--t)}
+.factor-impact{font-family:var(--mono);font-size:.65rem;color:var(--muted);margin-top:4px}
+.day-factor.inactive .factor-meter{background:var(--faint)}
+.forecast-grid-help{font-family:var(--mono);font-size:.7rem;color:var(--muted);margin:18px 0 10px}
+/* Four cards then three, all devices. The second row expands to use the whole width. */
+.weather-grid{grid-template-columns:repeat(12,minmax(0,1fr));gap:10px;border:0}
+.day-card{grid-column:span 3;min-width:0;padding:0;border:1px solid var(--line);background:var(--panel);text-align:left;display:flex;flex-direction:column;opacity:1}
+.day-card:nth-child(n+5){grid-column:span 4}
+.day-card.best,.day-card.second-best{padding:0;box-shadow:none}
+.day-card.best{border-color:var(--ink)}
+.day-card.second-best{border-color:var(--muted)}
+.day-card.no-skate,.day-card.no-skate:hover{opacity:1}
+.day-card.selected{box-shadow:inset 0 0 0 1px var(--ink)}
+.day-card-medal{position:static;padding:10px 14px 0;font-size:.6rem;letter-spacing:.08em;min-height:28px}
+.day-card:not(.best):not(.second-best)::before{content:'';display:block;min-height:28px}
+.day-select{display:flex;flex-direction:column;align-items:flex-start;flex:1;gap:4px;width:100%;min-height:180px;padding:10px 14px 12px;background:none;border:0;color:var(--ink);font:inherit;text-align:left;cursor:pointer}
+.day-select:hover{background:var(--faint)}
+.day-select:focus-visible,.day-share-btn:focus-visible{outline:2px solid var(--ink);outline-offset:-4px}
+.day-name{display:block;font-size:.85rem;letter-spacing:.05em;margin:0}
+.day-date{display:block;font-size:.75rem;margin:0;color:var(--muted)}
+.weather-icon{display:block;margin:6px 0 0;font-size:1.7rem}
+.temp{font-size:1.7rem;line-height:1.2;margin:0}
+.card-wind{font-family:var(--mono);font-size:.75rem;color:var(--muted)}
+.card-wind small,.card-score small{font-size:.65rem;font-weight:400}
+.card-score{font-family:var(--mono);font-size:1rem;margin-top:6px}
+.card-score-bar{display:block;width:100%;height:4px;background:var(--line)}
+.card-score-bar > span{display:block;height:100%;background:var(--ink)}
+.card-details{font-family:var(--mono);font-size:.65rem;color:var(--muted);margin-top:4px}
+.day-card .day-share-btn{position:static;display:flex;align-items:center;justify-content:center;gap:7px;min-width:44px;width:100%;height:44px;min-height:44px;margin:0;border:0;border-top:1px solid var(--line);font-family:var(--mono);font-size:.7rem;color:var(--ink);letter-spacing:.04em}
+.day-share-btn:hover{background:var(--faint)}
+@media(max-width:640px){
+  .factor-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:12px 16px}
+  .factor-heading{gap:2px 6px;font-size:.72rem}
+  .factor-heading strong{font-size:.7rem}
+  .factor-heading .icon{display:none}
+  .qualification-heading h3{font-size:.9rem}
+  .best-day{padding:14px}
+  .weather-grid{gap:6px}
+  .day-card-medal{padding:8px 6px 0;min-height:26px;font-size:.52rem;letter-spacing:0;white-space:nowrap}
+  .day-card-medal::before{width:1em;height:1em;margin-right:.15em}
+  .day-card:not(.best):not(.second-best)::before{min-height:26px}
+  .day-select{padding:8px 6px 10px;gap:5px;min-height:180px}
+  .day-name{font-family:var(--sans);font-size:.8rem;letter-spacing:0}
+  .day-date{font-size:.66rem}
+  .weather-icon{font-size:1.4rem}
+  .temp{font-size:1.4rem}
+  .card-wind{font-size:.65rem}
+  .card-wind .icon{display:none}
+  .card-wind small{font-size:.55rem}
+  .card-details{font-size:.58rem;letter-spacing:-.02em}
+  .day-card .day-share-btn{font-size:.62rem;gap:4px}
 }

@@ -360,68 +360,87 @@ class SkateParkDay {
         return ` from ${firstHour} to ${lastHour}`;
     }
 
-    calculateDayScore(day) {
-        let score = 100;
-        day.reasons = [];
-
-        // Only treat wind above 25km/h as a complete write-off
-        if (day.maxHourlyWind > 25) {
-            score = 0;
-            day.reasons.push('Extreme wind (write-off)');
-            return score;
-        }
-
-        if (day.tempMax > 30) {
-            score -= 30;
-            day.reasons.push('Too hot');
-        } else if (day.tempMax < 10) {
-            score -= 25;
-            day.reasons.push('Too cold');
-        } else if (day.tempMax >= 18 && day.tempMax <= 25) {
-            score += 20;
-            day.reasons.push('Perfect temperature');
-        }
-
-        // More gradual wind penalties
-        if (day.maxHourlyWind > 15) {
-            const windPenalty = Math.min((day.maxHourlyWind - 15) * 3, 40);
-            score -= windPenalty;
-            day.reasons.push('Windy');
-        } else if (day.maxHourlyWind > 10) {
-            const windPenalty = Math.min(day.maxHourlyWind * 1.5, 15);
-            score -= windPenalty;
-            day.reasons.push('Breezy');
-        }
-
-        if (day.precipitation > 0.1) {
-            score -= 60;
-            day.reasons.push('Rain expected');
-        } else if (day.precipitation > 0) {
-            score -= 30;
-            day.reasons.push('Light rain possible');
-        }
-
-        if (day.uvIndex > 8) {
-            score -= 15;
-            day.reasons.push('High UV');
-        } else if (day.uvIndex < 3) {
-            score += 10;
-            day.reasons.push('Low UV');
-        }
-
-        if (day.sunshine > 25200) { // 7+ hours
-            score += 10;
-            day.reasons.push('Sunny day');
-        }
-
+    // The original day-scoring rules (276607e), shared by the score and its meters.
+    // Each fill normalizes the actual point contribution within that rule's range;
+    // it is not a weather measurement or a percentage weight in the final score.
+    getDayFactors(day) {
+        const extremeWind = day.maxHourlyWind > 25;
         const cloudiness = this.getCloudiness(day.weatherCode);
-        if (cloudiness === 'clear') {
-            score += 5;
-        } else if (cloudiness === 'cloudy') {
-            score -= 5;
-        }
+        const temperature = day.tempMax > 30 ? -30 : day.tempMax < 10 ? -25 :
+            day.tempMax >= 18 && day.tempMax <= 25 ? 20 : 0;
+        const wind = extremeWind ? -100 : day.maxHourlyWind > 15 ?
+            -Math.min((day.maxHourlyWind - 15) * 3, 40) :
+            day.maxHourlyWind > 10 ? -Math.min(day.maxHourlyWind * 1.5, 15) : 0;
+        const rain = day.precipitation > 0.1 ? -60 : day.precipitation > 0 ? -30 : 0;
+        const uv = day.uvIndex > 8 ? -15 : day.uvIndex < 3 ? 10 : 0;
+        const sunshine = day.sunshine > 25200 ? 10 : 0;
+        const clouds = cloudiness === 'clear' ? 5 : cloudiness === 'cloudy' ? -5 : 0;
+        return [
+            { key: 'temperature', label: 'Temperature', value: `${day.tempMax}°C`, icon: ICONS.hot,
+                points: temperature, min: -30, max: 20,
+                reason: temperature === -30 ? 'Too hot' : temperature === -25 ? 'Too cold' : temperature === 20 ? 'Perfect temperature' : '' },
+            { key: 'wind', label: 'Wind', value: `${day.maxHourlyWind} km/h`, icon: ICONS.wind,
+                points: wind, min: -40, max: 0,
+                reason: extremeWind ? 'Extreme wind (write-off)' : day.maxHourlyWind > 15 ? 'Windy' : day.maxHourlyWind > 10 ? 'Breezy' : '' },
+            { key: 'rain', label: 'Rain', value: `${day.precipitation} mm`, icon: ICONS.drop,
+                points: rain, min: -60, max: 0,
+                reason: rain === -60 ? 'Rain expected' : rain === -30 ? 'Light rain possible' : '' },
+            { key: 'uv', label: 'UV', value: `${day.uvIndex} index`, icon: ICONS.uv,
+                points: uv, min: -15, max: 10,
+                reason: uv === -15 ? 'High UV' : uv === 10 ? 'Low UV' : '' },
+            { key: 'sunshine', label: 'Sunshine', value: `${+(day.sunshine / 3600).toFixed(1)} h`, icon: ICONS.sunHours,
+                points: sunshine, min: 0, max: 10, reason: sunshine ? 'Sunny day' : '' },
+            { key: 'clouds', label: 'Sky', value: cloudiness === 'clear' ? 'Clear' : cloudiness === 'partly-cloudy' ? 'Partly cloudy' : 'Cloudy', icon: ICONS.cloud,
+                points: clouds, min: -5, max: 5, reason: '' }
+        ].map(factor => ({ ...factor,
+            inactive: extremeWind && factor.key !== 'wind',
+            percent: extremeWind ? 0 : Math.max(0, Math.min(100, (factor.points - factor.min) / (factor.max - factor.min) * 100))
+        }));
+    }
 
-        return Math.min(Math.max(0, score), 100);
+    calculateDayScore(day) {
+        const factors = this.getDayFactors(day);
+        if (day.maxHourlyWind > 25) {
+            day.reasons = ['Extreme wind (write-off)'];
+            return 0;
+        }
+        day.reasons = factors.map(factor => factor.reason).filter(Boolean);
+        return Math.min(Math.max(0, 100 + factors.reduce((sum, factor) => sum + factor.points, 0)), 100);
+    }
+
+    renderDayQualification(index) {
+        const day = this.days[index];
+        if (!day) return;
+        this.selectedDayIndex = index;
+        this.selectedDayDate = day.date.toDateString();
+        const title = `${this.dayLabel(index)} · ${day.date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`;
+        const factors = this.getDayFactors(day);
+        document.getElementById('day-qualification').innerHTML = `
+            <div class="qualification-heading">
+                <h3 id="qualification-title">Why ${title} scores ${Math.round(day.score)}/100</h3>
+                <span>${day === this.bestDay ? 'Best day' : 'Selected day'}</span>
+            </div>
+            <p class="qualification-help">Fuller bars mean better conditions. Tap any day below to compare.</p>
+            <div class="factor-grid">
+                ${factors.map(factor => {
+                    const points = `${factor.points > 0 ? '+' : ''}${+factor.points.toFixed(1)} pts`;
+                    const impact = factor.inactive ? 'Not applied: extreme wind' : factor.key === 'wind' && day.maxHourlyWind > 25 ? 'Day ruled out' : points;
+                    const description = `${factor.label}: ${factor.value}; ${impact}; ${Math.round(factor.percent)} out of 100 for this factor`;
+                    return `<div class="day-factor${factor.inactive ? ' inactive' : ''}" data-factor="${factor.key}">
+                        <div class="factor-heading"><span>${factor.icon} ${factor.label}</span><strong>${factor.value}</strong></div>
+                        <div class="factor-meter" role="meter" aria-label="${escapeHtml(factor.label)} skate conditions" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${+factor.percent.toFixed(1)}" aria-valuetext="${escapeHtml(description)}">
+                            <span style="width:${factor.percent}%"></span>
+                        </div>
+                        <div class="factor-impact">${impact}</div>
+                    </div>`;
+                }).join('')}
+            </div>
+            <p class="qualification-note">Score starts at 100, adds the points above, then caps at 0–100. Wind above 25 km/h rules out the day. Bars use each rule’s point range, not a share of the total.</p>`;
+        document.querySelectorAll('.day-select').forEach(button => {
+            const selected = +button.dataset.day === index;
+            button.setAttribute('aria-pressed', String(selected));
+            button.closest('.day-card').classList.toggle('selected', selected);
+        });
     }
 
     getCloudiness(weatherCode) {
@@ -837,12 +856,6 @@ class SkateParkDay {
         const date = day.date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
         const fullDate = `${dayOfWeek} ${date}`;
         
-        // Calculate progress percentages
-        const windPercent = Math.min((day.maxHourlyWind / 25) * 100, 100);
-        const uvPercent = Math.min((day.uvIndex / 11) * 100, 100);
-        const sunPercent = Math.min((day.sunshine / 43200) * 100, 100);
-        const scorePercent = day.score;
-        
         const timeBlocksHtml = this.bestTimeBlocks && this.bestTimeBlocks.length > 0 
             ? `<div style="margin-top: 12px;">
                 <div style="font-size: 0.8rem; margin-bottom: 6px; opacity: 0.9;">${ICONS.clock} Best times:</div>
@@ -876,40 +889,6 @@ class SkateParkDay {
                 <div style="text-align: right;">
                     <div style="font-size: 1.1rem; font-weight: 700;">${Math.round(day.tempMax)}°C</div>
                     <div style="font-size: 0.7rem; opacity: 0.8;">Score: ${Math.round(day.score)}/100</div>
-                </div>
-            </div>
-            
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 8px;">
-                <div class="metric" style="font-size: 0.7rem;">
-                    <div class="metric-icon" style="font-size: 0.8rem; width: 14px;">${ICONS.wind}</div>
-                    <div class="metric-bar" style="height: 3px;">
-                        <div class="metric-fill wind" style="width: ${windPercent}%"></div>
-                    </div>
-                    <div class="metric-value" style="font-size: 0.65rem; min-width: 28px;">${Math.round(day.maxHourlyWind)}</div>
-                </div>
-                
-                <div class="metric" style="font-size: 0.7rem;">
-                    <div class="metric-icon" style="font-size: 0.8rem; width: 14px;">${ICONS.uv}</div>
-                    <div class="metric-bar" style="height: 3px;">
-                        <div class="metric-fill uv" style="width: ${uvPercent}%"></div>
-                    </div>
-                    <div class="metric-value" style="font-size: 0.65rem; min-width: 28px;">${Math.round(day.uvIndex)}</div>
-                </div>
-                
-                <div class="metric" style="font-size: 0.7rem;">
-                    <div class="metric-icon" style="font-size: 0.8rem; width: 14px;">${ICONS.sunHours}</div>
-                    <div class="metric-bar" style="height: 3px;">
-                        <div class="metric-fill sun" style="width: ${sunPercent}%"></div>
-                    </div>
-                    <div class="metric-value" style="font-size: 0.65rem; min-width: 28px;">${Math.round(day.sunshine / 3600)}h</div>
-                </div>
-                
-                <div class="metric" style="font-size: 0.7rem;">
-                    <div class="metric-icon" style="font-size: 0.8rem; width: 14px;">${ICONS.target}</div>
-                    <div class="metric-bar" style="height: 3px;">
-                        <div class="metric-fill score" style="width: ${scorePercent}%"></div>
-                    </div>
-                    <div class="metric-value" style="font-size: 0.65rem; min-width: 28px;">${Math.round(day.score)}</div>
                 </div>
             </div>
             
@@ -970,60 +949,38 @@ class SkateParkDay {
                 cardClass += ' no-skate';
             }
             
-            // Calculate progress percentages
-            const windPercent = Math.min((day.maxHourlyWind / 25) * 100, 100);
-            const uvPercent = Math.min((day.uvIndex / 11) * 100, 100);
-            const sunPercent = Math.min((day.sunshine / 43200) * 100, 100); // 12 hours max
-            const scorePercent = day.score;
-            
             return `
-                <div class="${cardClass}">
+                <article class="${cardClass}">
                     ${medalHtml}
-                    <button type="button" class="day-share-btn" data-day="${index}" aria-label="Share ${dayName}">${ICONS.share}</button>
-                    <div class="day-name">${dayName}</div>
-                    <div class="day-date">${fullDate}</div>
-                    <div class="weather-icon">${this.getWeatherIcon(day.weatherCode)}</div>
-                    <div class="temp">${Math.round(day.tempMax)}°C</div>
-                    
-                    <div class="metrics">
-                        <div class="metric">
-                            <div class="metric-icon">${ICONS.wind}</div>
-                            <div class="metric-bar">
-                                <div class="metric-fill wind" style="width: ${windPercent}%"></div>
-                            </div>
-                            <div class="metric-value">${Math.round(day.maxHourlyWind)}</div>
-                        </div>
-                        
-                        <div class="metric">
-                            <div class="metric-icon">${ICONS.uv}</div>
-                            <div class="metric-bar">
-                                <div class="metric-fill uv" style="width: ${uvPercent}%"></div>
-                            </div>
-                            <div class="metric-value">${Math.round(day.uvIndex)}</div>
-                        </div>
-                        
-                        <div class="metric">
-                            <div class="metric-icon">${ICONS.sunHours}</div>
-                            <div class="metric-bar">
-                                <div class="metric-fill sun" style="width: ${sunPercent}%"></div>
-                            </div>
-                            <div class="metric-value">${Math.round(day.sunshine / 3600)}h</div>
-                        </div>
-                        
-                        <div class="metric">
-                            <div class="metric-icon">${ICONS.target}</div>
-                            <div class="metric-bar">
-                                <div class="metric-fill score" style="width: ${scorePercent}%"></div>
-                            </div>
-                            <div class="metric-value">${Math.round(day.score)}</div>
-                        </div>
-                    </div>
-                    
-                    ${day.precipitation > 0 ? `<div style="font-size: 0.7rem; color: var(--muted); margin-top: 8px;">${ICONS.drop} ${day.precipitation}mm${this.getRainTiming(day)}</div>` : 
-                      (!isBest && !isSecondBest && this.getMainIssue(day)) ? `<div style="font-size: 0.7rem; color: var(--muted); margin-top: 8px;">${this.getMainIssue(day)}</div>` : ''}
-                </div>
-            `;
+                    <button type="button" class="day-select" data-day="${index}" aria-pressed="false" aria-controls="day-qualification" aria-label="Show weather factors for ${dayName}, ${date}">
+                        <span class="day-name">${dayName}</span>
+                        <span class="day-date">${date}</span>
+                        <span class="weather-icon">${this.getWeatherIcon(day.weatherCode)}</span>
+                        <span class="temp">${Math.round(day.tempMax)}°C</span>
+                        <span class="card-wind">${ICONS.wind} ${Math.round(day.maxHourlyWind)} <small>km/h</small></span>
+                        <span class="card-score">${Math.round(day.score)}<small>/100</small></span>
+                        <span class="card-score-bar" aria-hidden="true"><span style="width:${day.score}%"></span></span>
+                        <span class="card-details">View factors</span>
+                    </button>
+                    <button type="button" class="day-share-btn" data-day="${index}" aria-label="Share ${dayName}">${ICONS.share}<span>Share</span></button>
+                </article>`;
         }).join('');
+        grid.querySelectorAll('.day-select').forEach(button => {
+            button.onclick = () => {
+                this.renderDayQualification(+button.dataset.day);
+                const panel = document.getElementById('day-qualification');
+                const bounds = panel.getBoundingClientRect();
+                if (bounds.top < 64 || bounds.bottom > window.innerHeight) {
+                    panel.scrollIntoView({ block: 'start', behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
+                }
+            };
+        });
+        // Retain a selection on refresh of the same forecast, reset it for a new location.
+        const locationKey = `${this.location.lat},${this.location.lon}`;
+        let selected = this.qualificationLocation === locationKey ? this.days.findIndex(day => day.date.toDateString() === this.selectedDayDate) : -1;
+        this.qualificationLocation = locationKey;
+        if (selected < 0) selected = this.days.indexOf(this.bestDay);
+        this.renderDayQualification(selected);
         grid.querySelectorAll('.day-share-btn').forEach(btn => {
             btn.onclick = (e) => { e.stopPropagation(); this.openShareDialog(+btn.dataset.day); };
         });
