@@ -427,7 +427,8 @@ class SkateParkDay {
                 <h3 id="qualification-title">Why ${title} scores ${Math.round(day.score)}/100</h3>
                 <span>${day === this.bestDay ? 'Best day' : 'Selected day'}</span>
             </div>
-            <p class="qualification-help">Fuller bars mean better conditions. Tap any day below to compare.</p>
+            ${this.windowSummaryHtml(index)}
+            <p class="qualification-help">Fuller bars mean better conditions for the whole day. Tap any day below to compare.</p>
             <div class="factor-grid">
                 ${factors.map(factor => {
                     const points = `${factor.points > 0 ? '+' : ''}${+factor.points.toFixed(1)} pts`;
@@ -448,6 +449,33 @@ class SkateParkDay {
             button.setAttribute('aria-pressed', String(selected));
             button.closest('.day-card').classList.toggle('selected', selected);
         });
+    }
+
+    // Best time for the selected day, every remaining window's score, and why it can beat the day score.
+    windowSummaryHtml(index) {
+        const day = this.days[index];
+        const win = this.bestWindow(index);
+        if (!win) return `<div class="window-summary"><div class="window-best"><span class="window-label">Best time</span><strong>No time left today</strong></div></div>`;
+        const chips = win.blocks.map(b => {
+            const isBest = !win.none && b.startHour === win.startHour;
+            return `<li class="window-chip${isBest ? ' best' : ''}${b.score <= 0 ? ' zero' : ''}"><span>${this.shortBlockLabel(b.startHour, b.endHour)}</span><b>${Math.round(b.score)}</b></li>`;
+        }).join('');
+        const dayScore = Math.round(day.score);
+        let why = 'The day score rates the whole day. Each time score rates only that two-hour window: its wind, temperature, UV and rain.';
+        if (!win.none && win.score - dayScore >= 20) {
+            const cause = day.maxHourlyWind > 25 ? `wind peaks at ${Math.round(day.maxHourlyWind)} km/h at the windiest hour, which rules out the whole day`
+                : day.reasons && day.reasons.length ? day.reasons.filter(r => !/perfect|low uv|sunny/i.test(r)).join(', ').toLowerCase() || 'conditions elsewhere in the day' : 'conditions elsewhere in the day';
+            why = `The day scores ${dayScore} because ${cause}. ${win.label} avoids the worst of it and scores ${win.score} on its own.`;
+        } else if (win.none) {
+            why = win.reason === 'Too windy all day'
+                ? `Every ${index === 0 ? 'remaining ' : ''}window has an hour with wind over 15 km/h, so each scores 0. The day score is gentler: it only rules out a day at 25 km/h, which is why it can still look good.`
+                : `Every ${index === 0 ? 'remaining ' : ''}window has rain or wind over 15 km/h, so each scores 0.`;
+        }
+        return `<div class="window-summary">
+                <div class="window-best"><span class="window-label">Best time</span><strong>${win.none ? win.reason : `${win.label} · ${win.score}/100`}</strong><span class="window-vs">Day score ${dayScore}/100</span></div>
+                <ul class="window-chips" aria-label="Time scores${index === 0 ? ' for the rest of today' : ''}">${chips}</ul>
+                <p class="window-why">${escapeHtml(why)}</p>
+            </div>`;
     }
 
     getCloudiness(weatherCode) {
@@ -957,17 +985,24 @@ class SkateParkDay {
                 cardClass += ' no-skate';
             }
             
+            const win = this.bestWindow(index);
+            const windowText = !win ? 'No time left today' : win.none ? win.reason : '';
+            const windowHtml = win && !win.none
+                ? `<span class="card-window${win.score - day.score >= 20 ? ' standout' : ''}"><small class="card-label">Best time</small><span class="card-window-time">${this.shortBlockLabel(win.startHour, win.endHour)}</span><span class="card-window-score">${win.score}</span></span>`
+                : `<span class="card-window empty"><small class="card-label">Best time</small><span class="card-window-time">${windowText}</span></span>`;
+            const windowAria = win && !win.none ? `, best time ${win.label} scores ${win.score}` : `, ${windowText.toLowerCase()}`;
             return `
                 <article class="${cardClass}">
                     ${medalHtml}
-                    <button type="button" class="day-select" data-day="${index}" aria-pressed="false" aria-controls="day-qualification" aria-label="Show weather factors for ${dayName}, ${date}">
+                    <button type="button" class="day-select" data-day="${index}" aria-pressed="false" aria-controls="day-qualification" aria-label="Show weather factors for ${dayName}, ${date}: day score ${Math.round(day.score)}${windowAria}">
                         <span class="day-name">${dayName}</span>
                         <span class="day-date">${date}</span>
                         <span class="weather-icon">${this.getWeatherIcon(day.weatherCode)}</span>
                         <span class="temp">${Math.round(day.tempMax)}°C</span>
                         <span class="card-wind">${ICONS.wind} ${Math.round(day.maxHourlyWind)} <small>km/h</small></span>
-                        <span class="card-score">${Math.round(day.score)}<small>/100</small></span>
+                        <span class="card-score"><small class="card-label">Day</small> ${Math.round(day.score)}<small>/100</small></span>
                         <span class="card-score-bar" aria-hidden="true"><span style="width:${day.score}%"></span></span>
+                        ${windowHtml}
                         <span class="card-details">View factors</span>
                     </button>
                     <button type="button" class="day-share-btn" data-day="${index}" aria-label="Share ${dayName}">${ICONS.share}<span>Share</span></button>
@@ -1069,6 +1104,24 @@ class SkateParkDay {
             blocks = blocks.filter(b => b.endHour > h);
         }
         return blocks;
+    }
+
+    // The day's highest-scoring two-hour window (earliest wins ties), same blocks as the share dialog.
+    // null when no window is left today; { none: true } when every window scores 0.
+    bestWindow(index) {
+        const blocks = this.shareBlocksFor(index);
+        if (!blocks.length) return null;
+        const best = blocks.reduce((b, c) => c.score > b.score ? c : b);
+        if (best.score > 0) return { ...best, score: Math.round(best.score), blocks };
+        const windy = blocks.every(b => Math.max(...b.winds) > 15);
+        return { none: true, blocks, reason: windy ? 'Too windy all day' : 'No skateable window' };
+    }
+
+    // Short card label: "6–8pm", "10am–12pm", "12–2pm".
+    shortBlockLabel(start, end) {
+        const part = (h) => h < 12 ? 'am' : 'pm';
+        const num = (h) => h % 12 === 0 ? 12 : h % 12;
+        return part(start) === part(end) ? `${num(start)}–${num(end)}${part(end)}` : `${num(start)}${part(start)}–${num(end)}${part(end)}`;
     }
 
     // Nearby skate parks: bundled Ontario data first, live OpenStreetMap lookups as fallback.
@@ -1341,18 +1394,17 @@ class SkateParkDay {
         const name = this.dayLabel(index);
         const date = day.date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
         dlg.querySelector('#share-title').textContent = `Share ${name}`;
-        dlg.querySelector('#share-summary').textContent = `${date} · ${Math.round(day.tempMax)}°C · wind ${Math.round(day.maxHourlyWind)} km/h · score ${Math.round(day.score)}/100`;
+        dlg.querySelector('#share-summary').textContent = `${date} · ${Math.round(day.tempMax)}°C · wind ${Math.round(day.maxHourlyWind)} km/h · day score ${Math.round(day.score)}/100`;
 
         const timeSel = dlg.querySelector('#share-time');
         const blocks = this.shareBlocksFor(index);
+        // Pre-select the day's best time, the same window its card shows.
+        let best = 0;
+        blocks.forEach((b, i) => { if (b.score > blocks[best].score) best = i; });
         timeSel.innerHTML = blocks.length
-            ? blocks.map((b, i) => `<option value="${i}">${b.label} · score ${Math.round(b.score)}</option>`).join('')
+            ? blocks.map((b, i) => `<option value="${i}">${b.label} · time score ${Math.round(b.score)}${i === best && b.score > 0 ? ' · best' : ''}</option>`).join('')
             : '<option value="">Anytime</option>';
-        if (blocks.length) {
-            let best = 0;
-            blocks.forEach((b, i) => { if (b.score > blocks[best].score) best = i; });
-            timeSel.value = String(best);
-        }
+        if (blocks.length) timeSel.value = String(best);
 
         const status = dlg.querySelector('#share-park-status');
         const combo = this.parkCombo;
