@@ -391,3 +391,30 @@ html.splash-on body{overflow:hidden}
 .shared-note-text{font-size:1rem;font-weight:500;color:var(--ink)}
 .shared-note-map{display:inline-flex;align-items:center;gap:6px;min-height:44px;margin-left:auto;font-family:var(--mono);font-size:.68rem;letter-spacing:.18em;text-transform:uppercase;text-decoration:none;color:var(--ink)}
 .shared-note-map:hover{text-decoration:underline}
+
+/* Best time window: card row and detail summary */
+.card-label{font-family:var(--mono);font-size:.58rem;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);font-weight:400}
+.card-score .card-label{margin-right:2px}
+.card-window{display:grid;grid-template-columns:1fr auto;align-items:baseline;column-gap:6px;width:100%;margin-top:6px;padding-top:6px;border-top:1px dashed var(--line);font-family:var(--mono)}
+.card-window .card-label{grid-column:1/-1}
+.card-window-time{font-size:.8rem;color:var(--ink);white-space:nowrap}
+.card-window-score{font-size:.95rem;font-weight:600;color:var(--ink)}
+.card-window.empty .card-window-time{grid-column:1/-1;font-size:.68rem;color:var(--muted);white-space:normal}
+.window-summary{margin-top:12px;padding:12px 14px;border:1px solid var(--line);background:var(--bg)}
+.window-best{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 12px}
+.window-label{font-family:var(--mono);font-size:.62rem;letter-spacing:.16em;text-transform:uppercase;color:var(--muted)}
+.window-best strong{font-size:1.05rem;font-weight:600}
+.window-vs{font-family:var(--mono);font-size:.7rem;color:var(--muted)}
+.window-chips{display:flex;flex-wrap:wrap;gap:6px;list-style:none;margin:10px 0 0;padding:0}
+.window-chip{display:flex;gap:6px;align-items:baseline;padding:4px 8px;border:1px solid var(--line);font-family:var(--mono);font-size:.68rem;color:var(--muted)}
+.window-chip b{color:var(--ink);font-weight:600}
+.window-chip.zero b{color:var(--muted);font-weight:400}
+.window-chip.best{border-color:var(--ink);color:var(--ink)}
+.window-why{font-size:.75rem;color:var(--muted);margin-top:8px;max-width:760px}
+@media(max-width:640px){
+  .card-label{font-size:.5rem;letter-spacing:.04em}
+  .card-window{grid-template-columns:1fr}
+  .card-window-time{font-size:.66rem;letter-spacing:-.03em}
+  .card-window-score{font-size:.8rem}
+  .window-chip{font-size:.62rem;padding:3px 6px}
+}
