@@ -1,16 +1,9 @@
 {
-  "navigationFallback": {
-    "rewrite": "/index.html",
-    "exclude": [
-      "/css/*",
-      "/dist/*",
-      "/img/*",
-      "/js/*",
-      "/lib/*",
-      "/data/*"
-    ]
-  },
   "routes": [
+    {
+      "route": "/share",
+      "rewrite": "/api/share"
+    },
     {
       "route": "/app.js",
       "headers": {
@@ -71,5 +64,14 @@
     "strict-transport-security": "max-age=31536000; includeSubDomains; preload",
     "referrer-policy": "no-referrer",
     "permissions-policy": "camera=*, fullscreen=*, geolocation=*, microphone=*, payment=*"
+  },
+  "responseOverrides": {
+    "404": {
+      "rewrite": "/404.html",
+      "statusCode": 404
+    }
+  },
+  "platform": {
+    "apiRuntime": "node:20"
   }
 }

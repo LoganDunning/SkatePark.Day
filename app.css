@@ -383,3 +383,11 @@ html.splash-on body{overflow:hidden}
   .card-details{font-size:.58rem;letter-spacing:-.02em}
   .day-card .day-share-btn{font-size:.62rem;gap:4px}
 }
+
+/* Shared link banner */
+.shared-note{display:flex;flex-wrap:wrap;align-items:baseline;gap:6px 14px;margin-bottom:22px;padding:14px 18px;border:1px solid var(--line);border-left:3px solid var(--ink);background:var(--panel);scroll-margin-top:72px}
+.shared-note[hidden]{display:none}
+.shared-note-kicker{font-family:var(--mono);font-size:.64rem;letter-spacing:.22em;text-transform:uppercase;color:var(--muted)}
+.shared-note-text{font-size:1rem;font-weight:500;color:var(--ink)}
+.shared-note-map{display:inline-flex;align-items:center;gap:6px;min-height:44px;margin-left:auto;font-family:var(--mono);font-size:.68rem;letter-spacing:.18em;text-transform:uppercase;text-decoration:none;color:var(--ink)}
+.shared-note-map:hover{text-decoration:underline}
