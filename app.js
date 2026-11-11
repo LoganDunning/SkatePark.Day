@@ -49,7 +49,14 @@ class SkateParkDay {
 
     async init() {
         const saved = this.getSavedLocation();
-        this.location = saved || { ...DEFAULT_LOCATION };
+        // A shared link opens on the sharer's location and day without replacing the visitor's saved location.
+        this.shared = readSharedLink(location.search);
+        this.location = (this.shared && this.shared.location) || saved || { ...DEFAULT_LOCATION };
+        if (this.shared && this.shared.date) {
+            this.selectedDayDate = new Date(this.shared.date + 'T12:00:00').toDateString();
+            this.qualificationLocation = `${this.location.lat},${this.location.lon}`;
+        }
+        if (this.shared && this.shared.location && !this.shared.location.city) this.reverseGeocode(this.shared.location).then(() => { if (this.weatherData) this.updateLocationDisplay(); });
 
         // Paint instantly from cached forecast for this location, if any
         const cached = this.getCachedForecast(this.location);
@@ -71,7 +78,7 @@ class SkateParkDay {
         }
 
         // User-searched locations win; otherwise refine with geolocation in the background
-        if (!saved || saved.source !== 'manual') this.refineWithGeolocation();
+        if (!(this.shared && this.shared.location) && (!saved || saved.source !== 'manual')) this.refineWithGeolocation();
     }
 
     requestGeolocation() {
@@ -89,7 +96,7 @@ class SkateParkDay {
         const gps = await this.requestGeolocation();
         if (!gps) return;
         const current = this.getSavedLocation();
-        if (current && current.source === 'manual') return;
+        if ((current && current.source === 'manual') || (this.location && this.location.source === 'shared')) return;
         if (this.location && distanceKm(this.location, gps) <= 5) {
             if (this.location.source !== 'gps') return;
             this.saveLocation(this.location);
@@ -808,6 +815,7 @@ class SkateParkDay {
         this.updateBestSkateSummary();
         this.renderBestDay();
         this.renderWeatherGrid();
+        this.renderSharedNote();
         this.updateMetaTags();
         if (window.SkateSplash) window.SkateSplash.finish();
     }
@@ -984,6 +992,62 @@ class SkateParkDay {
         grid.querySelectorAll('.day-share-btn').forEach(btn => {
             btn.onclick = (e) => { e.stopPropagation(); this.openShareDialog(+btn.dataset.day); };
         });
+    }
+
+    // What a shared link asked for, shown above the forecast while its location is on screen.
+    renderSharedNote() {
+        const note = document.getElementById('shared-note');
+        const s = this.shared;
+        if (!note) return;
+        if (!s || !s.date || (s.location && this.location.source !== 'shared')) { note.hidden = true; return; }
+        const index = this.weatherData.daily.time.indexOf(s.date);
+        const when = new Date(s.date + 'T12:00:00').toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' });
+        const time = s.hour != null && index >= 0 ? ' at ' + this.formatTimeBlock(s.hour, s.hour + 2) : '';
+        note.textContent = '';
+        const kicker = document.createElement('span');
+        kicker.className = 'shared-note-kicker';
+        kicker.textContent = s.best ? 'Shared best day' : 'Shared with you';
+        const text = document.createElement('span');
+        text.className = 'shared-note-text';
+        text.textContent = index < 0
+            ? `${when} is outside this week's forecast, so here is the current 7 days.`
+            : s.best ? `${when}${time} is the best day to skate${s.location && s.location.city ? ' near ' + this.locationLabel() : ''}.`
+            : `Skate ${when}${time}${s.park ? ' · ' + s.park + (s.parkCity ? ', ' + s.parkCity : '') : ''}`;
+        note.append(kicker, text);
+        if (s.park && index >= 0) {
+            const map = document.createElement('a');
+            map.className = 'shared-note-map';
+            map.target = '_blank';
+            map.rel = 'noopener';
+            map.href = s.plat != null ? `https://www.google.com/maps/search/?api=1&query=${s.plat},${s.plon}`
+                : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent([s.park, s.parkCity].filter(Boolean).join(' '))}`;
+            map.innerHTML = `${ICONS.pin} Map`;
+            note.append(map);
+        }
+        note.hidden = false;
+        if (!this.sharedNoteShown) {
+            this.sharedNoteShown = true;
+            const b = note.getBoundingClientRect();
+            if (b.top < 64 || b.bottom > window.innerHeight) note.scrollIntoView({ block: 'start', behavior: 'auto' });
+        }
+    }
+
+    // A link to this app that opens on the shared day, place and park, with its own preview card.
+    shareLink(index, { block, park, best } = {}) {
+        const q = new URLSearchParams();
+        const iso = this.weatherData && this.weatherData.daily.time[index];
+        if (iso) q.set('d', iso);
+        if (best) q.set('best', '1');
+        if (block) q.set('t', String(block.startHour));
+        if (park && park.name) {
+            q.set('p', park.name);
+            if (park.city) q.set('pc', park.city);
+            if (park.lat != null && !park.custom) { q.set('plat', String(+(+park.lat).toFixed(5))); q.set('plon', String(+(+park.lon).toFixed(5))); }
+        }
+        const l = this.location || {};
+        if (l.city) q.set('loc', this.locationLabel());
+        if (l.lat != null) { q.set('lat', String(+(+l.lat).toFixed(2))); q.set('lon', String(+(+l.lon).toFixed(2))); }
+        return `${SITE_URL}share?${q.toString().replace(/\+/g, '%20')}`;
     }
 
     dayLabel(index) {
@@ -1317,7 +1381,7 @@ class SkateParkDay {
         ];
         if (park && park.lat != null && !park.custom) lines.push(`Map: https://www.google.com/maps/search/?api=1&query=${park.lat},${park.lon}`);
         else if (park) lines.push(`Map: https://www.google.com/maps/search/?api=1&query=${encodeURIComponent([park.name, park.city || this.location.city].filter(Boolean).join(' '))}`);
-        await this.shareText({ title: 'best.skatepark.day', text: lines.join('\n'), url: SITE_URL });
+        await this.shareText({ title: 'best.skatepark.day', text: lines.join('\n'), url: this.shareLink(index, { block, park }) });
         const dlg = document.getElementById('share-dialog');
         if (dlg && dlg.open) dlg.close();
     }
@@ -1327,7 +1391,8 @@ class SkateParkDay {
         const i = this.days.indexOf(this.bestDay);
         const date = this.bestDay.date.toLocaleDateString('en-US', { month: 'long', day: 'numeric' });
         const time = this.bestTimeBlocks && this.bestTimeBlocks[0] ? ' at ' + this.bestTimeBlocks[0].label : '';
-        this.shareText({ title: 'best.skatepark.day', text: `Best day to skate this week near ${this.locationLabel()}: ${this.dayLabel(i)}, ${date}${time} (${Math.round(this.bestDay.tempMax)}°C, score ${Math.round(this.bestDay.score)}/100)`, url: SITE_URL });
+        const block = this.bestTimeBlocks && this.bestTimeBlocks[0];
+        this.shareText({ title: 'best.skatepark.day', text: `Best day to skate this week near ${this.locationLabel()}: ${this.dayLabel(i)}, ${date}${time} (${Math.round(this.bestDay.tempMax)}°C, score ${Math.round(this.bestDay.score)}/100)`, url: this.shareLink(i, { block, best: true }) });
     }
 
     async shareText(data) {
@@ -1377,6 +1442,36 @@ class SkateParkDay {
 }
 
 const SITE_URL = 'https://best.skatepark.day/';
+
+// Reads a /share link: d=YYYY-MM-DD, t=start hour, p/pc/plat/plon=park, loc/lat/lon=forecast location, best=1.
+function readSharedLink(search) {
+    let q;
+    try { q = new URLSearchParams(search || ''); } catch (e) { return null; }
+    const text = (k, max) => (q.get(k) || '').replace(/[\u0000-\u001f\u007f-\u009f]/g, ' ').replace(/\s+/g, ' ').trim().slice(0, max);
+    const num = (k, lim) => { const v = q.get(k); return v != null && /^-?\d{1,3}(\.\d+)?$/.test(v) && Math.abs(+v) <= lim ? +v : null; };
+    const d = q.get('d');
+    const date = /^\d{4}-\d{2}-\d{2}$/.test(d || '') && !isNaN(new Date(d + 'T12:00:00')) ? d : null;
+    const t = q.get('t');
+    const lat = num('lat', 90), lon = num('lon', 180);
+    const park = q.get('best') === '1' ? '' : text('p', 80);
+    const s = {
+        date,
+        hour: date && /^\d{1,2}$/.test(t || '') && +t <= 22 ? +t : null,
+        best: !!date && q.get('best') === '1',
+        park,
+        parkCity: park ? text('pc', 60) : '',
+        plat: park ? num('plat', 90) : null,
+        plon: park ? num('plon', 180) : null,
+        location: null,
+    };
+    if (s.plat == null || s.plon == null) s.plat = s.plon = null;
+    if (lat != null && lon != null) {
+        const label = text('loc', 60);
+        const cut = label.lastIndexOf(',');
+        s.location = { lat, lon, city: cut > 0 ? label.slice(0, cut).trim() : label, region: cut > 0 ? label.slice(cut + 1).trim() : '', country: '', source: 'shared' };
+    }
+    return s.date || s.location ? s : null;
+}
 const PARK_ICON = '<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9c3 0 4 2 4 5h10c0-3 1-5 4-5"/><path d="M5 17h14"/><circle cx="8" cy="19.5" r="1.3"/><circle cx="16" cy="19.5" r="1.3"/></svg>';
 
 const REGION_CODES = {

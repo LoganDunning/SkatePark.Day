@@ -1,0 +1,7 @@
+{
+  "name": "skatepark-day-api",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Link preview pages for shared skate days",
+  "engines": { "node": ">=18" }
+}
