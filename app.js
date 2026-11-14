@@ -218,14 +218,10 @@ class SkateParkDay {
         const lowRainDays = this.days.filter(day => day.precipitation <= 1.0);
         
         if (lowRainDays.length > 0) {
-            this.bestDay = lowRainDays.reduce((best, current) => 
-                current.score > best.score ? current : best
-            );
+            this.bestDay = lowRainDays.reduce((best, current) => this.betterDay(current, best));
         } else {
             // If all days have significant rain, pick the least rainy one
-            this.bestDay = this.days.reduce((best, current) => 
-                current.score > best.score ? current : best
-            );
+            this.bestDay = this.days.reduce((best, current) => this.betterDay(current, best));
         }
         
         console.log('Best day selected:', this.bestDay.date.toDateString(), 'Score:', this.bestDay.score, 'Rain:', this.bestDay.precipitation + 'mm');
@@ -234,13 +230,19 @@ class SkateParkDay {
         this.calculateBestTimeBlocks();
     }
     
+    // Higher day score wins; on a tie, the better whole-day weather, then the earlier day.
+    betterDay(current, best) {
+        if (current.score !== best.score) return current.score > best.score ? current : best;
+        return (current.weatherScore || 0) > (best.weatherScore || 0) ? current : best;
+    }
+
     calculateBestTimeBlocks() {
         if (!this.bestDay || !this.bestDay.hourlyData) return;
         // Never headline a time block that has already passed today
         if (this.days && this.bestDay === this.days[0] && this.shareBlocksFor(0).length === 0 && this.days.length > 1) {
             const upcoming = this.days.slice(1);
             const dry = upcoming.filter(d => d.precipitation <= 1.0);
-            this.bestDay = (dry.length ? dry : upcoming).reduce((b, c) => c.score > b.score ? c : b);
+            this.bestDay = (dry.length ? dry : upcoming).reduce((b, c) => this.betterDay(c, b));
         }
         const idx = this.days ? this.days.indexOf(this.bestDay) : -1;
         this.bestTimeBlocks = (idx >= 0 ? this.shareBlocksFor(idx) : this.computeTimeBlocks(this.bestDay))
@@ -409,10 +411,23 @@ class SkateParkDay {
         const factors = this.getDayFactors(day);
         if (day.maxHourlyWind > 25) {
             day.reasons = ['Extreme wind (write-off)'];
+            day.weatherScore = 0;
+            day.cappedByWindow = false;
             return 0;
         }
         day.reasons = factors.map(factor => factor.reason).filter(Boolean);
-        return Math.min(Math.max(0, 100 + factors.reduce((sum, factor) => sum + factor.points, 0)), 100);
+        const weatherScore = Math.min(Math.max(0, 100 + factors.reduce((sum, factor) => sum + factor.points, 0)), 100);
+        day.weatherScore = weatherScore;
+        if (!day.hourlyData) return weatherScore;
+        // The whole-day rules add bonuses on top of 100 and only write a day off at 25 km/h,
+        // so on their own they saturate at 100 even when every two-hour window is unskateable.
+        // A day can never score higher than its best skate window (6am-8pm, all of today's windows).
+        const blocks = this.computeTimeBlocks(day);
+        const bestBlock = blocks.length ? Math.max(...blocks.map(b => b.score)) : 0;
+        day.bestBlockScore = bestBlock;
+        day.cappedByWindow = bestBlock < weatherScore;
+        if (bestBlock <= 0) day.reasons = [blocks.every(b => Math.max(...b.winds) > 15) ? 'Too windy all day' : 'No skateable window'];
+        return Math.min(weatherScore, bestBlock);
     }
 
     renderDayQualification(index) {
@@ -443,7 +458,7 @@ class SkateParkDay {
                     </div>`;
                 }).join('')}
             </div>
-            <p class="qualification-note">Score starts at 100, adds the points above, then caps at 0–100. Wind above 25 km/h rules out the day. Bars use each rule’s point range, not a share of the total.</p>`;
+            <p class="qualification-note">Score starts at 100, adds the points above, then caps at 0–100 and never above the day’s best two-hour window. Wind above 25 km/h rules out the day. Bars use each rule’s point range, not a share of the total.</p>`;
         document.querySelectorAll('.day-select').forEach(button => {
             const selected = +button.dataset.day === index;
             button.setAttribute('aria-pressed', String(selected));
@@ -461,15 +476,24 @@ class SkateParkDay {
             return `<li class="window-chip${isBest ? ' best' : ''}${b.score <= 0 ? ' zero' : ''}"><span>${this.shortBlockLabel(b.startHour, b.endHour)}</span><b>${Math.round(b.score)}</b></li>`;
         }).join('');
         const dayScore = Math.round(day.score);
+        const windowCap = day.bestBlockScore === undefined ? null : Math.round(day.bestBlockScore);
         let why = 'The day score rates the whole day. Each time score rates only that two-hour window: its wind, temperature, UV and rain.';
-        if (!win.none && win.score - dayScore >= 20) {
+        if (day.cappedByWindow && windowCap > 0 && !win.none && dayScore === win.score) {
+            why = `The day score is capped at the day's best two-hour window, so it is ${dayScore}: ${win.label} scores ${win.score} and no window scores higher.`;
+        } else if (day.cappedByWindow && windowCap > 0) {
+            why = index === 0 && (win.none || windowCap > win.score)
+                ? `The day score is capped at the day's best two-hour window. The best one was earlier today and scored ${windowCap}, so the day scores ${dayScore}.`
+                : `The day score is capped at the day's best two-hour window, which scores ${windowCap}, so the day scores ${dayScore}.`;
+        } else if (!win.none && win.score - dayScore >= 20) {
             const cause = day.maxHourlyWind > 25 ? `wind peaks at ${Math.round(day.maxHourlyWind)} km/h at the windiest hour, which rules out the whole day`
                 : day.reasons && day.reasons.length ? day.reasons.filter(r => !/perfect|low uv|sunny/i.test(r)).join(', ').toLowerCase() || 'conditions elsewhere in the day' : 'conditions elsewhere in the day';
             why = `The day scores ${dayScore} because ${cause}. ${win.label} avoids the worst of it and scores ${win.score} on its own.`;
         } else if (win.none) {
             why = win.reason === 'Too windy all day'
-                ? `Every ${index === 0 ? 'remaining ' : ''}window has an hour with wind over 15 km/h, so each scores 0. The day score is gentler: it only rules out a day at 25 km/h, which is why it can still look good.`
+                ? `Every ${index === 0 ? 'remaining ' : ''}window has an hour with wind over 15 km/h, so each scores 0.`
                 : `Every ${index === 0 ? 'remaining ' : ''}window has rain or wind over 15 km/h, so each scores 0.`;
+            why += dayScore === 0 ? ' The day score is 0.'
+                : ` Earlier windows today scored up to ${dayScore}, so the day score is ${dayScore}.`;
         }
         return `<div class="window-summary">
                 <div class="window-best"><span class="window-label">Best time</span><strong>${win.none ? win.reason : `${win.label} · ${win.score}/100`}</strong><span class="window-vs">Day score ${dayScore}/100</span></div>

@@ -297,10 +297,10 @@ html.splash-on body{overflow:hidden}
 .splash-wheel{transform-box:fill-box;transform-origin:center}
 .is-playing .splash-wheel{animation:splashSpin .45s linear infinite}
 @keyframes splashSpin{to{transform:rotate(360deg)}}
-.splash-word{display:flex;font-family:var(--sans);font-size:clamp(26px,7vmin,44px);font-weight:300;letter-spacing:.12em;padding-left:.12em;line-height:1}
+.splash-word{display:flex;max-width:100%;white-space:nowrap;font-family:var(--sans);font-size:clamp(18px,5.2vmin,40px);font-weight:300;letter-spacing:.1em;padding-left:.1em;line-height:1}
 .splash-word span{display:block;opacity:0;transform:translateY(16px);filter:blur(6px)}
 .splash-word .splash-dot{color:var(--muted)}
-.is-playing .splash-word span{animation:splashLetter .7s cubic-bezier(.16,1,.3,1) forwards;animation-delay:calc(450ms + var(--i) * 55ms)}
+.is-playing .splash-word span{animation:splashLetter .7s cubic-bezier(.16,1,.3,1) forwards;animation-delay:calc(450ms + var(--i) * 29ms)}
 @keyframes splashLetter{to{opacity:1;transform:none;filter:blur(0)}}
 .splash-bar{width:clamp(128px,34vmin,208px);height:2px;background:var(--line);overflow:hidden;opacity:0}
 .is-playing .splash-bar{animation:splashFade .5s .6s ease forwards}
@@ -314,7 +314,7 @@ html.splash-on body{overflow:hidden}
   @keyframes splashBreathe{50%{opacity:1}}
   .is-playing .splash-ramp,.is-playing .splash-deck{animation:none;stroke-dashoffset:0}
   .is-playing .splash-wheel{animation:none}
-  .is-playing .splash-word span{animation-delay:calc(var(--i) * 30ms);animation-duration:.25s}
+  .is-playing .splash-word span{animation-delay:calc(var(--i) * 16ms);animation-duration:.25s}
   .is-playing .splash-mark{animation-duration:.3s}
 }
 
