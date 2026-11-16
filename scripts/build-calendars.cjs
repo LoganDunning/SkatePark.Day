@@ -47,16 +47,22 @@ function parkList() {
     return parks;
 }
 
-async function getJson(url, tries = 4) {
+// Open-Meteo sometimes hangs on new connections from one of its servers, so retry patiently.
+async function getJson(url, tries = 6) {
+    let last;
     for (let i = 0; i < tries; i++) {
         try {
-            const r = await fetch(url, { headers: { 'user-agent': 'best.skatepark.day calendar build' } });
+            const r = await fetch(url, { headers: { 'user-agent': 'best.skatepark.day calendar build' }, signal: AbortSignal.timeout(20000) });
             if (r.ok) return await r.json();
-            if (r.status < 500 && r.status !== 429) throw new Error(`HTTP ${r.status}`);
-        } catch (e) { if (i === tries - 1) throw e; }
-        await new Promise(res => setTimeout(res, 1500 * 2 ** i));
+            last = new Error(`HTTP ${r.status}`);
+            if (r.status < 500 && r.status !== 429) throw last;
+        } catch (e) {
+            last = e.cause && e.cause.code ? new Error(`${e.message}: ${e.cause.code}`) : e;
+            if (/^HTTP 4/.test(e.message) && !/429/.test(e.message)) throw e;
+        }
+        if (i < tries - 1) await new Promise(res => setTimeout(res, Math.min(20000, 2000 * 2 ** i)));
     }
-    throw new Error('unreachable');
+    throw last;
 }
 
 // One Open-Meteo request per batch of ~11 km cells, same fields the page asks for.
