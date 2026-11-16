@@ -5,6 +5,7 @@
 // over from the feeds that are live on the site, so history survives without committing anything.
 process.env.TZ = process.env.TZ || 'America/Toronto';
 const fs = require('node:fs');
+const os = require('node:os');
 const path = require('node:path');
 const vm = require('node:vm');
 
@@ -14,6 +15,9 @@ const SITE = (process.env.SITE_URL || 'https://best.skatepark.day/').replace(/\/
 const TZID = 'America/Toronto';
 const BATCH = 50;
 const KEEP_WEEKS = 104;
+// Weather fetched by one build step is reused by the next (the landing pages), so Open-Meteo is asked once.
+const CACHE = process.env.FORECAST_CACHE || path.join(os.tmpdir(), 'skatepark-forecasts.json');
+const CACHE_MS = 90 * 60 * 1000;
 
 // The site's scoring, loaded the same way the tests load it.
 const context = vm.createContext({ document: { addEventListener() {} }, console: { log() {} }, URLSearchParams });
@@ -57,6 +61,10 @@ async function getJson(url, tries = 4) {
 
 // One Open-Meteo request per batch of ~11 km cells, same fields the page asks for.
 async function forecasts(cells) {
+    try {
+        const c = JSON.parse(fs.readFileSync(CACHE, 'utf8'));
+        if (Date.now() - c.at < CACHE_MS && cells.every(cell => c.data[cell.key])) return new Map(Object.entries(c.data));
+    } catch (e) {}
     const out = new Map();
     for (let i = 0; i < cells.length; i += BATCH) {
         const batch = cells.slice(i, i + BATCH);
@@ -66,6 +74,7 @@ async function forecasts(cells) {
         const data = await getJson(url);
         (Array.isArray(data) ? data : [data]).forEach((d, j) => out.set(batch[j].key, d));
     }
+    try { fs.writeFileSync(CACHE, JSON.stringify({ at: Date.now(), data: Object.fromEntries(out) })); } catch (e) {}
     return out;
 }
 
@@ -202,7 +211,7 @@ async function main() {
     const parks = parkList();
     const cells = new Map();
     for (const p of parks) {
-        p.cell = `${(Math.round(p.lat * 10) / 10).toFixed(1)},${(Math.round(p.lon * 10) / 10).toFixed(1)}`;
+        p.cell = cellOf(p);
         if (!cells.has(p.cell)) { const [lat, lon] = p.cell.split(',').map(Number); cells.set(p.cell, { key: p.cell, lat, lon }); }
     }
     let weather = new Map();
@@ -229,4 +238,8 @@ async function main() {
     console.log(`Calendar feeds: ${stats.parks} parks, ${stats.cells} weather cells, ${stats.events} upcoming events, ${stats.kept} events written to ${path.relative(ROOT, OUT)}/`);
 }
 
-main().catch(e => { console.error(e); process.exit(1); });
+const cellOf = p => `${(Math.round(p.lat * 10) / 10).toFixed(1)},${(Math.round(p.lon * 10) / 10).toFixed(1)}`;
+
+module.exports = { ROOT, SITE, TZID, newApp, slugify, parkList, forecasts, cellOf, isoWeek, weekRange, WEATHER };
+
+if (require.main === module) main().catch(e => { console.error(e); process.exit(1); });
