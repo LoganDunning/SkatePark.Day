@@ -26,6 +26,9 @@ class SkateParkDay {
         this.weatherData = null;
         const pageShare = document.getElementById('page-share');
         if (pageShare) pageShare.onclick = () => this.sharePage();
+        const locate = document.getElementById('locate-btn');
+        if (locate) locate.onclick = () => this.useCurrentLocation();
+        Flyouts.init();
         this.setupLocationSearch();
         this.init();
     }
@@ -443,7 +446,7 @@ class SkateParkDay {
                 <span>${day === this.bestDay ? 'Best day' : 'Selected day'}</span>
             </div>
             ${this.windowSummaryHtml(index)}
-            <p class="qualification-help">Fuller bars mean better conditions for the whole day. Tap any day below to compare.</p>
+            <p class="qualification-help">Fuller bars mean better conditions for the whole day.</p>
             <div class="factor-grid">
                 ${factors.map(factor => {
                     const points = `${factor.points > 0 ? '+' : ''}${+factor.points.toFixed(1)} pts`;
@@ -460,11 +463,6 @@ class SkateParkDay {
             </div>
             <p class="qualification-note">Score starts at 100, adds the points above, then caps at 0–100 and never above the day’s best two-hour window. Wind above 25 km/h rules out the day. Bars use each rule’s point range, not a share of the total.</p>`;
         CountUp.run(document.getElementById('day-qualification'));
-        document.querySelectorAll('.day-select').forEach(button => {
-            const selected = +button.dataset.day === index;
-            button.setAttribute('aria-pressed', String(selected));
-            button.closest('.day-card').classList.toggle('selected', selected);
-        });
     }
 
     // Best time for the selected day, every remaining window's score, and why it can beat the day score.
@@ -472,10 +470,6 @@ class SkateParkDay {
         const day = this.days[index];
         const win = this.bestWindow(index);
         if (!win) return `<div class="window-summary"><div class="window-best"><span class="window-label">Best time</span><strong>No time left today</strong></div></div>`;
-        const chips = win.blocks.map(b => {
-            const isBest = !win.none && b.startHour === win.startHour;
-            return `<li class="window-chip${isBest ? ' best' : ''}${b.score <= 0 ? ' zero' : ''}"><span>${this.shortBlockLabel(b.startHour, b.endHour)}</span><b>${CountUp.num(b.score)}</b></li>`;
-        }).join('');
         const dayScore = Math.round(day.score);
         const windowCap = day.bestBlockScore === undefined ? null : Math.round(day.bestBlockScore);
         let why = 'The day score rates the whole day. Each time score rates only that two-hour window: its wind, temperature, UV and rain.';
@@ -498,7 +492,6 @@ class SkateParkDay {
         }
         return `<div class="window-summary">
                 <div class="window-best"><span class="window-label">Best time</span><strong>${win.none ? win.reason : `${win.label} · ${CountUp.num(win.score)}/100`}</strong><span class="window-vs">Day score ${CountUp.num(dayScore)}/100</span></div>
-                <ul class="window-chips" aria-label="Time scores${index === 0 ? ' for the rest of today' : ''}">${chips}</ul>
                 <p class="window-why">${escapeHtml(why)}</p>
             </div>`;
     }
@@ -730,6 +723,58 @@ class SkateParkDay {
         }
     }
 
+    // Pointer button in the search bar: jump to where the visitor is, asking the browser only when needed.
+    async useCurrentLocation() {
+        const btn = document.getElementById('locate-btn');
+        const note = document.getElementById('locate-note');
+        const say = (msg, kind) => {
+            if (!note) return;
+            clearTimeout(this.locateNoteTimer);
+            note.textContent = msg || '';
+            note.className = `locate-note${kind ? ' ' + kind : ''}`;
+            note.hidden = !msg;
+            if (msg && kind === 'error') this.locateNoteTimer = setTimeout(() => { note.hidden = true; }, 7000);
+        };
+        if (this.locating) return;
+        if (!navigator.geolocation) { say('Location isn’t available in this browser. Type a city or town in the search bar instead.', 'error'); return; }
+        let state = 'prompt';
+        try {
+            if (navigator.permissions && navigator.permissions.query) state = (await navigator.permissions.query({ name: 'geolocation' })).state;
+        } catch (e) { state = 'prompt'; }
+        if (state === 'denied') { say('Location is blocked for this site. Allow it in your browser settings, or type a city or town in the search bar.', 'error'); return; }
+        this.locating = true;
+        if (btn) { btn.classList.add('is-loading'); btn.setAttribute('aria-busy', 'true'); }
+        if (state !== 'granted') say('Requesting your location…');
+        else say('');
+        const pos = await new Promise(resolve => navigator.geolocation.getCurrentPosition(
+            p => resolve({ lat: p.coords.latitude, lon: p.coords.longitude }),
+            err => resolve({ error: err }),
+            { enableHighAccuracy: false, timeout: 10000, maximumAge: 5 * 60 * 1000 }
+        ));
+        if (pos.error) {
+            this.locating = false;
+            if (btn) { btn.classList.remove('is-loading'); btn.removeAttribute('aria-busy'); }
+            say(pos.error.code === 1 ? 'Location is blocked for this site. Allow it in your browser settings, or type a city or town in the search bar.'
+                : 'Couldn’t find your location just now. Try again, or type a city or town in the search bar.', 'error');
+            return;
+        }
+        say('');
+        const loc = { lat: pos.lat, lon: pos.lon, source: 'gps' };
+        await this.reverseGeocode(loc);
+        this.location = loc;
+        this.saveLocation(loc);
+        this.updateLocationDisplay();
+        try {
+            await this.getWeatherData();
+            this.calculateBestDay();
+            this.renderForecast();
+        } catch (error) {
+            this.showError(error.message);
+        }
+        this.locating = false;
+        if (btn) { btn.classList.remove('is-loading'); btn.removeAttribute('aria-busy'); }
+    }
+
     async searchLocation(query) {
         if (!query.trim()) return;
         
@@ -899,74 +944,145 @@ class SkateParkDay {
     renderBestDay() {
         const bestDayInfo = document.getElementById('best-day-info');
         const day = this.bestDay;
-        
-        let dayName;
-        const now = new Date();
-        const today = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 12, 0, 0).toDateString();
-        const tomorrow = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1, 12, 0, 0).toDateString();
-        
-        if (day.date.toDateString() === today) {
-            dayName = 'Today';
-        } else if (day.date.toDateString() === tomorrow) {
-            dayName = 'Tomorrow';
-        } else {
-            dayName = day.date.toLocaleDateString('en-US', { weekday: 'long' });
-        }
-        
-        const dayOfWeek = day.date.toLocaleDateString('en-US', { weekday: 'short' });
-        const date = day.date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-        const fullDate = `${dayOfWeek} ${date}`;
-        
-        const timeBlocksHtml = this.bestTimeBlocks && this.bestTimeBlocks.length > 0 
-            ? `<div style="margin-top: 12px;">
-                <div style="font-size: 0.8rem; margin-bottom: 6px; opacity: 0.9;">${ICONS.clock} Best times:</div>
-                <div style="display: flex; gap: 6px; justify-content: center; flex-wrap: wrap;">
-                    ${this.bestTimeBlocks.map((block, index) => {
-                        const scorePercent = block.score;
-                        return `
-                        <div class="time-block ${index === 0 ? 'best' : ''}" style="padding: 4px 8px; font-size: 0.7rem;">
-                            ${block.label}
-                            <div class="time-block-score" style="margin-top: 2px;">
-                                <div class="metric-icon" style="font-size: 0.6rem; width: 10px;">${ICONS.target}</div>
-                                <div class="metric-bar" style="height: 2px;">
-                                    <div class="metric-fill score" ${CountUp.fill(scorePercent)}></div>
-                                </div>
-                                <div class="metric-value" style="font-size: 0.6rem; min-width: 20px;">${CountUp.num(block.score)}</div>
-                            </div>
-                        </div>
-                    `;
-                    }).join('')}
-                </div>
-            </div>`
-            : '';
-        
+        const index = this.days.indexOf(day);
+        const date = day.date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+        const win = this.bestWindow(index);
+        const when = win && !win.none ? win.label : win ? win.reason : 'No time left today';
         bestDayInfo.innerHTML = `
-            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
-                <div>
-                    <div style="font-size: 1rem; font-weight: 700;">${dayName}</div>
-                    <div style="font-size: 0.8rem; opacity: 0.8;">${fullDate}</div>
-                </div>
-                <div style="font-size: 1.8rem;">${this.getWeatherIcon(day.weatherCode)}</div>
-                <div style="text-align: right;">
-                    <div style="font-size: 1.1rem; font-weight: 700;">${Math.round(day.tempMax)}°C</div>
-                    <div style="font-size: 0.7rem; opacity: 0.8;">Score: ${CountUp.num(day.score)}/100</div>
+            <div class="best-summary">
+                <div class="best-when"><strong>${this.dayLabel(index)}</strong><span>${date}</span></div>
+                <div class="best-wx">${this.getWeatherIcon(day.weatherCode)}<span class="best-temp">${Math.round(day.tempMax)}°C</span></div>
+                <div class="best-meta"><span>${ICONS.wind} ${Math.round(day.maxHourlyWind)} km/h</span><span>${ICONS.clock} ${when}</span>${day.precipitation > 0 ? `<span>${ICONS.drop} ${day.precipitation}mm</span>` : ''}</div>
+                <div class="best-score"><span class="card-label">Score</span> <b>${CountUp.num(day.score)}</b><small>/100</small><span class="card-score-bar" aria-hidden="true"><span ${CountUp.fill(day.score)}></span></span></div>
+            </div>`;
+        CountUp.run(bestDayInfo);
+    }
+
+    // Time scores for one day as a "popular times" style bar chart, with a tab per day above it.
+    renderTimeChart() {
+        const box = document.getElementById('time-chart');
+        if (!box || !this.days) return;
+        const tabs = this.days.map((d, i) => {
+            const sel = i === this.selectedDayIndex;
+            return `<button type="button" role="tab" id="day-tab-${i}" class="day-tab${d === this.bestDay ? ' is-best' : ''}" data-day="${i}" aria-selected="${sel}" aria-controls="chart-panel" tabindex="${sel ? 0 : -1}"><span>${i === 0 ? 'Today' : d.date.toLocaleDateString('en-US', { weekday: 'short' })}</span><b>${d.date.getDate()}</b></button>`;
+        }).join('');
+        box.innerHTML = `
+            <div class="chart-head">
+                <h3 class="chart-title" id="chart-title"></h3>
+                <div class="chart-actions">
+                    <button type="button" class="chart-btn" id="chart-why">Factors</button>
+                    <button type="button" class="chart-btn chart-share" id="chart-share" aria-label="Share this day">${ICONS.share}</button>
                 </div>
             </div>
-            
-            ${day.precipitation > 0 ? `<div style="font-size: 0.7rem; color: var(--muted); margin-bottom: 8px; text-align: center;">${ICONS.drop} ${day.precipitation}mm rain expected${this.getRainTiming(day)}</div>` : ''}
-            
-            ${timeBlocksHtml}
-        `;
-        CountUp.run(bestDayInfo);
+            <div class="day-tabs" role="tablist" aria-label="Choose a day">${tabs}</div>
+            <div class="chart-panel" id="chart-panel" role="tabpanel"></div>`;
+        const list = box.querySelector('.day-tabs');
+        list.onclick = e => { const t = e.target.closest('[role=tab]'); if (t) this.selectDay(+t.dataset.day); };
+        list.onkeydown = e => {
+            const keys = { ArrowRight: 1, ArrowDown: 1, ArrowLeft: -1, ArrowUp: -1 };
+            let i = this.selectedDayIndex;
+            if (e.key in keys) i = (i + keys[e.key] + this.days.length) % this.days.length;
+            else if (e.key === 'Home') i = 0;
+            else if (e.key === 'End') i = this.days.length - 1;
+            else return;
+            e.preventDefault();
+            this.selectDay(i);
+            document.getElementById(`day-tab-${i}`).focus();
+        };
+        box.querySelector('#chart-why').onclick = () => { this.renderDayQualification(this.selectedDayIndex); Flyouts.open('day-sheet', box.querySelector('#chart-why')); };
+        box.querySelector('#chart-share').onclick = () => this.openShareDialog(this.selectedDayIndex);
+    }
+
+    renderChartPanel() {
+        const panel = document.getElementById('chart-panel');
+        if (!panel) return;
+        const index = this.selectedDayIndex;
+        const day = this.days[index];
+        const blocks = this.computeTimeBlocks(day);
+        const win = this.bestWindow(index);
+        const nowHour = new Date().getHours();
+        const short = h => `${h % 12 === 0 ? 12 : h % 12}${h < 12 ? 'a' : 'p'}`;
+        const bars = blocks.map(b => {
+            const past = index === 0 && b.endHour <= nowHour;
+            const best = win && !win.none && b.startHour === win.startHour;
+            const score = Math.round(b.score);
+            const label = this.shortBlockLabel(b.startHour, b.endHour);
+            const note = past ? ' · past' : best ? ' · best' : score === 0 ? ' · too windy or wet' : '';
+            return `<button type="button" class="bar-col${best ? ' best' : ''}${past ? ' past' : ''}${score === 0 ? ' zero' : ''}" data-tip="${label} · ${score}${note}" aria-label="${label}, score ${score}${note.replace(' · ', ', ')}">
+                <span class="bar-track"><span class="bar" data-axis="y" ${CountUp.fill(b.score).replace('width:', 'height:')}></span></span><span class="bar-x" aria-hidden="true">${short(b.startHour)}</span></button>`;
+        }).join('');
+        panel.setAttribute('aria-labelledby', `day-tab-${index}`);
+        panel.innerHTML = `<div class="chart-grid" aria-hidden="true"><span>100</span><span>50</span><span>0</span></div><div class="chart-bars">${bars}</div><div class="chart-tip" role="status" hidden></div>`;
+        const title = document.getElementById('chart-title');
+        if (title) title.innerHTML = `<em>Time scores</em> <span>${this.dayLabel(index)} · day ${CountUp.num(day.score)}</span>`;
+        const why = document.getElementById('chart-why');
+        if (why) why.setAttribute('aria-label', `Weather factors for ${this.dayLabel(index)}`);
+        const tip = panel.querySelector('.chart-tip');
+        const show = col => {
+            tip.textContent = col.dataset.tip;
+            tip.hidden = false;
+            const p = panel.getBoundingClientRect(), r = col.getBoundingClientRect();
+            const x = Math.min(Math.max(r.left + r.width / 2 - p.left, 48), p.width - 48);
+            tip.style.left = `${x}px`;
+            panel.querySelectorAll('.bar-col.tip-on').forEach(c => c.classList.remove('tip-on'));
+            col.classList.add('tip-on');
+        };
+        const hide = () => { tip.hidden = true; panel.querySelectorAll('.bar-col.tip-on').forEach(c => c.classList.remove('tip-on')); };
+        panel.querySelectorAll('.bar-col').forEach(col => {
+            col.onmouseenter = () => show(col);
+            col.onfocus = () => show(col);
+            col.onclick = () => {
+                if (panel.pinned === col && !tip.hidden) { panel.pinned = null; hide(); return; }
+                panel.pinned = col;
+                show(col);
+            };
+        });
+        panel.querySelector('.chart-bars').onmouseleave = hide;
+        panel.onfocusout = e => { if (!panel.contains(e.relatedTarget)) hide(); };
+        CountUp.run(panel);
+        CountUp.run(title);
+    }
+
+    // One selected day everywhere: the card, the chart tab and the factors sheet.
+    selectDay(index) {
+        if (!this.days || !this.days[index]) return;
+        this.selectedDayIndex = index;
+        this.selectedDayDate = this.days[index].date.toDateString();
+        document.querySelectorAll('.day-select').forEach(button => {
+            const selected = +button.dataset.day === index;
+            button.setAttribute('aria-pressed', String(selected));
+            button.closest('.day-card').classList.toggle('selected', selected);
+        });
+        document.querySelectorAll('.day-tab').forEach(tab => {
+            const selected = +tab.dataset.day === index;
+            tab.setAttribute('aria-selected', String(selected));
+            tab.tabIndex = selected ? 0 : -1;
+        });
+        this.renderChartPanel();
+        if (Flyouts.isOpen('day-sheet')) this.renderDayQualification(index);
+    }
+
+    // Lightweight animated weather behind each card's text, chosen from the day's forecast.
+    weatherFxHtml(day) {
+        const c = day.weatherCode;
+        const kind = [95, 96, 99].includes(c) ? 'storm' : [71, 73, 75, 77, 85, 86].includes(c) ? 'snow'
+            : [61, 63, 65, 80, 81, 82].includes(c) ? 'rain' : [51, 53, 55, 56, 57].includes(c) ? 'drizzle'
+            : [45, 48].includes(c) ? 'fog' : c === 3 ? 'cloud' : c === 2 ? 'partly' : 'sun';
+        const n = kind === 'drizzle' ? 6 : kind === 'rain' || kind === 'storm' ? Math.min(12, 7 + Math.round((day.precipitation || 0) / 3)) : kind === 'snow' ? 8 : 0;
+        const drops = Array.from({ length: n }, (_, i) => `<i style="--x:${(i * 37 + 11) % 96}%;--d:${((i * 53) % 100) / 100 * 1.2}s;--s:${0.8 + ((i * 29) % 40) / 100}"></i>`).join('');
+        const sun = kind === 'sun' || kind === 'partly' ? '<b class="wx-sun"></b>' : '';
+        const cloud = kind === 'partly' || kind === 'cloud' || kind === 'storm' || kind === 'rain' ? '<b class="wx-cloud"></b>' : '';
+        const fog = kind === 'fog' ? '<b class="wx-fog"></b><b class="wx-fog two"></b>' : '';
+        const flash = kind === 'storm' ? '<b class="wx-flash"></b>' : '';
+        const wind = day.maxHourlyWind > 20 ? '<s></s><s></s><s></s>' : '';
+        return `<div class="wx wx--${kind}" data-wx="${kind}" aria-hidden="true">${sun}${cloud}${fog}${flash}<span class="wx-p">${drops}</span>${wind ? `<span class="wx-wind">${wind}</span>` : ''}</div>`;
     }
 
     renderWeatherGrid() {
         const grid = document.getElementById('weather-grid');
-        
+
         // Sort days by score to find rankings, but filter heavy rain days from #2 spot
         const sortedDays = [...this.days].sort((a, b) => b.score - a.score);
-        
-        // Find second best day, excluding heavy rain days
         let secondBestDay = null;
         for (const day of sortedDays) {
             if (day !== this.bestDay && !this.isHeavyRainDay(day)) {
@@ -974,33 +1090,17 @@ class SkateParkDay {
                 break;
             }
         }
-        
-        // If no suitable second day found, just use the actual second highest score
-        if (!secondBestDay && sortedDays.length > 1) {
-            secondBestDay = sortedDays[1];
-        }
-        
+        if (!secondBestDay && sortedDays.length > 1) secondBestDay = sortedDays[1];
+
         grid.innerHTML = this.days.map((day, index) => {
-            let dayName;
-            if (index === 0) {
-                dayName = 'Today';
-            } else if (index === 1) {
-                dayName = 'Tomorrow';
-            } else {
-                dayName = day.date.toLocaleDateString('en-US', { weekday: 'long' });
-            }
-            
-            const dayOfWeek = day.date.toLocaleDateString('en-US', { weekday: 'short' });
+            const dayName = this.dayLabel(index);
+            const shortName = index === 0 ? 'Today' : day.date.toLocaleDateString('en-US', { weekday: 'short' });
             const date = day.date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-            const fullDate = `${dayOfWeek} ${date}`;
-            
             const isBest = day === this.bestDay;
             const isSecondBest = day === secondBestDay && !isBest;
             const isNoSkate = day.maxHourlyWind > 15 || day.score < 30;
-            
             let cardClass = 'day-card';
             let medalHtml = '';
-            
             if (isBest) {
                 cardClass += ' best';
                 medalHtml = '<div class="day-card-medal gold"></div>';
@@ -1010,52 +1110,43 @@ class SkateParkDay {
             } else if (isNoSkate) {
                 cardClass += ' no-skate';
             }
-            
             const win = this.bestWindow(index);
-            const windowText = !win ? 'No time left today' : win.none ? win.reason : '';
+            const windowText = !win ? 'None left' : win.none ? win.reason : '';
             const windowHtml = win && !win.none
-                ? `<span class="card-window${win.score - day.score >= 20 ? ' standout' : ''}"><small class="card-label">Best time</small><span class="card-window-time">${this.shortBlockLabel(win.startHour, win.endHour)}</span><span class="card-window-score">${CountUp.num(win.score)}</span></span>`
-                : `<span class="card-window empty"><small class="card-label">Best time</small><span class="card-window-time">${windowText}</span></span>`;
-            const windowAria = win && !win.none ? `, best time ${win.label} scores ${win.score}` : `, ${windowText.toLowerCase()}`;
+                ? `<span class="card-window${win.score - day.score >= 20 ? ' standout' : ''}"><small class="card-label">Best</small><span class="card-window-time">${this.shortBlockLabel(win.startHour, win.endHour)}</span><span class="card-window-score">${CountUp.num(win.score)}</span></span>`
+                : `<span class="card-window empty"><small class="card-label">Best</small><span class="card-window-time">${windowText}</span></span>`;
+            const windowAria = win && !win.none ? `, best time ${win.label} scores ${win.score}` : `, ${(windowText || '').toLowerCase()}`;
             return `
                 <article class="${cardClass}">
+                    ${this.weatherFxHtml(day)}
                     ${medalHtml}
-                    <button type="button" class="day-select" data-day="${index}" aria-pressed="false" aria-controls="day-qualification" aria-label="Show weather factors for ${dayName}, ${date}: day score ${Math.round(day.score)}${windowAria}">
-                        <span class="day-name">${dayName}</span>
+                    <button type="button" class="day-select" data-day="${index}" aria-pressed="false" aria-controls="chart-panel" aria-label="Show time scores for ${dayName}, ${date}: day score ${Math.round(day.score)}${windowAria}${isBest ? ', best day' : isSecondBest ? ', runner-up' : ''}">
+                        <span class="day-name"><span class="dn-long">${dayName}</span><span class="dn-short">${shortName} <b>${day.date.getDate()}</b></span></span>
                         <span class="day-date">${date}</span>
-                        <span class="weather-icon">${this.getWeatherIcon(day.weatherCode)}</span>
-                        <span class="temp">${Math.round(day.tempMax)}°C</span>
+                        <span class="card-wx"><span class="weather-icon">${this.getWeatherIcon(day.weatherCode)}</span><span class="temp">${Math.round(day.tempMax)}°</span></span>
                         <span class="card-wind">${ICONS.wind} ${Math.round(day.maxHourlyWind)} <small>km/h</small></span>
                         <span class="card-score"><small class="card-label">Day</small> ${CountUp.num(day.score)}<small>/100</small></span>
                         <span class="card-score-bar" aria-hidden="true"><span ${CountUp.fill(day.score)}></span></span>
                         ${windowHtml}
-                        <span class="card-details">View factors</span>
                     </button>
-                    <button type="button" class="day-share-btn" data-day="${index}" aria-label="Share ${dayName}">${ICONS.share}<span>Share</span></button>
                 </article>`;
         }).join('');
         const entrance = CardEntrance.shouldRun(grid, `${this.location.lat},${this.location.lon}`);
         CountUp.run(grid, entrance ? '.day-card' : null);
         if (entrance) CardEntrance.run(grid);
+        else WeatherFx.start(grid.querySelectorAll('.day-card'));
+        WeatherFx.watch(grid);
         grid.querySelectorAll('.day-select').forEach(button => {
-            button.onclick = () => {
-                this.renderDayQualification(+button.dataset.day);
-                const panel = document.getElementById('day-qualification');
-                const bounds = panel.getBoundingClientRect();
-                if (bounds.top < 64 || bounds.bottom > window.innerHeight) {
-                    panel.scrollIntoView({ block: 'start', behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
-                }
-            };
+            button.onclick = () => this.selectDay(+button.dataset.day);
         });
         // Retain a selection on refresh of the same forecast, reset it for a new location.
         const locationKey = `${this.location.lat},${this.location.lon}`;
         let selected = this.qualificationLocation === locationKey ? this.days.findIndex(day => day.date.toDateString() === this.selectedDayDate) : -1;
         this.qualificationLocation = locationKey;
         if (selected < 0) selected = this.days.indexOf(this.bestDay);
-        this.renderDayQualification(selected);
-        grid.querySelectorAll('.day-share-btn').forEach(btn => {
-            btn.onclick = (e) => { e.stopPropagation(); this.openShareDialog(+btn.dataset.day); };
-        });
+        this.selectedDayIndex = selected;
+        this.renderTimeChart();
+        this.selectDay(selected);
     }
 
     // What a shared link asked for, shown above the forecast while its location is on screen.
@@ -1633,7 +1724,8 @@ const CountUp = {
 
     // Style attribute for a bar that fills to `percent`.
     fill(percent) {
-        return `data-fill="${percent}" style="width:${percent}%"`;
+        const v = +(+percent).toFixed(2);
+        return `data-fill="${v}" style="width:${v}%"`;
     },
 
     reduced() {
@@ -1646,7 +1738,7 @@ const CountUp = {
 
     paint(el, ratio) {
         if (el.dataset.count !== undefined) el.textContent = ratio >= 1 ? el.dataset.count : String(Math.round(+el.dataset.count * ratio));
-        else el.style.width = ratio >= 1 ? `${el.dataset.fill}%` : `${+el.dataset.fill * ratio}%`;
+        else el.style[el.dataset.axis === 'y' ? 'height' : 'width'] = ratio >= 1 ? `${el.dataset.fill}%` : `${+el.dataset.fill * ratio}%`;
     },
 
     // Reset everything new under `root` to 0, then animate each group when the splash is gone and it scrolls into view.
@@ -1707,6 +1799,93 @@ const CountUp = {
     }
 };
 
+// Off-canvas panels (menu, about/FAQ, day factors): one shared blurred backdrop, focus trap, scroll lock.
+const Flyouts = {
+    current: null,
+    opener: null,
+
+    init() {
+        if (this.ready || typeof document === 'undefined') return;
+        this.ready = true;
+        const backdrop = document.getElementById('flyout-backdrop');
+        if (backdrop) backdrop.onclick = () => this.close();
+        const toggle = document.getElementById('menu-toggle');
+        if (toggle) toggle.onclick = () => (this.isOpen('site-menu') ? this.close() : this.open('site-menu', toggle));
+        document.querySelectorAll('.flyout [data-close]').forEach(b => { b.addEventListener('click', () => this.close()); });
+        document.querySelectorAll('#site-menu a').forEach(a => a.addEventListener('click', e => {
+            const info = a.dataset.info;
+            if (info) { e.preventDefault(); this.open('info-panel', toggle, info); return; }
+            if (a.dataset.menu === 'forecast') { e.preventDefault(); this.close(); return; }
+            this.close(false);
+        }));
+        document.addEventListener('keydown', e => {
+            if (!this.current) return;
+            if (e.key === 'Escape') { e.preventDefault(); this.close(); return; }
+            if (e.key !== 'Tab') return;
+            const items = [...this.current.querySelectorAll('a[href],button:not([disabled]),input,select,textarea,[tabindex]:not([tabindex="-1"])')].filter(el => el.offsetParent !== null || el === document.activeElement);
+            if (!items.length) return;
+            const first = items[0], last = items[items.length - 1];
+            if (e.shiftKey && (document.activeElement === first || !this.current.contains(document.activeElement))) { e.preventDefault(); last.focus(); }
+            else if (!e.shiftKey && (document.activeElement === last || !this.current.contains(document.activeElement))) { e.preventDefault(); first.focus(); }
+        });
+    },
+
+    isOpen(id) { return !!this.current && this.current.id === id; },
+
+    open(id, opener, anchorId) {
+        const panel = document.getElementById(id);
+        if (!panel) return;
+        if (this.current && this.current !== panel) this.close(false, true);
+        const backdrop = document.getElementById('flyout-backdrop');
+        this.opener = opener || document.activeElement;
+        this.current = panel;
+        panel.inert = false;
+        panel.removeAttribute('inert');
+        if (backdrop) { backdrop.hidden = false; void backdrop.offsetWidth; backdrop.classList.add('open'); }
+        panel.classList.add('open');
+        document.documentElement.classList.add('flyout-lock');
+        const toggle = document.getElementById('menu-toggle');
+        if (toggle) { toggle.setAttribute('aria-expanded', String(id === 'site-menu')); document.querySelector('.site-header').classList.toggle('menu-open', id === 'site-menu'); }
+        const scroller = panel.querySelector('.flyout-scroll');
+        if (scroller) scroller.scrollTop = 0;
+        if (anchorId && scroller) { const t = document.getElementById(anchorId); if (t) scroller.scrollTop = t.offsetTop - scroller.offsetTop - 12; }
+        const focusTarget = panel.querySelector('.flyout-close');
+        setTimeout(() => focusTarget && focusTarget.focus({ preventScroll: true }), 30);
+    },
+
+    close(restoreFocus = true, switching = false) {
+        const panel = this.current;
+        if (!panel) return;
+        panel.classList.remove('open');
+        panel.inert = true;
+        panel.setAttribute('inert', '');
+        this.current = null;
+        const toggle = document.getElementById('menu-toggle');
+        if (toggle) { toggle.setAttribute('aria-expanded', 'false'); document.querySelector('.site-header').classList.remove('menu-open'); }
+        if (switching) return;
+        const backdrop = document.getElementById('flyout-backdrop');
+        if (backdrop) { backdrop.classList.remove('open'); setTimeout(() => { if (!this.current) backdrop.hidden = true; }, 260); }
+        document.documentElement.classList.remove('flyout-lock');
+        if (restoreFocus && this.opener && this.opener.focus) this.opener.focus({ preventScroll: true });
+    }
+};
+
+// Card weather effects run only after a card lands, and pause off screen or in a hidden tab.
+const WeatherFx = {
+    observer: null,
+    start(cards) { [...cards].forEach(c => c.classList.add('wx-on')); },
+    watch(grid) {
+        if (typeof IntersectionObserver !== 'function' || !grid) return;
+        if (this.observer) this.observer.disconnect();
+        this.observer = new IntersectionObserver(entries => entries.forEach(e => e.target.classList.toggle('wx-paused', !e.isIntersecting)));
+        this.observer.observe(grid);
+        if (!this.vis) {
+            this.vis = true;
+            document.addEventListener('visibilitychange', () => document.documentElement.classList.toggle('doc-hidden', document.hidden));
+        }
+    }
+};
+
 // The seven day cards drop in one after another once the grid is on screen (after the splash), each card's
 // scores count up as it lands, then the BEST card gets a pop and the runner-up a glow, in that order.
 // Runs for the first forecast and each new location; a same-place refresh just counts up.
@@ -1763,6 +1942,7 @@ const CardEntrance = {
                 card.classList.remove('card-drop');
                 card.classList.add('card-landed');
                 CountUp.animate(card, true);
+                WeatherFx.start([card]);
             }, i * this.STAGGER + this.DROP);
         });
         const allLanded = (cards.length - 1) * this.STAGGER + this.DROP;
@@ -1785,6 +1965,7 @@ const CardEntrance = {
     // Hidden tab: no motion, show the cards and their final scores.
     finish(grid, cards) {
         grid.classList.remove('cards-waiting');
+        WeatherFx.start(cards);
         cards.forEach(card => {
             (card.countUpList || []).forEach(el => CountUp.paint(el, 1));
             card.countUpList = null;
