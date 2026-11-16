@@ -62,7 +62,7 @@
     <link rel="preconnect" href="https://api.open-meteo.com" crossorigin>
     <link rel="preconnect" href="https://geocoding-api.open-meteo.com" crossorigin>
     <link rel="dns-prefetch" href="https://nominatim.openstreetmap.org">
-    <link rel="stylesheet" href="app.css?v=2026111601">
+    <link rel="stylesheet" href="app.css?v=2026111602">
 </head>
 <body id="top">
     <script>document.documentElement.setAttribute('data-theme','dark');</script>
@@ -91,15 +91,16 @@
     <script>
     (function(){
         var s=document.getElementById('splash');
-        if(!s){window.SkateSplash={finish:function(){},setProgress:function(){}};return;}
+        if(!s){window.SkateSplash={finish:function(){},setProgress:function(){},whenGone:function(cb){cb();}};return;}
         var svg=document.getElementById('splash-svg'),bar=document.getElementById('splash-bar'),fill=document.getElementById('splash-fill');
         var reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
         var SEQ=reduce?600:3100,EXIT=reduce?250:450,t0=performance.now(),pct=0,done=false,timer;
+        var gone=false,waiting=[];function whenGone(cb){if(gone)cb();else waiting.push(cb);}
         document.documentElement.classList.add('splash-on');
         s.querySelectorAll('.splash-draw').forEach(function(el){el.style.setProperty('--len',Math.ceil(el.getTotalLength()));});
         function paint(v){pct=Math.min(100,Math.max(pct,v));fill.style.width=pct+'%';bar.setAttribute('aria-valuenow',Math.round(pct));}
         function creep(){if(done)return;paint(pct<70?pct+9+Math.random()*10:pct+(92-pct)*.25);if(pct<92)timer=setTimeout(creep,120+Math.random()*160);}
-        function exit(){s.classList.add('is-exiting');document.documentElement.classList.remove('splash-on');setTimeout(function(){s.classList.add('is-done');try{svg.pauseAnimations();}catch(e){}s.remove();},EXIT);}
+        function exit(){s.classList.add('is-exiting');document.documentElement.classList.remove('splash-on');setTimeout(function(){s.classList.add('is-done');try{svg.pauseAnimations();}catch(e){}s.remove();gone=true;waiting.splice(0).forEach(function(cb){try{cb();}catch(e){}});},EXIT);}
         var exited=false;function leave(){if(exited)return;exited=true;done=true;clearTimeout(timer);paint(100);exit();}
         function finish(){if(done)return;done=true;clearTimeout(timer);paint(100);}
         if(reduce){try{svg.pauseAnimations();}catch(e){}}
@@ -107,7 +108,7 @@
         timer=setTimeout(creep,300);
         // Play the full sequence (draw-on, wordmark, one full board roll), then exit
         setTimeout(leave,SEQ);
-        window.SkateSplash={finish:finish,setProgress:function(v){paint(+v||0);}};
+        window.SkateSplash={finish:finish,setProgress:function(v){paint(+v||0);},whenGone:whenGone};
     })();
     </script>
     <header class="site-header">
@@ -331,6 +332,6 @@
         document.addEventListener('keydown',function(e){if(e.key==='Escape')setOpen(false);});
     })();
     </script>
-    <script src="app.js?v=2026111401" defer></script>
+    <script src="app.js?v=2026111602" defer></script>
 </body>
 </html>

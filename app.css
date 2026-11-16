@@ -363,6 +363,8 @@ html.splash-on body{overflow:hidden}
 .card-score{font-family:var(--mono);font-size:1rem;margin-top:6px}
 .card-score-bar{display:block;width:100%;height:4px;background:var(--line)}
 .card-score-bar > span{display:block;height:100%;background:var(--ink)}
+.count{display:inline-block;text-align:right;font-variant-numeric:tabular-nums}
+[data-fill]{transition:none!important}
 .card-details{font-family:var(--mono);font-size:.65rem;color:var(--muted);margin-top:4px}
 .day-card .day-share-btn{position:static;display:flex;align-items:center;justify-content:center;gap:7px;min-width:44px;width:100%;height:44px;min-height:44px;margin:0;border:0;border-top:1px solid var(--line);font-family:var(--mono);font-size:.7rem;color:var(--ink);letter-spacing:.04em}
 .day-share-btn:hover{background:var(--faint)}
