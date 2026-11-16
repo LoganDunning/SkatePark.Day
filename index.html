@@ -62,7 +62,7 @@
     <link rel="preconnect" href="https://api.open-meteo.com" crossorigin>
     <link rel="preconnect" href="https://geocoding-api.open-meteo.com" crossorigin>
     <link rel="dns-prefetch" href="https://nominatim.openstreetmap.org">
-    <link rel="stylesheet" href="app.css?v=2026111603">
+    <link rel="stylesheet" href="app.css?v=2026111604">
 </head>
 <body id="top">
     <script>document.documentElement.setAttribute('data-theme','dark');</script>
@@ -72,13 +72,14 @@
                 <span class="splash-halo" aria-hidden="true"></span>
                 <svg class="splash-mark" id="splash-svg" viewBox="0 0 200 120" aria-hidden="true">
                     <path class="splash-ramp splash-draw" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" d="M10 104h44c22 0 30-30 46-30s24 30 46 30h44"/>
-                    <g class="splash-board">
-                        <animateMotion dur="2.6s" repeatCount="indefinite" begin="0.5s" rotate="auto" path="M10 96h44c22 0 30-30 46-30s24 30 46 30h44"/>
+                    <g class="splash-board" transform="translate(10 96)">
+                        <g class="splash-flip">
                         <g transform="translate(-28 -14)">
                             <path class="splash-deck splash-draw" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round" d="M2 4c2 4 5 6 10 6h32c5 0 8-2 10-6"/>
                             <path fill="none" stroke="currentColor" stroke-width="2" d="M16 10v3M40 10v3"/>
                             <g class="splash-wheel"><circle cx="16" cy="16" r="3.4" fill="none" stroke="currentColor" stroke-width="2"/><path d="M16 13.2v2" stroke="currentColor" stroke-width="1.4"/></g>
                             <g class="splash-wheel"><circle cx="40" cy="16" r="3.4" fill="none" stroke="currentColor" stroke-width="2"/><path d="M40 13.2v2" stroke="currentColor" stroke-width="1.4"/></g>
+                        </g>
                         </g>
                     </g>
                 </svg>
@@ -332,6 +333,6 @@
         document.addEventListener('keydown',function(e){if(e.key==='Escape')setOpen(false);});
     })();
     </script>
-    <script src="app.js?v=2026111603" defer></script>
+    <script src="app.js?v=2026111604" defer></script>
 </body>
 </html>
