@@ -61,9 +61,9 @@
     <link rel="preconnect" href="https://api.open-meteo.com" crossorigin>
     <link rel="preconnect" href="https://geocoding-api.open-meteo.com" crossorigin>
     <link rel="dns-prefetch" href="https://nominatim.openstreetmap.org">
-    <link rel="stylesheet" href="app.css?v=2026111607">
+    <link rel="stylesheet" href="app.css?v=2026111608">
 </head>
-<body id="top" class="app">
+<body id="top" class="app v3">
     <script>document.documentElement.setAttribute('data-theme','dark');</script>
     <div class="splash" id="splash" role="img" aria-label="best.skatepark.day">
         <div class="splash-stage">
@@ -113,37 +113,23 @@
     </script>
     <header class="site-header">
         <div class="site-header-inner">
-            <a href="https://best.skatepark.day/" class="brand" aria-label="best.skatepark.day home">
-                <svg class="brand-mark" viewBox="0 0 42 32" width="34" height="26" aria-hidden="true"><g fill="none" stroke-linecap="butt"><path class="bd-b" stroke="currentColor" stroke-width="1.9" d="M4 3v26h8.5a6.75 6.75 0 0 0 0-13.5H4M4 3h7.5a6.25 6.25 0 0 1 0 12.5"/><path class="bd-d" stroke="currentColor" stroke-width="1.1" opacity=".62" d="M23 3v19M23 3h3a13 13 0 0 1 0 26h-1.5"/></g></svg>
-                <span class="brand-name"><b>Best</b> SkatePark Day</span>
-            </a>
+            <a href="https://best.skatepark.day/" class="brand wordmark" aria-label="best.skatepark.day home"><strong>best</strong>.skatepark.day</a>
             <div class="header-actions">
-                <div class="cal-wrap">
-                    <button type="button" class="cal-toggle" id="cal-toggle" aria-expanded="false" aria-controls="cal-pop" aria-haspopup="dialog">
-                        <svg class="icon" viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15.5" rx="2.5"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg>
-                        <span class="cal-label">Calendar</span>
-                    </button>
-                    <div class="cal-pop" id="cal-pop" role="dialog" aria-labelledby="cal-title" hidden>
-                        <p class="cal-title" id="cal-title">Skate days in your calendar</p>
-                        <p class="cal-park" id="cal-park">Finding the nearest park…</p>
-                        <p class="cal-note" id="cal-note" hidden></p>
-                        <div class="cal-actions">
-                            <a class="cal-btn primary" id="cal-subscribe" href="#">Subscribe</a>
-                            <a class="cal-btn" id="cal-download" href="#" download>Download .ics</a>
-                        </div>
-                        <p class="cal-help">Subscribing adds each week's best skate time and keeps it updated every 6 hours.</p>
-                    </div>
-                </div>
-                <button type="button" class="theme-toggle" id="theme-toggle" aria-label="Toggle dark or light theme">
-                    <span class="theme-toggle-label">Light</span>
-                </button>
-                <button type="button" class="hamburger-menu" id="menu-toggle" aria-expanded="false" aria-controls="site-menu" aria-haspopup="dialog">
-                    <span class="menu-label">Menu</span>
-                    <span class="hamburger-lines" aria-hidden="true"><span class="hamburger-line"></span><span class="hamburger-line"></span><span class="hamburger-line"></span></span>
-                </button>
+                <button type="button" id="page-share" class="hd-btn page-share" aria-label="Share this forecast"><svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" class="ic"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg></button>
+                <button type="button" class="hd-btn hamburger-menu" id="menu-toggle" aria-label="Menu" aria-expanded="false" aria-controls="site-menu" aria-haspopup="dialog"><svg aria-hidden="true" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" class="ic"><line x1="3" y1="8" x2="21" y2="8"/><line x1="3" y1="16" x2="21" y2="16"/></svg></button>
             </div>
         </div>
     </header>
+    <div class="cal-pop" id="cal-pop" role="dialog" aria-labelledby="cal-title" hidden>
+        <p class="cal-title" id="cal-title">Skate days in your calendar</p>
+        <p class="cal-park" id="cal-park">Finding the nearest park…</p>
+        <p class="cal-note" id="cal-note" hidden></p>
+        <div class="cal-actions">
+            <a class="cal-btn primary" id="cal-subscribe" href="#">Subscribe</a>
+            <a class="cal-btn" id="cal-download" href="#" download>Download .ics</a>
+        </div>
+        <p class="cal-help">Subscribing adds each week's best skate time and keeps it updated every 6 hours.</p>
+    </div>
     <div class="flyout-backdrop" id="flyout-backdrop" hidden></div>
     <aside class="flyout site-menu" id="site-menu" role="dialog" aria-modal="true" aria-label="Site menu" inert>
         <div class="flyout-head"><span class="kicker">Menu</span><button type="button" class="flyout-close" data-close aria-label="Close menu">&times;</button></div>
@@ -151,8 +137,10 @@
             <a href="#top" data-menu="forecast"><span class="menu-num">01</span>Forecast</a>
             <a href="#about-heading" data-info="about-heading"><span class="menu-num">02</span>How it works</a>
             <a href="#faq-heading" data-info="faq-heading"><span class="menu-num">03</span>FAQ</a>
-            <a href="https://github.com/LoganDunning/SkatePark.Day" target="_blank" rel="noopener noreferrer" class="github-icon"><span class="menu-num">04</span>Source on GitHub ↗</a>
-            <a href="https://www.logandunning.com/" target="_blank" rel="noopener noreferrer" class="ld-logo" title="Lets Do Fun Things Everyday"><span class="menu-num">05</span>Logan Dunning ↗</a>
+            <button type="button" class="menu-row cal-toggle" id="cal-toggle" aria-expanded="false" aria-controls="cal-pop" aria-haspopup="dialog"><span class="menu-num">04</span>Add to calendar</button>
+            <button type="button" class="menu-row theme-toggle" id="theme-toggle" aria-label="Toggle dark or light theme"><span class="menu-num">05</span><span><span class="theme-toggle-label">Light</span> mode</span></button>
+            <a href="https://github.com/LoganDunning/SkatePark.Day" target="_blank" rel="noopener noreferrer" class="github-icon"><span class="menu-num">06</span>Source on GitHub ↗</a>
+            <a href="https://www.logandunning.com/" target="_blank" rel="noopener noreferrer" class="ld-logo" title="Lets Do Fun Things Everyday"><span class="menu-num">07</span>Logan Dunning ↗</a>
         </nav>
         <div class="flyout-foot">
             <button type="button" class="btn btn-solid flyout-login">Log in</button>
@@ -162,18 +150,17 @@
 
     <main id="main" class="container">
         <section class="hero" aria-labelledby="page-title">
-            <p class="kicker">Social Dunn Right Inc · 7-Day Skate Forecast</p>
-            <h1 id="page-title"><span class="visually-hidden">Best Skate Park Day: </span><span class="best-word">best</span><span class="muted-text">.</span>skatepark<span class="muted-text">.</span>day</h1>
-            <p id="best-skate-summary" class="lede">The Best Day to Skate this week is...</p>
+            <h1 id="page-title" class="visually-hidden">Best Skate Park Day: the best day to skate this week</h1>
+            <p id="best-skate-summary" class="visually-hidden">The Best Day to Skate this week is...</p>
             <p id="location-display" class="visually-hidden" aria-live="polite"></p>
-            <div class="location-row">
+            <button type="button" id="location-pill" class="loc-pill" aria-expanded="false" aria-controls="location-panel"><svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" class="ic"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg><span id="location-pill-text">Finding your location…</span><svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" class="ic"><polyline points="6 9 12 15 18 9"/></svg></button>
+            <div class="location-row location-panel" id="location-panel" hidden>
             <div id="location-edit" class="location-edit location-bar">
                 <label for="location-search" class="visually-hidden">Location: search for a city</label>
                 <svg class="icon location-bar-icon" viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="M20 20l-4.3-4.3"/></svg>
                 <input type="search" id="location-search" enterkeyhint="search" class="location-search" placeholder="Search for a city or town" autocomplete="off">
                 <div class="bar-tools">
                     <button type="button" id="locate-btn" class="bar-btn locate-btn" aria-label="Use my current location"><svg class="icon" viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.5 3.5L3.5 10.6l7.1 2.8 2.8 7.1z"/></svg><span class="bar-spinner" aria-hidden="true"></span></button>
-                    <button type="button" id="page-share" class="bar-btn page-share" aria-label="Share this forecast"><svg class="icon" viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 15V3M8 7l4-4 4 4"/><path d="M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-7"/></svg></button>
                 </div>
             </div>
             <p id="locate-note" class="locate-note" role="status" aria-live="polite" hidden></p>
@@ -198,12 +185,14 @@
             <div id="forecast" class="forecast hidden">
                 <div id="shared-note" class="shared-note" hidden></div>
                 <div id="best-day" class="best-day">
-                    <h2 id="forecast-heading" class="best-label">Best day</h2>
+                    <h2 id="forecast-heading" class="hl-label">Best time to skate this week</h2>
                     <div id="best-day-info"></div>
-                    <div id="time-chart" class="time-chart"></div>
                 </div>
-                
-                <div id="weather-grid" class="weather-grid"></div>
+                <div id="time-chart" class="time-chart"></div>
+                <div class="week">
+                    <div class="week-head"><span>This week</span><span>Tap a day for its hours</span></div>
+                    <div id="weather-grid" class="week-list"></div>
+                </div>
             </div>
         </section>
 
@@ -361,6 +350,6 @@
         sync();
     })();
     </script>
-    <script src="app.js?v=2026111607" defer></script>
+    <script src="app.js?v=2026111608" defer></script>
 </body>
 </html>

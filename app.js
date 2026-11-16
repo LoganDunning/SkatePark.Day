@@ -29,6 +29,7 @@ class SkateParkDay {
         if (pageShare) pageShare.onclick = () => this.sharePage();
         const locate = document.getElementById('locate-btn');
         if (locate) locate.onclick = () => this.useCurrentLocation();
+        this.setupLocationPill();
         Flyouts.init();
         CalendarFeed.init(this);
         this.setupLocationSearch();
@@ -535,6 +536,11 @@ class SkateParkDay {
         }
         
         locationElement.textContent = locationText;
+        const pill = document.getElementById('location-pill-text');
+        if (pill) {
+            pill.textContent = locationText;
+            document.getElementById('location-pill').setAttribute('aria-label', `Change location, currently ${locationText}`);
+        }
         const input = document.getElementById('location-search');
         if (document.activeElement !== input) input.value = locationText;
         input.dataset.current = locationText;
@@ -543,12 +549,48 @@ class SkateParkDay {
     }
 
     showLocationEdit() {
-        document.getElementById('location-search').focus();
+        this.openLocationPanel();
     }
 
     hideLocationEdit() {
         const input = document.getElementById('location-search');
         input.blur();
+        this.closeLocationPanel(false);
+    }
+
+    // The location pill opens the search (type-ahead plus the current-location arrow) under it.
+    setupLocationPill() {
+        const pill = document.getElementById('location-pill');
+        const panel = document.getElementById('location-panel');
+        if (!pill || !panel || pill.dataset.ready) return;
+        pill.dataset.ready = '1';
+        pill.onclick = () => (panel.hidden ? this.openLocationPanel() : this.closeLocationPanel());
+        document.addEventListener('pointerdown', e => {
+            if (!panel.hidden && !panel.contains(e.target) && !pill.contains(e.target) && !e.target.closest('#location-suggestions')) this.closeLocationPanel(false);
+        });
+        panel.addEventListener('keydown', e => {
+            const list = document.getElementById('location-suggestions');
+            if (e.key === 'Escape' && (!list || list.hidden || !list.children.length)) { e.preventDefault(); this.closeLocationPanel(); }
+        });
+    }
+
+    openLocationPanel() {
+        const pill = document.getElementById('location-pill');
+        const panel = document.getElementById('location-panel');
+        const input = document.getElementById('location-search');
+        if (panel) { panel.hidden = false; pill.setAttribute('aria-expanded', 'true'); }
+        if (input) { input.focus(); input.select(); }
+    }
+
+    closeLocationPanel(restoreFocus = true) {
+        const pill = document.getElementById('location-pill');
+        const panel = document.getElementById('location-panel');
+        const note = document.getElementById('locate-note');
+        if (!panel || panel.hidden) return;
+        if (note && !note.hidden && note.classList.contains('error')) return;
+        panel.hidden = true;
+        pill.setAttribute('aria-expanded', 'false');
+        if (restoreFocus) pill.focus();
     }
 
     setupLocationSearch() {
@@ -761,6 +803,7 @@ class SkateParkDay {
             return;
         }
         say('');
+        this.hideLocationEdit();
         const loc = { lat: pos.lat, lon: pos.lon, source: 'gps' };
         await this.reverseGeocode(loc);
         this.location = loc;
@@ -943,54 +986,49 @@ class SkateParkDay {
         summaryElement.innerHTML = `<span class="muted-text">The Best Day to Skate this week is</span> ${dayName}, ${date} at ${bestTime}`;
     }
 
-    renderBestDay() {
+    // Headline for the selected day (the best day by default): day, best window, score, conditions.
+    renderBestDay(index = this.days.indexOf(this.bestDay)) {
         const bestDayInfo = document.getElementById('best-day-info');
-        const day = this.bestDay;
-        const index = this.days.indexOf(day);
-        const date = day.date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+        const day = this.days[index];
+        if (!bestDayInfo || !day) return;
+        const isBest = day === this.bestDay;
         const win = this.bestWindow(index);
-        const when = win && !win.none ? this.shortBlockLabel(win.startHour, win.endHour) : win ? win.reason : 'No time left today';
+        const when = win && !win.none ? this.longBlockLabel(win.startHour, win.endHour) : win ? win.reason : 'No time left today';
+        const name = index === 0 ? 'Today' : index === 1 ? 'Tomorrow' : day.date.toLocaleDateString('en-US', { weekday: 'long' });
+        const label = document.getElementById('forecast-heading');
+        if (label) label.textContent = isBest ? 'Best time to skate this week' : `Best time to skate ${index === 0 ? 'today' : index === 1 ? 'tomorrow' : 'on ' + name}`;
         bestDayInfo.innerHTML = `
-            <div class="best-summary">
-                <p class="best-when"><strong>${this.dayLabel(index)}</strong> <span>${date} · ${when}</span></p>
-                <p class="best-score">${CountUp.num(day.score)}<span class="visually-hidden"> out of 100</span></p>
-            </div>`;
+            <div class="hl-row">
+                <p class="hl-when"><span class="hl-day">${name}</span><span class="hl-time">${when}</span></p>
+                <button type="button" class="hl-score" id="hl-factors" aria-label="Skate score ${Math.round(day.score)} out of 100. Show the factors behind it">
+                    <span class="hl-num"><b>${CountUp.num(day.score)}</b><small>/100</small></span>
+                    <span class="hl-factors">Factors <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></span>
+                </button>
+            </div>
+            <p class="hl-wx"><span class="hl-icon">${this.getWeatherIcon(day.weatherCode)}</span><span class="hl-temp">${Math.round(day.tempMax)}°C</span><span>${this.conditionText(day.weatherCode)}</span><span aria-hidden="true">·</span><span>Wind ${Math.round(day.maxHourlyWind)} km/h</span>${day.precipitation > 0 ? `<span aria-hidden="true">·</span><span>Rain ${day.precipitation} mm</span>` : ''}</p>`;
+        bestDayInfo.querySelector('#hl-factors').onclick = e => { this.renderDayQualification(this.selectedDayIndex); Flyouts.open('day-sheet', e.currentTarget); };
         CountUp.run(bestDayInfo);
     }
 
-    // Time scores for one day as a "popular times" style bar chart, with a tab per day above it.
+    conditionText(code) {
+        const map = { 0: 'Clear', 1: 'Mostly clear', 2: 'Partly cloudy', 3: 'Cloudy', 45: 'Fog', 48: 'Fog', 51: 'Drizzle', 53: 'Drizzle', 55: 'Drizzle', 56: 'Freezing drizzle', 57: 'Freezing drizzle',
+            61: 'Light rain', 63: 'Rain', 65: 'Heavy rain', 66: 'Freezing rain', 67: 'Freezing rain', 71: 'Light snow', 73: 'Snow', 75: 'Heavy snow', 77: 'Snow', 80: 'Showers', 81: 'Showers', 82: 'Heavy showers', 85: 'Snow showers', 86: 'Snow showers', 95: 'Storms', 96: 'Storms', 99: 'Storms' };
+        return map[code] || 'Mixed';
+    }
+
+    // "10am to 12pm", "12 to 2pm"
+    longBlockLabel(start, end) {
+        const f = h => `${h % 12 === 0 ? 12 : h % 12}${h < 12 ? 'am' : 'pm'}`;
+        return `${f(start)} to ${f(end)}`;
+    }
+
+    // Two-hour skate scores for the selected day as a bar chart.
     renderTimeChart() {
         const box = document.getElementById('time-chart');
         if (!box || !this.days) return;
-        const tabs = this.days.map((d, i) => {
-            const sel = i === this.selectedDayIndex;
-            return `<button type="button" role="tab" id="day-tab-${i}" class="day-tab${d === this.bestDay ? ' is-best' : ''}" data-day="${i}" aria-selected="${sel}" aria-controls="chart-panel" tabindex="${sel ? 0 : -1}"><span>${i === 0 ? 'Today' : d.date.toLocaleDateString('en-US', { weekday: 'short' })}</span><b>${d.date.getDate()}</b></button>`;
-        }).join('');
         box.innerHTML = `
-            <div class="chart-head">
-                <h3 class="chart-title" id="chart-title"></h3>
-                <div class="chart-actions">
-                    <button type="button" class="chart-btn" id="chart-why">${ICONS.info}</button>
-                    <button type="button" class="chart-btn chart-share" id="chart-share" aria-label="Share this day">${ICONS.share}</button>
-                </div>
-            </div>
-            <div class="day-tabs" role="tablist" aria-label="Choose a day">${tabs}</div>
-            <div class="chart-panel" id="chart-panel" role="tabpanel"></div>`;
-        const list = box.querySelector('.day-tabs');
-        list.onclick = e => { const t = e.target.closest('[role=tab]'); if (t) this.selectDay(+t.dataset.day); };
-        list.onkeydown = e => {
-            const keys = { ArrowRight: 1, ArrowDown: 1, ArrowLeft: -1, ArrowUp: -1 };
-            let i = this.selectedDayIndex;
-            if (e.key in keys) i = (i + keys[e.key] + this.days.length) % this.days.length;
-            else if (e.key === 'Home') i = 0;
-            else if (e.key === 'End') i = this.days.length - 1;
-            else return;
-            e.preventDefault();
-            this.selectDay(i);
-            document.getElementById(`day-tab-${i}`).focus();
-        };
-        box.querySelector('#chart-why').onclick = () => { this.renderDayQualification(this.selectedDayIndex); Flyouts.open('day-sheet', box.querySelector('#chart-why')); };
-        box.querySelector('#chart-share').onclick = () => this.openShareDialog(this.selectedDayIndex);
+            <div class="chart-head"><h3 class="chart-title" id="chart-title"></h3><span class="chart-max" aria-hidden="true">100</span></div>
+            <div class="chart-panel" id="chart-panel"></div>`;
     }
 
     renderChartPanel() {
@@ -1001,22 +1039,22 @@ class SkateParkDay {
         const blocks = this.computeTimeBlocks(day);
         const win = this.bestWindow(index);
         const nowHour = new Date().getHours();
-        const short = h => `${h % 12 === 0 ? 12 : h % 12}${h < 12 ? 'a' : 'p'}`;
+        const short = h => `${h % 12 === 0 ? 12 : h % 12}${h < 12 ? 'am' : 'pm'}`;
         const bars = blocks.map(b => {
             const past = index === 0 && b.endHour <= nowHour;
             const best = win && !win.none && b.startHour === win.startHour;
             const score = Math.round(b.score);
             const label = this.shortBlockLabel(b.startHour, b.endHour);
             const note = past ? ' · past' : best ? ' · best' : score === 0 ? ' · too windy or wet' : '';
-            return `<button type="button" class="bar-col${best ? ' best' : ''}${past ? ' past' : ''}${score === 0 ? ' zero' : ''}" data-tip="${label} · ${score}${note}" aria-label="${label}, score ${score}${note.replace(' · ', ', ')}">
+            return `<button type="button" class="bar-col${best ? ' best' : ''}${past ? ' past' : ''}${score === 0 ? ' zero' : ''}" data-tip="${label} · ${score}${note}" aria-label="${short(b.startHour)}: ${label}, score ${score}${note.replace(' · ', ', ')}">
                 <span class="bar-track"><span class="bar" data-axis="y" ${CountUp.fill(b.score).replace('width:', 'height:')}></span></span><span class="bar-x" aria-hidden="true">${short(b.startHour)}</span></button>`;
         }).join('');
-        panel.setAttribute('aria-labelledby', `day-tab-${index}`);
-        panel.innerHTML = `<div class="chart-grid" aria-hidden="true"><span>100</span><span>50</span><span>0</span></div><div class="chart-bars">${bars}</div><div class="chart-tip" role="status" hidden></div>`;
+        const name = index === 0 ? 'Today' : day.date.toLocaleDateString('en-US', { weekday: 'long' });
+        panel.setAttribute('role', 'group');
+        panel.setAttribute('aria-label', `Skate score for each two-hour window on ${name}`);
+        panel.innerHTML = `<div class="chart-bars">${bars}</div><div class="chart-tip" role="status" hidden></div>`;
         const title = document.getElementById('chart-title');
-        if (title) title.innerHTML = `<span class="chart-day">${day.date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}</span><span class="chart-meta">${this.getWeatherIcon(day.weatherCode)} ${Math.round(day.tempMax)}° · ${ICONS.wind} ${Math.round(day.maxHourlyWind)} km/h${day.precipitation > 0 ? ` · ${ICONS.drop} ${day.precipitation} mm` : ''}</span>`;
-        const why = document.getElementById('chart-why');
-        if (why) why.setAttribute('aria-label', `Weather factors for ${this.dayLabel(index)}`);
+        if (title) title.textContent = `${name}, hour by hour`;
         const tip = panel.querySelector('.chart-tip');
         const show = col => {
             tip.textContent = col.dataset.tip;
@@ -1042,7 +1080,7 @@ class SkateParkDay {
         CountUp.run(panel);
     }
 
-    // One selected day everywhere: the card, the chart tab and the factors sheet.
+    // One selected day everywhere: the row, the headline, the chart and the factors sheet.
     selectDay(index) {
         if (!this.days || !this.days[index]) return;
         this.selectedDayIndex = index;
@@ -1050,31 +1088,11 @@ class SkateParkDay {
         document.querySelectorAll('.day-select').forEach(button => {
             const selected = +button.dataset.day === index;
             button.setAttribute('aria-pressed', String(selected));
-            button.closest('.day-card').classList.toggle('selected', selected);
+            button.classList.toggle('selected', selected);
         });
-        document.querySelectorAll('.day-tab').forEach(tab => {
-            const selected = +tab.dataset.day === index;
-            tab.setAttribute('aria-selected', String(selected));
-            tab.tabIndex = selected ? 0 : -1;
-        });
+        this.renderBestDay(index);
         this.renderChartPanel();
         if (Flyouts.isOpen('day-sheet')) this.renderDayQualification(index);
-    }
-
-    // Lightweight animated weather behind each card's text, chosen from the day's forecast.
-    weatherFxHtml(day) {
-        const c = day.weatherCode;
-        const kind = [95, 96, 99].includes(c) ? 'storm' : [71, 73, 75, 77, 85, 86].includes(c) ? 'snow'
-            : [61, 63, 65, 80, 81, 82].includes(c) ? 'rain' : [51, 53, 55, 56, 57].includes(c) ? 'drizzle'
-            : [45, 48].includes(c) ? 'fog' : c === 3 ? 'cloud' : c === 2 ? 'partly' : 'sun';
-        const n = kind === 'drizzle' ? 6 : kind === 'rain' || kind === 'storm' ? Math.min(12, 7 + Math.round((day.precipitation || 0) / 3)) : kind === 'snow' ? 8 : 0;
-        const drops = Array.from({ length: n }, (_, i) => `<i style="--x:${(i * 37 + 11) % 96}%;--d:${((i * 53) % 100) / 100 * 1.2}s;--s:${0.8 + ((i * 29) % 40) / 100}"></i>`).join('');
-        const sun = kind === 'sun' || kind === 'partly' ? '<b class="wx-sun"></b>' : '';
-        const cloud = kind === 'partly' || kind === 'cloud' || kind === 'storm' || kind === 'rain' ? '<b class="wx-cloud"></b>' : '';
-        const fog = kind === 'fog' ? '<b class="wx-fog"></b><b class="wx-fog two"></b>' : '';
-        const flash = kind === 'storm' ? '<b class="wx-flash"></b>' : '';
-        const wind = day.maxHourlyWind > 20 ? '<s></s><s></s><s></s>' : '';
-        return `<div class="wx wx--${kind}" data-wx="${kind}" aria-hidden="true">${sun}${cloud}${fog}${flash}<span class="wx-p">${drops}</span>${wind ? `<span class="wx-wind">${wind}</span>` : ''}</div>`;
     }
 
     renderWeatherGrid() {
@@ -1092,38 +1110,35 @@ class SkateParkDay {
         if (!secondBestDay && sortedDays.length > 1) secondBestDay = sortedDays[1];
 
         grid.innerHTML = this.days.map((day, index) => {
-            const dayName = this.dayLabel(index);
-            const shortName = index === 0 ? 'Today' : day.date.toLocaleDateString('en-US', { weekday: 'short' });
-            const date = day.date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
             const isBest = day === this.bestDay;
             const isSecondBest = day === secondBestDay && !isBest;
-            const isNoSkate = day.score < 30;
-            let cardClass = 'day-card';
-            if (isBest) cardClass += ' best';
-            else if (isSecondBest) cardClass += ' second-best';
-            else if (isNoSkate) cardClass += ' no-skate';
+            const shortName = index === 0 ? 'Today' : day.date.toLocaleDateString('en-US', { weekday: 'short' });
+            const longName = day.date.toLocaleDateString('en-US', { weekday: 'long' });
             const win = this.bestWindow(index);
-            const windowText = !win ? 'None left' : win.none ? (win.reason === 'Too windy all day' ? 'Too windy' : 'No window') : '';
-            const windowHtml = `<span class="card-time${win && !win.none ? '' : ' empty'}">${win && !win.none ? this.shortBlockLabel(win.startHour, win.endHour) : windowText}</span>`;
-            const windowAria = win && !win.none ? `, best time ${win.label} scores ${win.score}` : `, ${(windowText || '').toLowerCase()}`;
-            return `
-                <article class="${cardClass}">
-                    ${this.weatherFxHtml(day)}
-                    <button type="button" class="day-select" data-day="${index}" aria-pressed="false" aria-controls="chart-panel" aria-label="Show time scores for ${dayName}, ${date}: day score ${Math.round(day.score)}${windowAria}${isBest ? ', best day' : isSecondBest ? ', runner-up' : ''}">
-                        <span class="day-name">${shortName}${index === 0 ? '' : ` ${day.date.getDate()}`}</span>
-                        <span class="weather-icon">${this.getWeatherIcon(day.weatherCode)}</span>
-                        <span class="card-score">${CountUp.num(day.score)}</span>
-                        ${windowHtml}
-                    </button>
-                </article>`;
+            const windowAria = win && !win.none ? ` Best time ${this.longBlockLabel(win.startHour, win.endHour)}.` : win ? ` ${win.reason}.` : '';
+            const cls = `day-card day-select${isBest ? ' best' : isSecondBest ? ' second-best' : ''}${day.score < 30 ? ' no-skate' : ''}`;
+            return `<button type="button" class="${cls}" data-day="${index}" aria-pressed="false" aria-controls="chart-panel" aria-label="${index === 0 ? 'Today, ' : ''}${longName} ${day.date.getDate()}${isBest ? ', best day' : isSecondBest ? ', runner-up' : ''}. ${this.conditionText(day.weatherCode)}, ${Math.round(day.tempMax)} degrees. Score ${Math.round(day.score)} out of 100.${windowAria}">
+                    <span class="row-day"><span class="row-name">${shortName}</span><span class="row-date">${day.date.getDate()}</span></span>
+                    <span class="row-wx">${this.getWeatherIcon(day.weatherCode)}<span>${Math.round(day.tempMax)}°</span></span>
+                    <span class="row-bar" aria-hidden="true"><span ${CountUp.fill(day.score)}></span></span>
+                    <span class="row-score card-score">${CountUp.num(day.score)}</span>
+                </button>`;
         }).join('');
         const entrance = CardEntrance.shouldRun(grid, `${this.location.lat},${this.location.lon}`);
         CountUp.run(grid, entrance ? '.day-card' : null);
         if (entrance) CardEntrance.run(grid);
         else WeatherFx.start(grid.querySelectorAll('.day-card'));
-        WeatherFx.watch(grid);
-        grid.querySelectorAll('.day-select').forEach(button => {
+        const rows = [...grid.querySelectorAll('.day-select')];
+        rows.forEach(button => {
             button.onclick = () => this.selectDay(+button.dataset.day);
+            button.onkeydown = e => {
+                const step = { ArrowDown: 1, ArrowRight: 1, ArrowUp: -1, ArrowLeft: -1 }[e.key];
+                if (!step) return;
+                e.preventDefault();
+                const next = rows[(rows.indexOf(button) + step + rows.length) % rows.length];
+                next.focus();
+                this.selectDay(+next.dataset.day);
+            };
         });
         // Retain a selection on refresh of the same forecast, reset it for a new location.
         const locationKey = `${this.location.lat},${this.location.lon}`;
@@ -1813,6 +1828,7 @@ const CalendarFeed = {
     },
 
     async open() {
+        if (Flyouts.isOpen('site-menu')) Flyouts.close(false);
         this.pop.hidden = false;
         this.btn.setAttribute('aria-expanded', 'true');
         await this.update();
@@ -1823,7 +1839,7 @@ const CalendarFeed = {
     close(restoreFocus = true) {
         this.pop.hidden = true;
         this.btn.setAttribute('aria-expanded', 'false');
-        if (restoreFocus) this.btn.focus();
+        if (restoreFocus) (this.btn.offsetParent ? this.btn : document.getElementById('menu-toggle')).focus();
     },
 
     async update() {
