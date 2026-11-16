@@ -58,11 +58,10 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300..700&display=swap">
-    <link rel="preload" as="image" href="img/hero-skatepark.jpg" fetchpriority="high">
     <link rel="preconnect" href="https://api.open-meteo.com" crossorigin>
     <link rel="preconnect" href="https://geocoding-api.open-meteo.com" crossorigin>
     <link rel="dns-prefetch" href="https://nominatim.openstreetmap.org">
-    <link rel="stylesheet" href="app.css?v=2026111605">
+    <link rel="stylesheet" href="app.css?v=2026111606">
 </head>
 <body id="top" class="app">
     <script>document.documentElement.setAttribute('data-theme','dark');</script>
@@ -183,11 +182,11 @@
             <div id="forecast" class="forecast hidden">
                 <div id="shared-note" class="shared-note" hidden></div>
                 <div id="best-day" class="best-day">
-                    <h2 id="forecast-heading" class="kicker"><svg class="icon" viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 4h8v5a4 4 0 0 1-8 0V4zM8 6H5a3 3 0 0 0 3 4M16 6h3a3 3 0 0 1-3 4M12 13v4M8.5 20h7M10 17h4v3h-4z"/></svg> Best Skate Day</h2>
+                    <h2 id="forecast-heading" class="best-label">Best day</h2>
                     <div id="best-day-info"></div>
                     <div id="time-chart" class="time-chart"></div>
                 </div>
-                <p class="forecast-grid-help">Your week · tap a day for its time scores</p>
+                
                 <div id="weather-grid" class="weather-grid"></div>
             </div>
         </section>
@@ -346,6 +345,6 @@
         sync();
     })();
     </script>
-    <script src="app.js?v=2026111605" defer></script>
+    <script src="app.js?v=2026111606" defer></script>
 </body>
 </html>

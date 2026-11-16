@@ -695,3 +695,140 @@ html.flyout-lock,html.flyout-lock body{overflow:hidden}
   .chart-panel{height:clamp(64px,11vh,96px)}
   .app .hero{padding:8px 0}
 }
+
+/* ======================================================================
+   Simplified design: one accent, quiet surfaces, one score per place,
+   consistent 4/8/12/16/24 spacing and a 12/14/16/20/28 type scale.
+   ====================================================================== */
+:root{--r:14px;--surface:#141416;--surface-2:#1C1C1F;--soft:color-mix(in srgb,var(--muted) 40%,transparent)}
+:root[data-theme="light"]{--surface:#FFFFFF;--surface-2:#ECEAE4}
+.app{--fs-xs:.75rem;--fs-sm:.875rem;--fs-md:1rem;--fs-lg:1.25rem;--fs-xl:1.75rem}
+.app .site-header{background:var(--bg);border-bottom:0;-webkit-backdrop-filter:none;backdrop-filter:none}
+.app .theme-toggle,.app .hamburger-menu{min-height:44px;padding:0 4px}
+.app .hero::before{display:none}
+.app .hero h1,.app #best-skate-summary,.app .hero .kicker{position:absolute!important;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;margin:0}
+.app .hero{padding:8px 0 12px;display:block}
+.app .location-row{margin:0;max-width:none}
+.app .location-bar .location-search{min-height:48px;border:0;border-radius:var(--r);background:var(--surface);font-family:var(--sans);font-size:max(16px,var(--fs-md));padding-right:100px}
+.app .location-bar .location-search:focus{outline:2px solid var(--soft);outline-offset:0}
+.app .bar-tools{right:4px}
+.app .bar-btn,.app .bar-btn.page-share{width:44px;height:44px;border-radius:10px}
+.app .locate-note{border:0;border-radius:10px;background:var(--surface-2);box-shadow:none}
+.app .locate-note.error{color:var(--ink)}
+
+/* Best pick: label, day + time, one score */
+.app .best-day{border:0;border-radius:calc(var(--r) + 4px);background:var(--surface);padding:16px}
+.best-label{margin:0 0 4px;font-size:var(--fs-xs);font-weight:500;color:var(--muted)}
+.best-summary{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.best-when{margin:0;min-width:0;line-height:1.2}
+.best-when strong{display:inline;font-size:var(--fs-xl);font-weight:500;letter-spacing:-.02em}
+.best-when span{display:inline;font-size:var(--fs-md);color:var(--muted);white-space:nowrap}
+.best-score{margin:0;font-size:var(--fs-xl);font-weight:600;line-height:1;color:var(--accent);font-family:var(--sans);font-variant-numeric:tabular-nums;white-space:nowrap}
+
+/* Chart: the selected day's conditions, icon actions, quiet pills and bars */
+.app .time-chart{border-top:0;margin-top:12px;padding-top:0}
+.chart-title{display:flex;align-items:baseline;gap:12px;min-width:0;font-family:var(--sans);font-size:var(--fs-sm);letter-spacing:0;text-transform:none;color:var(--ink)}
+.chart-day{font-weight:500;white-space:nowrap}
+.chart-meta{display:inline-flex;align-items:center;gap:4px;color:var(--muted);font-size:var(--fs-xs);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.chart-btn{min-width:44px;min-height:44px;padding:0;border:0;border-radius:10px;color:var(--muted);font-size:1.15rem}
+.chart-btn:hover,.chart-btn:focus-visible{background:var(--surface-2);color:var(--ink)}
+.chart-actions{gap:0;margin-right:-8px}
+.day-tabs{gap:4px;margin-top:8px}
+.day-tab{min-height:44px;border:0;border-radius:12px;font-family:var(--sans);color:var(--muted)}
+.day-tab span{font-size:.6875rem;letter-spacing:0;text-transform:none}
+.day-tab b{font-size:var(--fs-sm);font-weight:500}
+.day-tab:hover{background:var(--surface-2)}
+.day-tab[aria-selected="true"]{background:var(--ink);color:var(--bg)}
+.day-tab.is-best::after{top:6px;right:calc(50% - 15px);width:4px;height:4px}
+.chart-panel{margin-top:12px}
+.chart-grid span{border-top:1px solid color-mix(in srgb,var(--line) 60%,transparent);font-family:var(--sans);font-size:.5625rem;opacity:.7}
+.chart-grid span:nth-child(2){border-top-style:dashed}
+.bar{background:var(--soft);opacity:1;border-radius:6px 6px 2px 2px}
+.bar-col:hover .bar,.bar-col.tip-on .bar{background:color-mix(in srgb,var(--muted) 70%,transparent)}
+.bar-col.best .bar{background:var(--accent)}
+.bar-col.past .bar{background:color-mix(in srgb,var(--line) 70%,transparent)}
+.bar-x{font-family:var(--sans);font-size:.625rem}
+.bar-col.best .bar-x{color:var(--ink);font-weight:500}
+.chart-tip{border-radius:8px;font-family:var(--sans);font-size:var(--fs-xs);padding:4px 8px}
+
+/* Cards: day, weather, score, best time. No borders or badges. */
+.app .weather-grid{row-gap:8px;gap:8px;padding-top:0}
+.app .day-card,.app .day-card.best,.app .day-card.second-best{border:0;border-radius:var(--r);background:var(--surface);overflow:hidden;box-shadow:none}
+.app .day-card.no-skate .card-score,.app .day-card.no-skate .weather-icon{opacity:.55}
+.app .day-select{padding:12px;gap:4px;justify-content:space-between;border-radius:var(--r)}
+.app .day-select:hover{background:var(--surface-2)}
+.app .day-card.selected{box-shadow:inset 0 0 0 1.5px color-mix(in srgb,var(--ink) 55%,transparent)}
+.app .day-name{display:flex;align-items:center;gap:6px;font-family:var(--sans);font-size:var(--fs-sm);font-weight:500;letter-spacing:0;text-transform:none;white-space:nowrap}
+.app .day-card.best .day-name::after,.app .day-card.second-best .day-name::after{content:'';width:6px;height:6px;border-radius:50%;flex:none}
+.app .day-card.best .day-name::after{background:var(--accent)}
+.app .day-card.second-best .day-name::after{box-shadow:inset 0 0 0 1.5px var(--accent)}
+.app .weather-icon{margin:0;font-size:1.5rem;line-height:1;color:var(--muted)}
+.app .card-score{margin:0;font-family:var(--sans);font-size:var(--fs-xl);font-weight:500;line-height:1;font-variant-numeric:tabular-nums}
+.app .day-card.best .card-score{color:var(--accent)}
+.card-time{font-size:var(--fs-xs);color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+
+/* Highlights: one soft pulse each */
+.app .day-card.hl-best{animation:softPulseBest 1.2s ease-out}
+.app .day-card.hl-runner{animation:softPulseRunner 1.2s ease-out}
+.app .day-card.hl-best::after,.app .day-card.hl-runner::after{content:none;animation:none}
+@keyframes softPulseBest{0%{box-shadow:0 0 0 0 color-mix(in srgb,var(--accent) 45%,transparent)}100%{box-shadow:0 0 0 10px color-mix(in srgb,var(--accent) 0%,transparent)}}
+@keyframes softPulseRunner{0%{box-shadow:0 0 0 0 color-mix(in srgb,var(--muted) 35%,transparent)}100%{box-shadow:0 0 0 10px color-mix(in srgb,var(--muted) 0%,transparent)}}
+@media (prefers-reduced-motion:reduce){.app .day-card.hl-best,.app .day-card.hl-runner{animation:none}}
+
+/* Quieter weather */
+.app .wx{transition:opacity 1s ease}
+.app .day-card.wx-on .wx{opacity:.7}
+.app .wx-sun{background:radial-gradient(circle,rgba(255,206,110,.16) 0,rgba(255,206,110,.05) 45%,transparent 70%)}
+.app .wx-sun::after{content:none}
+.app .wx-cloud{top:8px;height:22px;border-radius:50%;background:rgba(200,206,214,.06);filter:blur(5px)}
+.app .wx-cloud::after{content:none}
+.app .wx--rain .wx-cloud,.app .wx--storm .wx-cloud{background:rgba(160,170,184,.08)}
+.app .wx-p i{opacity:.6}
+.app .wx-flash{background:rgba(255,255,255,.08)}
+.app .wx-wind s{background:linear-gradient(90deg,transparent,rgba(200,200,200,.14),transparent)}
+.app .wx-cloud{width:50%;background:rgba(200,206,214,.045)}
+:root[data-theme="light"] .app .wx-cloud{background:rgba(80,90,105,.08)}
+:root[data-theme="light"] .app .wx-p i{background:linear-gradient(rgba(60,110,200,0),rgba(60,110,200,.45))}
+
+/* Flyouts and panels */
+.app .flyout{border-left:0}
+.app .flyout-head,.app .flyout-foot{border-color:color-mix(in srgb,var(--line) 60%,transparent)}
+.app .flyout-login{border-radius:12px}
+
+/* Desktop */
+@media (min-width:1025px){
+  .app .best-day{display:grid;grid-template-columns:minmax(220px,300px) minmax(0,1fr);grid-template-areas:"k chart" "info chart";column-gap:32px;padding:20px 24px}
+  .app .time-chart{padding-left:32px;border-left:1px solid color-mix(in srgb,var(--line) 60%,transparent)}
+  .best-summary{flex-direction:column;align-items:flex-start;gap:16px}
+  .best-when strong{display:block;font-size:2rem}
+  .best-when span{display:block;margin-top:4px}
+  .best-score{font-size:3rem}
+  .app .hero{max-width:560px;margin-left:auto}
+  .app .day-select{padding:16px}
+  .app .weather-icon{font-size:1.75rem}
+  .app .card-score{font-size:2rem}
+  .app .card-time{font-size:var(--fs-sm)}
+}
+/* Phones */
+@media (max-width:640px){
+  .app .best-day{padding:12px}
+  .best-when strong{font-size:var(--fs-lg)}
+  .best-when span{font-size:var(--fs-sm)}
+  .best-score{font-size:var(--fs-xl)}
+  .app .day-select{padding:10px 8px;gap:2px}
+  .app .day-name{font-size:.8125rem;gap:4px}
+  .app .weather-icon{font-size:1.25rem}
+  .app .card-score{font-size:var(--fs-lg)}
+  .card-time{font-size:.6875rem}
+  .chart-meta .icon{display:none}
+}
+@media (max-height:740px) and (max-width:1024px){
+  .app .hero{padding:4px 0 8px}
+  .app .location-bar .location-search{min-height:44px}
+  .app .best-day{padding:10px 12px}
+  .best-label{display:none}
+  .chart-btn{min-height:40px}
+  .day-tab{min-height:40px}
+  .app .time-chart{margin-top:8px}
+  .chart-panel{margin-top:8px}
+}
