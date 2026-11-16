@@ -1,25 +1,36 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="dark">
+<html lang="en-CA">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Page not found | best.skatepark.day</title>
     <meta name="robots" content="noindex">
-    <meta name="theme-color" content="#0B0B0C">
+    <meta name="theme-color" content="#0B0B0E">
     <meta name="color-scheme" content="dark">
     <link rel="icon" type="image/svg+xml" href="/favicon.svg">
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300..700&display=swap">
-    <link rel="stylesheet" href="/app.css?v=2026111608">
+    <link rel="preload" href="/fonts/space-grotesk-latin.woff2" as="font" type="font/woff2" crossorigin>
+    <link rel="stylesheet" href="/pages.css?v=2026111609">
 </head>
-<body>
-    <main class="container">
-        <section class="hero" aria-labelledby="page-title">
-            <p class="kicker">404 · Page not found</p>
-            <h1 id="page-title">This ramp doesn't exist.</h1>
-            <p class="lede">The page you were looking for isn't here. The 7-day skate forecast is.</p>
-            <div class="hero-actions">
-                <a href="/" class="btn btn-solid">Find the best day to skate</a>
-            </div>
+<body class="pg">
+    <header class="pg-header">
+        <a class="wordmark" href="/"><strong>best</strong>.skatepark.day</a>
+        <a class="pg-live" href="/">Live forecast <svg class="ic" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="9 18 15 12 9 6"/></svg></a>
+    </header>
+    <main>
+        <p class="hl-label kicker-404">404 · Page not found</p>
+        <h1>This ramp doesn't exist.</h1>
+        <p class="lede">The page you were looking for isn't here. The 7-day skate forecast is.</p>
+        <p class="cta-row"><a class="cta" href="/">Find the best day to skate</a><a class="cta cta-ghost" href="/skateparks/">Skate parks by city</a></p>
+        <section aria-labelledby="pop-h">
+            <h2 id="pop-h">Popular cities</h2>
+            <ul class="near-list">
+                <li><a href="/skateparks/toronto/">Toronto</a><span>13 parks</span></li>
+                <li><a href="/skateparks/ottawa/">Ottawa</a><span>16 parks</span></li>
+                <li><a href="/skateparks/markham/">Markham</a><span>11 parks</span></li>
+                <li><a href="/skateparks/london/">London</a><span>10 parks</span></li>
+                <li><a href="/skateparks/brampton/">Brampton</a><span>10 parks</span></li>
+                <li><a href="/skateparks/mississauga/">Mississauga</a><span>8 parks</span></li>
+            </ul>
         </section>
     </main>
 </body>

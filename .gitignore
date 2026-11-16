@@ -59,3 +59,6 @@ node_modules/
 # Copied from index.html at deploy time
 api/share/template.html
 cal/
+
+# Generated at deploy time by scripts/build-pages.cjs
+skateparks/

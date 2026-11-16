@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="dark">
+<html lang="en-CA" data-theme="dark">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Best Skate Park Day: 7-Day Skateboarding Weather Forecast</title>
+    <title>Best Skate Park Day: Skate Park Weather &amp; 7-Day Forecast</title>
     
     <!-- Favicon -->
     <link rel="icon" type="image/svg+xml" href="favicon.svg">
@@ -19,15 +19,14 @@
     <meta name="apple-mobile-web-app-title" content="best.skatepark.day">
     
     <!-- SEO meta tags -->
-    <meta name="description" content="Find the best skate park day this week. Our free 7-day skateboarding weather forecast ranks each day by temperature, wind speed, rain, sun and UV to pick the best day to skate near you.">
-    <meta name="keywords" content="best skate park day, best skatepark day, best day to skate, skate park day, skatepark weather, 7-day skate forecast, skateboard weather, skateboarding weather forecast, skate park, wind speed, temperature, UV index">
+    <meta name="description" content="Find the best day to skate this week. A free 7-day skate park weather forecast that scores every day and two-hour window by wind, rain, temperature and UV.">
     <meta name="author" content="Social Dunn Right Inc.">
-    <meta name="robots" content="index, follow">
+    <meta name="robots" content="index, follow, max-image-preview:large">
     <link rel="canonical" href="https://best.skatepark.day/">
     
     <!-- Open Graph meta tags -->
-    <meta property="og:title" content="Best Skate Park Day - 7-Day Skateboarding Weather Forecast">
-    <meta property="og:description" content="Find the best skate park day this week. A 7-day skateboarding forecast that ranks each day by temperature, wind speed, rain, sun and UV.">
+    <meta property="og:title" content="Best Skate Park Day: the best day to skate this week">
+    <meta property="og:description" content="A free 7-day skate park weather forecast. Every day and two-hour window scored by wind, rain, temperature and UV.">
     <meta property="og:type" content="website">
     <meta property="og:url" content="https://best.skatepark.day/">
     <meta property="og:image" content="https://best.skatepark.day/img/share/default.jpg">
@@ -36,12 +35,12 @@
     <meta property="og:image:type" content="image/jpeg">
     <meta property="og:image:alt" content="best.skatepark.day 7-day skate forecast">
     <meta property="og:site_name" content="best.skatepark.day">
-    <meta property="og:locale" content="en_US">
+    <meta property="og:locale" content="en_CA">
     
     <!-- Twitter Card meta tags -->
     <meta name="twitter:card" content="summary_large_image">
-    <meta name="twitter:title" content="Best Skate Park Day - 7-Day Skateboarding Weather Forecast">
-    <meta name="twitter:description" content="Find the best skate park day this week, ranked by temperature, wind speed, rain, sun and UV.">
+    <meta name="twitter:title" content="Best Skate Park Day: the best day to skate this week">
+    <meta name="twitter:description" content="A free 7-day skate park weather forecast. Every day and two-hour window scored by wind, rain, temperature and UV.">
     <meta name="twitter:image" content="https://best.skatepark.day/img/share/default.jpg">
     <meta name="twitter:image:alt" content="best.skatepark.day 7-day skate forecast">
     <meta name="twitter:site" content="@skateparkday">
@@ -55,13 +54,11 @@
     <!-- Touch icons for mobile -->
     <link rel="manifest" href="manifest.json">
     
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300..700&display=swap">
+    <link rel="preload" href="/fonts/space-grotesk-latin.woff2" as="font" type="font/woff2" crossorigin>
     <link rel="preconnect" href="https://api.open-meteo.com" crossorigin>
     <link rel="preconnect" href="https://geocoding-api.open-meteo.com" crossorigin>
     <link rel="dns-prefetch" href="https://nominatim.openstreetmap.org">
-    <link rel="stylesheet" href="app.css?v=2026111608">
+    <link rel="stylesheet" href="app.css?v=2026111609">
 </head>
 <body id="top" class="app v3">
     <script>document.documentElement.setAttribute('data-theme','dark');</script>
@@ -87,7 +84,7 @@
             <div class="splash-bar" role="progressbar" aria-label="Loading forecast" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" id="splash-bar"><i id="splash-fill"></i></div>
         </div>
     </div>
-    <noscript><style>#splash{display:none}</style></noscript>
+    <noscript><style>#splash,#loading,#location-pill,.header-actions{display:none!important}.noscript{margin-top:24px!important}</style></noscript>
     <script>
     (function(){
         var s=document.getElementById('splash');
@@ -137,10 +134,11 @@
             <a href="#top" data-menu="forecast"><span class="menu-num">01</span>Forecast</a>
             <a href="#about-heading" data-info="about-heading"><span class="menu-num">02</span>How it works</a>
             <a href="#faq-heading" data-info="faq-heading"><span class="menu-num">03</span>FAQ</a>
-            <button type="button" class="menu-row cal-toggle" id="cal-toggle" aria-expanded="false" aria-controls="cal-pop" aria-haspopup="dialog"><span class="menu-num">04</span>Add to calendar</button>
-            <button type="button" class="menu-row theme-toggle" id="theme-toggle" aria-label="Toggle dark or light theme"><span class="menu-num">05</span><span><span class="theme-toggle-label">Light</span> mode</span></button>
-            <a href="https://github.com/LoganDunning/SkatePark.Day" target="_blank" rel="noopener noreferrer" class="github-icon"><span class="menu-num">06</span>Source on GitHub ↗</a>
-            <a href="https://www.logandunning.com/" target="_blank" rel="noopener noreferrer" class="ld-logo" title="Lets Do Fun Things Everyday"><span class="menu-num">07</span>Logan Dunning ↗</a>
+            <a href="/skateparks/"><span class="menu-num">04</span>Skate parks by city</a>
+            <button type="button" class="menu-row cal-toggle" id="cal-toggle" aria-expanded="false" aria-controls="cal-pop" aria-haspopup="dialog"><span class="menu-num">05</span>Add to calendar</button>
+            <button type="button" class="menu-row theme-toggle" id="theme-toggle" aria-label="Toggle dark or light theme"><span class="menu-num">06</span><span><span class="theme-toggle-label">Light</span> mode</span></button>
+            <a href="https://github.com/LoganDunning/SkatePark.Day" target="_blank" rel="noopener noreferrer" class="github-icon"><span class="menu-num">07</span>Source on GitHub ↗</a>
+            <a href="https://www.logandunning.com/" target="_blank" rel="noopener noreferrer" class="ld-logo" title="Lets Do Fun Things Everyday"><span class="menu-num">08</span>Logan Dunning ↗</a>
         </nav>
         <div class="flyout-foot">
             <button type="button" class="btn btn-solid flyout-login">Log in</button>
@@ -197,6 +195,12 @@
         </section>
 
 
+        <noscript>
+            <div class="noscript">
+                <p>The live forecast needs JavaScript. Without it you can still see this week's skate forecast for <a href="/skateparks/">333 Ontario skate parks by city</a>, updated every 6 hours.</p>
+                <p>Popular: <a href="/skateparks/toronto/">Toronto</a> · <a href="/skateparks/ottawa/">Ottawa</a> · <a href="/skateparks/markham/">Markham</a> · <a href="/skateparks/london/">London</a> · <a href="/skateparks/brampton/">Brampton</a> · <a href="/skateparks/mississauga/">Mississauga</a></p>
+            </div>
+        </noscript>
     </main>
     <aside class="flyout info-panel" id="info-panel" role="dialog" aria-modal="true" aria-label="How it works and FAQ" inert>
         <div class="flyout-head"><span class="kicker">About</span><button type="button" class="flyout-close" data-close aria-label="Close">&times;</button></div>
@@ -205,6 +209,7 @@
             <p class="kicker">01 — About</p>
             <h2 id="about-heading">Find the Best Skate Park Day This Week</h2>
             <p>best.skatepark.day checks the 7-day weather forecast for your location and picks the best skate park day of the week, which is the day with the best conditions for skateboarding at your local skatepark.</p>
+            <p>Looking for a park? Browse <a href="/skateparks/">333 Ontario skate parks by city</a>, each with this week's skate forecast and a calendar feed, for example <a href="/skateparks/toronto/">Toronto</a>, <a href="/skateparks/ottawa/">Ottawa</a>, <a href="/skateparks/london/">London</a> and <a href="/skateparks/mississauga/">Mississauga</a>.</p>
 
             <p class="kicker">02 — Method</p>
             <h2>How We Pick the Best Day to Skate</h2>
@@ -223,6 +228,14 @@
             <p>Yes. It's free, needs no account, and works in any browser on desktop or mobile.</p>
             <h3>How does it know where I am?</h3>
             <p>It asks for your location. If you say no, it starts with Toronto, and you can search for any city or town.</p>
+            <h3>What's the best weather for skateboarding?</h3>
+            <p>Dry ground, light wind under about 10 km/h and temperatures between 18°C and 25°C. Cool, dry days still score well; any rain in a two-hour window rules it out.</p>
+            <h3>How windy is too windy to skate?</h3>
+            <p>Once hourly wind passes 15 km/h, a two-hour window scores zero here. Gusts push boards around on ramps and make flip tricks unpredictable.</p>
+            <h3>Can you skate after it rains?</h3>
+            <p>Usually not right away. Wet concrete and wooden ramps are slippery and soak bearings, so the forecast puts dry days and dry two-hour windows first.</p>
+            <h3>Does it cover skateparks in Ontario?</h3>
+            <p>Yes. It knows 333 skateparks across Ontario and works for any city or town worldwide. Each Ontario park has its own calendar feed with the best skate time every week. <a href="/skateparks/">See every Ontario skate park by city</a>.</p>
         </section>
         <footer class="site-footer">
             <div class="footer-inner">
@@ -254,15 +267,30 @@
           "@id": "https://best.skatepark.day/#org",
           "name": "Social Dunn Right Inc.",
           "url": "https://www.logandunning.com/",
-          "logo": "https://best.skatepark.day/img/icon-512.png",
+          "logo": {
+            "@type": "ImageObject",
+            "url": "https://best.skatepark.day/img/icon-512.png",
+            "width": 512,
+            "height": 512
+          },
           "founder": {
-            "@type": "Person",
-            "name": "Logan Dunning",
-            "url": "https://www.logandunning.com/"
+            "@id": "https://best.skatepark.day/#logan"
           },
           "sameAs": [
             "https://github.com/LoganDunning"
           ]
+        },
+        {
+          "@type": "Person",
+          "@id": "https://best.skatepark.day/#logan",
+          "name": "Logan Dunning",
+          "url": "https://www.logandunning.com/",
+          "sameAs": [
+            "https://github.com/LoganDunning"
+          ],
+          "worksFor": {
+            "@id": "https://best.skatepark.day/#org"
+          }
         },
         {
           "@type": "WebSite",
@@ -274,8 +302,34 @@
           ],
           "url": "https://best.skatepark.day/",
           "@id": "https://best.skatepark.day/#website",
-          "inLanguage": "en",
-          "description": "7-day skateboarding weather forecast that picks the best day to skate.",
+          "inLanguage": "en-CA",
+          "description": "Free 7-day skate park weather forecast that picks the best day and time to skate.",
+          "publisher": {
+            "@id": "https://best.skatepark.day/#org"
+          }
+        },
+        {
+          "@type": "WebPage",
+          "@id": "https://best.skatepark.day/#webpage",
+          "url": "https://best.skatepark.day/",
+          "name": "Best Skate Park Day: Skate Park Weather & 7-Day Forecast",
+          "description": "Find the best day to skate this week. A free 7-day skate park weather forecast that scores every day and two-hour window by wind, rain, temperature and UV.",
+          "isPartOf": {
+            "@id": "https://best.skatepark.day/#website"
+          },
+          "about": {
+            "@id": "https://best.skatepark.day/#app"
+          },
+          "primaryImageOfPage": {
+            "@type": "ImageObject",
+            "url": "https://best.skatepark.day/img/share/default.jpg",
+            "width": 1200,
+            "height": 630
+          },
+          "inLanguage": "en-CA",
+          "author": {
+            "@id": "https://best.skatepark.day/#logan"
+          },
           "publisher": {
             "@id": "https://best.skatepark.day/#org"
           }
@@ -284,7 +338,7 @@
           "@type": "WebApplication",
           "name": "Best Skate Park Day",
           "alternateName": "best.skatepark.day",
-          "description": "Find the best skate park day this week with a 7-day skateboarding weather forecast ranked by temperature, wind speed, rain, sun and UV.",
+          "description": "A free 7-day skate park weather forecast that scores every day and two-hour window by wind, rain, temperature and UV, and picks the best day to skate.",
           "url": "https://best.skatepark.day/",
           "applicationCategory": "WeatherApplication",
           "operatingSystem": "Web Browser",
@@ -294,19 +348,22 @@
             "priceCurrency": "USD"
           },
           "author": {
-            "@id": "https://best.skatepark.day/#org"
+            "@id": "https://best.skatepark.day/#logan"
           },
           "featureList": [
-            "7-day skate forecast",
-            "Skateboarding-optimized conditions",
-            "Wind speed analysis",
-            "Temperature tracking",
-            "UV index monitoring",
-            "Location-based forecasts",
-            "Mobile responsive design"
+            "7-day skate park weather forecast",
+            "Best day and best two-hour window to skate",
+            "Hourly wind, rain, temperature and UV scoring",
+            "Search any city or use your current location",
+            "Calendar feeds for 333 Ontario skateparks"
           ],
           "image": "https://best.skatepark.day/img/share/default.jpg",
-          "browserRequirements": "Requires JavaScript and a modern browser"
+          "browserRequirements": "Requires JavaScript and a modern browser",
+          "@id": "https://best.skatepark.day/#app",
+          "publisher": {
+            "@id": "https://best.skatepark.day/#org"
+          },
+          "isAccessibleForFree": true
         },
         {
           "@type": "FAQPage",
@@ -334,8 +391,41 @@
                 "@type": "Answer",
                 "text": "It asks for your location. If you say no, it starts with Toronto, and you can search for any city or town."
               }
+            },
+            {
+              "@type": "Question",
+              "name": "What's the best weather for skateboarding?",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "Dry ground, light wind under about 10 km/h and temperatures between 18°C and 25°C. Cool, dry days still score well; any rain in a two-hour window rules it out."
+              }
+            },
+            {
+              "@type": "Question",
+              "name": "How windy is too windy to skate?",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "Once hourly wind passes 15 km/h, a two-hour window scores zero here. Gusts push boards around on ramps and make flip tricks unpredictable."
+              }
+            },
+            {
+              "@type": "Question",
+              "name": "Can you skate after it rains?",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "Usually not right away. Wet concrete and wooden ramps are slippery and soak bearings, so the forecast puts dry days and dry two-hour windows first."
+              }
+            },
+            {
+              "@type": "Question",
+              "name": "Does it cover skateparks in Ontario?",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "Yes. It knows 333 skateparks across Ontario and works for any city or town worldwide. Each Ontario park has its own calendar feed with the best skate time every week."
+              }
             }
-          ]
+          ],
+          "@id": "https://best.skatepark.day/#faq"
         }
       ]
     }
@@ -350,6 +440,6 @@
         sync();
     })();
     </script>
-    <script src="app.js?v=2026111608" defer></script>
+    <script src="app.js?v=2026111609" defer></script>
 </body>
 </html>

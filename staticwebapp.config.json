@@ -1,8 +1,16 @@
 {
+  "trailingSlash": "auto",
   "routes": [
     {
       "route": "/share",
       "rewrite": "/api/share"
+    },
+    {
+      "route": "/fonts/*",
+      "headers": {
+        "cache-control": "public, max-age=31536000, immutable",
+        "access-control-allow-origin": "*"
+      }
     },
     {
       "route": "/cal/*",
@@ -19,6 +27,12 @@
     },
     {
       "route": "/app.css",
+      "headers": {
+        "cache-control": "public, max-age=31536000, immutable"
+      }
+    },
+    {
+      "route": "/pages.css",
       "headers": {
         "cache-control": "public, max-age=31536000, immutable"
       }

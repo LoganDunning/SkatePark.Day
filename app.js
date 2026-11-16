@@ -1894,6 +1894,9 @@ const Flyouts = {
             if (a.dataset.menu === 'forecast') { e.preventDefault(); this.close(); return; }
             this.close(false);
         }));
+        // /#about-heading or /#faq-heading (linked from the city pages) opens the info panel there.
+        const hash = location.hash.slice(1);
+        if (hash === 'about-heading' || hash === 'faq-heading') setTimeout(() => this.open('info-panel', toggle, hash), 0);
         document.addEventListener('keydown', e => {
             if (!this.current) return;
             if (e.key === 'Escape') { e.preventDefault(); this.close(); return; }
