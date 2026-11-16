@@ -58,3 +58,4 @@ node_modules/
 
 # Copied from index.html at deploy time
 api/share/template.html
+cal/

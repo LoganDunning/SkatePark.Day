@@ -5,6 +5,13 @@
       "rewrite": "/api/share"
     },
     {
+      "route": "/cal/*",
+      "headers": {
+        "cache-control": "public, max-age=3600",
+        "access-control-allow-origin": "*"
+      }
+    },
+    {
       "route": "/app.js",
       "headers": {
         "cache-control": "public, max-age=31536000, immutable"
@@ -73,5 +80,8 @@
   },
   "platform": {
     "apiRuntime": "node:20"
+  },
+  "mimeTypes": {
+    ".ics": "text/calendar; charset=utf-8"
   }
 }
