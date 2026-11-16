@@ -9,6 +9,7 @@
 }
 :root[data-theme="light"]{
   --bg:#F4F3EF;--panel:#FFFFFF;--ink:#161614;--muted:#605E57;--line:#D8D6CE;--faint:#E7E5DE;
+  --glow-best:rgba(22,22,20,.35);--glow-best-0:rgba(22,22,20,0);--glow-runner:rgba(96,94,87,.3);--glow-runner-line:rgba(96,94,87,.8);
   --hdr:rgba(244,243,239,.75);--hero-veil:linear-gradient(90deg,rgba(244,243,239,.96) 0%,rgba(244,243,239,.9) 55%,rgba(244,243,239,.78) 100%);
   color-scheme:light;
 }
@@ -365,6 +366,19 @@ html.splash-on body{overflow:hidden}
 .card-score-bar > span{display:block;height:100%;background:var(--ink)}
 .count{display:inline-block;text-align:right;font-variant-numeric:tabular-nums}
 [data-fill]{transition:none!important}
+.weather-grid.cards-waiting .day-card:not(.card-drop):not(.card-landed){opacity:0}
+.day-card.card-drop{animation:cardDrop .6s cubic-bezier(.22,1,.36,1) both}
+@keyframes cardDrop{0%{opacity:0;transform:translateY(-36px)}55%{opacity:1}78%{transform:translateY(3px)}100%{opacity:1;transform:none}}
+.day-card.hl-best{animation:cardPop .8s cubic-bezier(.34,1.56,.64,1)}
+@keyframes cardPop{0%{transform:none}35%{transform:scale(1.035)}100%{transform:none}}
+.day-card.hl-best::after,.day-card.hl-runner::after{content:'';position:absolute;inset:-1px;pointer-events:none}
+.day-card.hl-best::after{animation:cardGlowBest .8s ease-out}
+@keyframes cardGlowBest{0%{box-shadow:0 0 0 0 var(--glow-best,rgba(241,240,236,.55))}100%{box-shadow:0 0 0 12px var(--glow-best-0,rgba(241,240,236,0))}}
+.day-card.hl-runner::after{animation:cardGlowRunner 1s ease-in-out}
+@keyframes cardGlowRunner{0%,100%{box-shadow:0 0 0 0 rgba(160,160,155,0),inset 0 0 0 1px rgba(160,160,155,0)}45%{box-shadow:0 0 18px 2px var(--glow-runner,rgba(160,160,155,.35)),inset 0 0 0 1px var(--glow-runner-line,rgba(200,200,195,.7))}}
+.day-card.hl-runner .day-card-medal{animation:medalBlink 1s ease-in-out}
+@keyframes medalBlink{45%{color:var(--ink)}}
+@media (prefers-reduced-motion:reduce){.day-card.card-drop,.day-card.hl-best,.day-card.hl-runner,.day-card.hl-best::after,.day-card.hl-runner::after,.day-card.hl-runner .day-card-medal{animation:none}.weather-grid.cards-waiting .day-card{opacity:1}}
 .card-details{font-family:var(--mono);font-size:.65rem;color:var(--muted);margin-top:4px}
 .day-card .day-share-btn{position:static;display:flex;align-items:center;justify-content:center;gap:7px;min-width:44px;width:100%;height:44px;min-height:44px;margin:0;border:0;border-top:1px solid var(--line);font-family:var(--mono);font-size:.7rem;color:var(--ink);letter-spacing:.04em}
 .day-share-btn:hover{background:var(--faint)}

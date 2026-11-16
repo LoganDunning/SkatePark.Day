@@ -1034,7 +1034,9 @@ class SkateParkDay {
                     <button type="button" class="day-share-btn" data-day="${index}" aria-label="Share ${dayName}">${ICONS.share}<span>Share</span></button>
                 </article>`;
         }).join('');
-        CountUp.run(grid);
+        const entrance = CardEntrance.shouldRun(grid, `${this.location.lat},${this.location.lon}`);
+        CountUp.run(grid, entrance ? '.day-card' : null);
+        if (entrance) CardEntrance.run(grid);
         grid.querySelectorAll('.day-select').forEach(button => {
             button.onclick = () => {
                 this.renderDayQualification(+button.dataset.day);
@@ -1648,7 +1650,8 @@ const CountUp = {
     },
 
     // Reset everything new under `root` to 0, then animate each group when the splash is gone and it scrolls into view.
-    run(root) {
+    // `hold`: groups matching it are reset but wait for someone else to call animate() (the card entrance).
+    run(root, hold) {
         if (!root || typeof document === 'undefined') return;
         const els = this.elements(root);
         if (!els.length || this.reduced() || typeof requestAnimationFrame !== 'function') { els.forEach(el => this.paint(el, 1)); return; }
@@ -1659,6 +1662,7 @@ const CountUp = {
             if (!groups.has(group)) groups.set(group, []);
             groups.get(group).push(el);
         });
+        if (hold) groups.forEach((list, group) => { if (group.matches && group.matches(hold)) { group.countUpList = list; groups.delete(group); } });
         const start = () => groups.forEach((list, group) => this.watch(group, list));
         const splash = window.SkateSplash;
         if (splash && typeof splash.whenGone === 'function') splash.whenGone(start);
@@ -1682,13 +1686,13 @@ const CountUp = {
         this.observer.observe(group);
     },
 
-    animate(group) {
+    animate(group, noStagger) {
         const list = (group.countUpList || []).filter(el => el.isConnected);
         group.countUpList = null;
         if (!list.length) return;
         if (document.hidden) { list.forEach(el => this.paint(el, 1)); return; }
         let delay = 0;
-        if (group.matches && group.matches(this.STAGGERED) && group.parentElement) {
+        if (!noStagger && group.matches && group.matches(this.STAGGERED) && group.parentElement) {
             delay = Math.min([...group.parentElement.children].indexOf(group), 8) * this.STAGGER;
         }
         let t0 = null;
@@ -1700,6 +1704,91 @@ const CountUp = {
             if (p < 1 && list.some(el => el.isConnected)) requestAnimationFrame(step);
         };
         requestAnimationFrame(step);
+    }
+};
+
+// The seven day cards drop in one after another once the grid is on screen (after the splash), each card's
+// scores count up as it lands, then the BEST card gets a pop and the runner-up a glow, in that order.
+// Runs for the first forecast and each new location; a same-place refresh just counts up.
+const CardEntrance = {
+    STAGGER: 110,
+    DROP: 600,
+    BEST: 800,
+    GAP: 120,
+    RUNNER: 1000,
+    lastKey: null,
+    timers: [],
+    observer: null,
+
+    shouldRun(grid, key) {
+        const changed = key !== this.lastKey;
+        this.lastKey = key;
+        this.cancel(grid);
+        return changed && !CountUp.reduced() && typeof requestAnimationFrame === 'function' && typeof document !== 'undefined';
+    },
+
+    cancel(grid) {
+        this.timers.forEach(clearTimeout);
+        this.timers = [];
+        if (this.observer) { this.observer.disconnect(); this.observer = null; }
+        if (grid) grid.classList.remove('cards-waiting');
+    },
+
+    later(fn, ms) { this.timers.push(setTimeout(fn, ms)); },
+
+    run(grid) {
+        grid.classList.add('cards-waiting');
+        const go = () => {
+            if (!grid.isConnected) return;
+            if (typeof IntersectionObserver !== 'function') return this.play(grid);
+            this.observer = new IntersectionObserver(entries => {
+                if (!entries.some(e => e.isIntersecting)) return;
+                this.observer.disconnect(); this.observer = null;
+                this.play(grid);
+            }, { rootMargin: '0px 0px -12% 0px' });
+            this.observer.observe(grid);
+        };
+        const splash = window.SkateSplash;
+        if (splash && typeof splash.whenGone === 'function') splash.whenGone(go);
+        else go();
+    },
+
+    play(grid) {
+        const cards = [...grid.querySelectorAll('.day-card')];
+        if (!grid.isConnected || !cards.length) return;
+        if (document.hidden) { this.finish(grid, cards); return; }
+        cards.forEach((card, i) => {
+            this.later(() => card.classList.add('card-drop'), i * this.STAGGER);
+            this.later(() => {
+                card.classList.remove('card-drop');
+                card.classList.add('card-landed');
+                CountUp.animate(card, true);
+            }, i * this.STAGGER + this.DROP);
+        });
+        const allLanded = (cards.length - 1) * this.STAGGER + this.DROP;
+        this.later(() => {
+            grid.classList.remove('cards-waiting');
+            cards.forEach(c => c.classList.remove('card-landed'));
+            const best = grid.querySelector('.day-card.best');
+            if (best) best.classList.add('hl-best');
+            const runnerAt = best ? this.BEST + this.GAP : 0;
+            this.later(() => {
+                if (best) best.classList.remove('hl-best');
+                const runner = grid.querySelector('.day-card.second-best');
+                if (!runner) return;
+                runner.classList.add('hl-runner');
+                this.later(() => runner.classList.remove('hl-runner'), this.RUNNER);
+            }, runnerAt);
+        }, allLanded);
+    },
+
+    // Hidden tab: no motion, show the cards and their final scores.
+    finish(grid, cards) {
+        grid.classList.remove('cards-waiting');
+        cards.forEach(card => {
+            (card.countUpList || []).forEach(el => CountUp.paint(el, 1));
+            card.countUpList = null;
+        });
     }
 };
 
