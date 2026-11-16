@@ -61,7 +61,7 @@
     <link rel="preconnect" href="https://api.open-meteo.com" crossorigin>
     <link rel="preconnect" href="https://geocoding-api.open-meteo.com" crossorigin>
     <link rel="dns-prefetch" href="https://nominatim.openstreetmap.org">
-    <link rel="stylesheet" href="app.css?v=2026111606">
+    <link rel="stylesheet" href="app.css?v=2026111607">
 </head>
 <body id="top" class="app">
     <script>document.documentElement.setAttribute('data-theme','dark');</script>
@@ -118,6 +118,22 @@
                 <span class="brand-name"><b>Best</b> SkatePark Day</span>
             </a>
             <div class="header-actions">
+                <div class="cal-wrap">
+                    <button type="button" class="cal-toggle" id="cal-toggle" aria-expanded="false" aria-controls="cal-pop" aria-haspopup="dialog">
+                        <svg class="icon" viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15.5" rx="2.5"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg>
+                        <span class="cal-label">Calendar</span>
+                    </button>
+                    <div class="cal-pop" id="cal-pop" role="dialog" aria-labelledby="cal-title" hidden>
+                        <p class="cal-title" id="cal-title">Skate days in your calendar</p>
+                        <p class="cal-park" id="cal-park">Finding the nearest park…</p>
+                        <p class="cal-note" id="cal-note" hidden></p>
+                        <div class="cal-actions">
+                            <a class="cal-btn primary" id="cal-subscribe" href="#">Subscribe</a>
+                            <a class="cal-btn" id="cal-download" href="#" download>Download .ics</a>
+                        </div>
+                        <p class="cal-help">Subscribing adds each week's best skate time and keeps it updated every 6 hours.</p>
+                    </div>
+                </div>
                 <button type="button" class="theme-toggle" id="theme-toggle" aria-label="Toggle dark or light theme">
                     <span class="theme-toggle-label">Light</span>
                 </button>
@@ -345,6 +361,6 @@
         sync();
     })();
     </script>
-    <script src="app.js?v=2026111606" defer></script>
+    <script src="app.js?v=2026111607" defer></script>
 </body>
 </html>

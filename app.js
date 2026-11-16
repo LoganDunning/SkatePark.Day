@@ -30,6 +30,7 @@ class SkateParkDay {
         const locate = document.getElementById('locate-btn');
         if (locate) locate.onclick = () => this.useCurrentLocation();
         Flyouts.init();
+        CalendarFeed.init(this);
         this.setupLocationSearch();
         this.init();
     }
@@ -1785,6 +1786,80 @@ const CountUp = {
 };
 
 // Off-canvas panels (menu, about/FAQ, day factors): one shared blurred backdrop, focus trap, scroll lock.
+// Calendar feeds built by the deploy workflow: cal/<slug>.ics per park, listed in cal/index.json.
+// The popover offers the feed for the shared park, or the nearest park to the forecast location.
+const CalendarFeed = {
+    init(app) {
+        if (typeof document === 'undefined') return;
+        this.app = app;
+        this.btn = document.getElementById('cal-toggle');
+        this.pop = document.getElementById('cal-pop');
+        if (!this.btn || !this.pop) return;
+        this.btn.onclick = () => (this.pop.hidden ? this.open() : this.close());
+        document.addEventListener('click', e => {
+            if (!this.pop.hidden && !this.pop.contains(e.target) && !this.btn.contains(e.target)) this.close(false);
+        });
+        document.addEventListener('keydown', e => { if (e.key === 'Escape' && !this.pop.hidden) { e.stopPropagation(); this.close(); } }, true);
+    },
+
+    feeds() {
+        if (!this.list) {
+            this.list = fetch('cal/index.json', { cache: 'no-cache' })
+                .then(r => (r.ok ? r.json() : null))
+                .then(d => (d && Array.isArray(d.feeds) ? d.feeds : []))
+                .catch(() => []);
+        }
+        return this.list;
+    },
+
+    async open() {
+        this.pop.hidden = false;
+        this.btn.setAttribute('aria-expanded', 'true');
+        await this.update();
+        const first = this.pop.querySelector('.cal-btn:not([hidden])');
+        if (first && !this.pop.hidden) first.focus();
+    },
+
+    close(restoreFocus = true) {
+        this.pop.hidden = true;
+        this.btn.setAttribute('aria-expanded', 'false');
+        if (restoreFocus) this.btn.focus();
+    },
+
+    async update() {
+        const park = document.getElementById('cal-park');
+        const note = document.getElementById('cal-note');
+        const sub = document.getElementById('cal-subscribe');
+        const dl = document.getElementById('cal-download');
+        const feeds = await this.feeds();
+        const app = this.app || {};
+        const shared = app.shared && app.shared.plat != null && (!app.location || app.location.source === 'shared') ? app.shared : null;
+        const from = shared ? { lat: shared.plat, lon: shared.plon } : app.location;
+        if (!feeds.length || !from) {
+            park.textContent = feeds.length ? 'Pick a location first.' : 'Calendar feeds aren\'t available right now.';
+            note.hidden = true;
+            sub.hidden = dl.hidden = true;
+            return;
+        }
+        let feed = null, km = Infinity;
+        for (const f of feeds) {
+            const d = distanceKm(from, f);
+            if (d < km) { km = d; feed = f; }
+        }
+        const place = shared ? [shared.park, shared.parkCity].filter(Boolean).join(', ') : app.locationLabel();
+        park.textContent = feed.name;
+        const exact = km < 0.3;
+        note.hidden = exact;
+        note.textContent = exact ? '' : `No feed for ${place} itself, so this is the nearest park's feed (${km < 10 ? km.toFixed(1) : Math.round(km)} km away).`;
+        const path = `cal/${feed.slug}.ics`;
+        sub.href = `webcal://${location.host}/${path}`;
+        dl.href = path;
+        dl.setAttribute('download', `${feed.slug}.ics`);
+        sub.hidden = dl.hidden = false;
+        this.feed = feed;
+    }
+};
+
 const Flyouts = {
     current: null,
     opener: null,
