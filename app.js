@@ -162,7 +162,7 @@ class SkateParkDay {
         try {
             const userTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
             console.log('Using timezone:', userTimezone, 'for location:', this.location.lat, this.location.lon);
-            const response = await fetch(
+            const response = await fetchWithRetry(
                 `https://api.open-meteo.com/v1/forecast?latitude=${this.location.lat}&longitude=${this.location.lon}&daily=temperature_2m_max,temperature_2m_min,wind_speed_10m_max,wind_gusts_10m_max,precipitation_sum,weather_code,uv_index_max,sunshine_duration&hourly=wind_speed_10m,temperature_2m,uv_index,precipitation,weather_code&timezone=${encodeURIComponent(userTimezone)}&forecast_days=7`
             );
             
@@ -1617,6 +1617,22 @@ class SkateParkDay {
 const SITE_URL = 'https://best.skatepark.day/';
 
 // Reads a /share link: d=YYYY-MM-DD, t=start hour, p/pc/plat/plon=park, loc/lat/lon=forecast location, best=1.
+// Open-Meteo sometimes leaves a new connection hanging; give up on it after a few seconds and try again.
+async function fetchWithRetry(url, waits = [7000, 9000, 15000]) {
+    let last;
+    for (const ms of waits) {
+        const ctrl = typeof AbortController === 'function' ? new AbortController() : null;
+        const timer = ctrl ? setTimeout(() => ctrl.abort(), ms) : null;
+        try {
+            const r = await fetch(url, ctrl ? { signal: ctrl.signal } : undefined);
+            if (r.ok || r.status < 500) return r;
+            last = new Error(`HTTP ${r.status}`);
+        } catch (e) { last = e; }
+        finally { if (timer) clearTimeout(timer); }
+    }
+    throw last;
+}
+
 function readSharedLink(search) {
     let q;
     try { q = new URLSearchParams(search || ''); } catch (e) { return null; }
