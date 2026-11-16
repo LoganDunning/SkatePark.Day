@@ -35,6 +35,13 @@ jobs:
         env:
           TZ: America/Toronto
         run: node scripts/build-calendars.cjs
+      - name: Build city pages and sitemap
+        # Static /skateparks/ pages with this week's forecast baked in, plus sitemap.xml (never committed).
+        # Reuses the forecasts fetched for the calendar feeds. Without weather, pages build without the forecast.
+        continue-on-error: true
+        env:
+          TZ: America/Toronto
+        run: node scripts/build-pages.cjs
       - name: Build And Deploy
         id: builddeploy
         uses: Azure/static-web-apps-deploy@v1

@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="dark">
+<html lang="en-CA" data-theme="dark">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -54,11 +54,11 @@
     <!-- Touch icons for mobile -->
     <link rel="manifest" href="manifest.json">
     
-    <link rel="preload" href="fonts/space-grotesk-latin.woff2" as="font" type="font/woff2" crossorigin>
+    <link rel="preload" href="/fonts/space-grotesk-latin.woff2" as="font" type="font/woff2" crossorigin>
     <link rel="preconnect" href="https://api.open-meteo.com" crossorigin>
     <link rel="preconnect" href="https://geocoding-api.open-meteo.com" crossorigin>
     <link rel="dns-prefetch" href="https://nominatim.openstreetmap.org">
-    <link rel="stylesheet" href="app.css?v=2026111608">
+    <link rel="stylesheet" href="app.css?v=2026111609">
 </head>
 <body id="top" class="app v3">
     <script>document.documentElement.setAttribute('data-theme','dark');</script>
@@ -84,7 +84,7 @@
             <div class="splash-bar" role="progressbar" aria-label="Loading forecast" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" id="splash-bar"><i id="splash-fill"></i></div>
         </div>
     </div>
-    <noscript><style>#splash{display:none}</style></noscript>
+    <noscript><style>#splash,#loading,#location-pill,.header-actions{display:none!important}.noscript{margin-top:24px!important}</style></noscript>
     <script>
     (function(){
         var s=document.getElementById('splash');
@@ -134,10 +134,11 @@
             <a href="#top" data-menu="forecast"><span class="menu-num">01</span>Forecast</a>
             <a href="#about-heading" data-info="about-heading"><span class="menu-num">02</span>How it works</a>
             <a href="#faq-heading" data-info="faq-heading"><span class="menu-num">03</span>FAQ</a>
-            <button type="button" class="menu-row cal-toggle" id="cal-toggle" aria-expanded="false" aria-controls="cal-pop" aria-haspopup="dialog"><span class="menu-num">04</span>Add to calendar</button>
-            <button type="button" class="menu-row theme-toggle" id="theme-toggle" aria-label="Toggle dark or light theme"><span class="menu-num">05</span><span><span class="theme-toggle-label">Light</span> mode</span></button>
-            <a href="https://github.com/LoganDunning/SkatePark.Day" target="_blank" rel="noopener noreferrer" class="github-icon"><span class="menu-num">06</span>Source on GitHub ↗</a>
-            <a href="https://www.logandunning.com/" target="_blank" rel="noopener noreferrer" class="ld-logo" title="Lets Do Fun Things Everyday"><span class="menu-num">07</span>Logan Dunning ↗</a>
+            <a href="/skateparks/"><span class="menu-num">04</span>Skate parks by city</a>
+            <button type="button" class="menu-row cal-toggle" id="cal-toggle" aria-expanded="false" aria-controls="cal-pop" aria-haspopup="dialog"><span class="menu-num">05</span>Add to calendar</button>
+            <button type="button" class="menu-row theme-toggle" id="theme-toggle" aria-label="Toggle dark or light theme"><span class="menu-num">06</span><span><span class="theme-toggle-label">Light</span> mode</span></button>
+            <a href="https://github.com/LoganDunning/SkatePark.Day" target="_blank" rel="noopener noreferrer" class="github-icon"><span class="menu-num">07</span>Source on GitHub ↗</a>
+            <a href="https://www.logandunning.com/" target="_blank" rel="noopener noreferrer" class="ld-logo" title="Lets Do Fun Things Everyday"><span class="menu-num">08</span>Logan Dunning ↗</a>
         </nav>
         <div class="flyout-foot">
             <button type="button" class="btn btn-solid flyout-login">Log in</button>
@@ -194,6 +195,12 @@
         </section>
 
 
+        <noscript>
+            <div class="noscript">
+                <p>The live forecast needs JavaScript. Without it you can still see this week's skate forecast for <a href="/skateparks/">333 Ontario skate parks by city</a>, updated every 6 hours.</p>
+                <p>Popular: <a href="/skateparks/toronto/">Toronto</a> · <a href="/skateparks/ottawa/">Ottawa</a> · <a href="/skateparks/markham/">Markham</a> · <a href="/skateparks/london/">London</a> · <a href="/skateparks/brampton/">Brampton</a> · <a href="/skateparks/mississauga/">Mississauga</a></p>
+            </div>
+        </noscript>
     </main>
     <aside class="flyout info-panel" id="info-panel" role="dialog" aria-modal="true" aria-label="How it works and FAQ" inert>
         <div class="flyout-head"><span class="kicker">About</span><button type="button" class="flyout-close" data-close aria-label="Close">&times;</button></div>
@@ -202,6 +209,7 @@
             <p class="kicker">01 — About</p>
             <h2 id="about-heading">Find the Best Skate Park Day This Week</h2>
             <p>best.skatepark.day checks the 7-day weather forecast for your location and picks the best skate park day of the week, which is the day with the best conditions for skateboarding at your local skatepark.</p>
+            <p>Looking for a park? Browse <a href="/skateparks/">333 Ontario skate parks by city</a>, each with this week's skate forecast and a calendar feed, for example <a href="/skateparks/toronto/">Toronto</a>, <a href="/skateparks/ottawa/">Ottawa</a>, <a href="/skateparks/london/">London</a> and <a href="/skateparks/mississauga/">Mississauga</a>.</p>
 
             <p class="kicker">02 — Method</p>
             <h2>How We Pick the Best Day to Skate</h2>
@@ -227,7 +235,7 @@
             <h3>Can you skate after it rains?</h3>
             <p>Usually not right away. Wet concrete and wooden ramps are slippery and soak bearings, so the forecast puts dry days and dry two-hour windows first.</p>
             <h3>Does it cover skateparks in Ontario?</h3>
-            <p>Yes. It knows 333 skateparks across Ontario and works for any city or town worldwide. Each Ontario park has its own calendar feed with the best skate time every week.</p>
+            <p>Yes. It knows 333 skateparks across Ontario and works for any city or town worldwide. Each Ontario park has its own calendar feed with the best skate time every week. <a href="/skateparks/">See every Ontario skate park by city</a>.</p>
         </section>
         <footer class="site-footer">
             <div class="footer-inner">
@@ -432,6 +440,6 @@
         sync();
     })();
     </script>
-    <script src="app.js?v=2026111608" defer></script>
+    <script src="app.js?v=2026111609" defer></script>
 </body>
 </html>
