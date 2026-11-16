@@ -439,7 +439,7 @@ class SkateParkDay {
         const factors = this.getDayFactors(day);
         document.getElementById('day-qualification').innerHTML = `
             <div class="qualification-heading">
-                <h3 id="qualification-title">Why ${title} scores ${Math.round(day.score)}/100</h3>
+                <h3 id="qualification-title">Why ${title} scores ${CountUp.num(day.score)}/100</h3>
                 <span>${day === this.bestDay ? 'Best day' : 'Selected day'}</span>
             </div>
             ${this.windowSummaryHtml(index)}
@@ -452,13 +452,14 @@ class SkateParkDay {
                     return `<div class="day-factor${factor.inactive ? ' inactive' : ''}" data-factor="${factor.key}">
                         <div class="factor-heading"><span>${factor.icon} ${factor.label}</span><strong>${factor.value}</strong></div>
                         <div class="factor-meter" role="meter" aria-label="${escapeHtml(factor.label)} skate conditions" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${+factor.percent.toFixed(1)}" aria-valuetext="${escapeHtml(description)}">
-                            <span style="width:${factor.percent}%"></span>
+                            <span ${CountUp.fill(factor.percent)}></span>
                         </div>
                         <div class="factor-impact">${impact}</div>
                     </div>`;
                 }).join('')}
             </div>
             <p class="qualification-note">Score starts at 100, adds the points above, then caps at 0–100 and never above the day’s best two-hour window. Wind above 25 km/h rules out the day. Bars use each rule’s point range, not a share of the total.</p>`;
+        CountUp.run(document.getElementById('day-qualification'));
         document.querySelectorAll('.day-select').forEach(button => {
             const selected = +button.dataset.day === index;
             button.setAttribute('aria-pressed', String(selected));
@@ -473,7 +474,7 @@ class SkateParkDay {
         if (!win) return `<div class="window-summary"><div class="window-best"><span class="window-label">Best time</span><strong>No time left today</strong></div></div>`;
         const chips = win.blocks.map(b => {
             const isBest = !win.none && b.startHour === win.startHour;
-            return `<li class="window-chip${isBest ? ' best' : ''}${b.score <= 0 ? ' zero' : ''}"><span>${this.shortBlockLabel(b.startHour, b.endHour)}</span><b>${Math.round(b.score)}</b></li>`;
+            return `<li class="window-chip${isBest ? ' best' : ''}${b.score <= 0 ? ' zero' : ''}"><span>${this.shortBlockLabel(b.startHour, b.endHour)}</span><b>${CountUp.num(b.score)}</b></li>`;
         }).join('');
         const dayScore = Math.round(day.score);
         const windowCap = day.bestBlockScore === undefined ? null : Math.round(day.bestBlockScore);
@@ -496,7 +497,7 @@ class SkateParkDay {
                 : ` Earlier windows today scored up to ${dayScore}, so the day score is ${dayScore}.`;
         }
         return `<div class="window-summary">
-                <div class="window-best"><span class="window-label">Best time</span><strong>${win.none ? win.reason : `${win.label} · ${win.score}/100`}</strong><span class="window-vs">Day score ${dayScore}/100</span></div>
+                <div class="window-best"><span class="window-label">Best time</span><strong>${win.none ? win.reason : `${win.label} · ${CountUp.num(win.score)}/100`}</strong><span class="window-vs">Day score ${CountUp.num(dayScore)}/100</span></div>
                 <ul class="window-chips" aria-label="Time scores${index === 0 ? ' for the rest of today' : ''}">${chips}</ul>
                 <p class="window-why">${escapeHtml(why)}</p>
             </div>`;
@@ -928,9 +929,9 @@ class SkateParkDay {
                             <div class="time-block-score" style="margin-top: 2px;">
                                 <div class="metric-icon" style="font-size: 0.6rem; width: 10px;">${ICONS.target}</div>
                                 <div class="metric-bar" style="height: 2px;">
-                                    <div class="metric-fill score" style="width: ${scorePercent}%"></div>
+                                    <div class="metric-fill score" ${CountUp.fill(scorePercent)}></div>
                                 </div>
-                                <div class="metric-value" style="font-size: 0.6rem; min-width: 20px;">${Math.round(block.score)}</div>
+                                <div class="metric-value" style="font-size: 0.6rem; min-width: 20px;">${CountUp.num(block.score)}</div>
                             </div>
                         </div>
                     `;
@@ -948,7 +949,7 @@ class SkateParkDay {
                 <div style="font-size: 1.8rem;">${this.getWeatherIcon(day.weatherCode)}</div>
                 <div style="text-align: right;">
                     <div style="font-size: 1.1rem; font-weight: 700;">${Math.round(day.tempMax)}°C</div>
-                    <div style="font-size: 0.7rem; opacity: 0.8;">Score: ${Math.round(day.score)}/100</div>
+                    <div style="font-size: 0.7rem; opacity: 0.8;">Score: ${CountUp.num(day.score)}/100</div>
                 </div>
             </div>
             
@@ -956,6 +957,7 @@ class SkateParkDay {
             
             ${timeBlocksHtml}
         `;
+        CountUp.run(bestDayInfo);
     }
 
     renderWeatherGrid() {
@@ -1012,7 +1014,7 @@ class SkateParkDay {
             const win = this.bestWindow(index);
             const windowText = !win ? 'No time left today' : win.none ? win.reason : '';
             const windowHtml = win && !win.none
-                ? `<span class="card-window${win.score - day.score >= 20 ? ' standout' : ''}"><small class="card-label">Best time</small><span class="card-window-time">${this.shortBlockLabel(win.startHour, win.endHour)}</span><span class="card-window-score">${win.score}</span></span>`
+                ? `<span class="card-window${win.score - day.score >= 20 ? ' standout' : ''}"><small class="card-label">Best time</small><span class="card-window-time">${this.shortBlockLabel(win.startHour, win.endHour)}</span><span class="card-window-score">${CountUp.num(win.score)}</span></span>`
                 : `<span class="card-window empty"><small class="card-label">Best time</small><span class="card-window-time">${windowText}</span></span>`;
             const windowAria = win && !win.none ? `, best time ${win.label} scores ${win.score}` : `, ${windowText.toLowerCase()}`;
             return `
@@ -1024,14 +1026,15 @@ class SkateParkDay {
                         <span class="weather-icon">${this.getWeatherIcon(day.weatherCode)}</span>
                         <span class="temp">${Math.round(day.tempMax)}°C</span>
                         <span class="card-wind">${ICONS.wind} ${Math.round(day.maxHourlyWind)} <small>km/h</small></span>
-                        <span class="card-score"><small class="card-label">Day</small> ${Math.round(day.score)}<small>/100</small></span>
-                        <span class="card-score-bar" aria-hidden="true"><span style="width:${day.score}%"></span></span>
+                        <span class="card-score"><small class="card-label">Day</small> ${CountUp.num(day.score)}<small>/100</small></span>
+                        <span class="card-score-bar" aria-hidden="true"><span ${CountUp.fill(day.score)}></span></span>
                         ${windowHtml}
                         <span class="card-details">View factors</span>
                     </button>
                     <button type="button" class="day-share-btn" data-day="${index}" aria-label="Share ${dayName}">${ICONS.share}<span>Share</span></button>
                 </article>`;
         }).join('');
+        CountUp.run(grid);
         grid.querySelectorAll('.day-select').forEach(button => {
             button.onclick = () => {
                 this.renderDayQualification(+button.dataset.day);
@@ -1609,6 +1612,96 @@ const PARK_DATA_VERSION = '2026110302';
 function escapeHtml(str) {
     return String(str).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 }
+
+// Scores count up from 0 and their bars fill with them, after the splash and once each group is on screen.
+// Markup keeps the real value: numbers have a hidden copy for screen readers, bars keep their real width.
+const CountUp = {
+    DURATION: 1500,
+    STAGGER: 70,
+    GROUP: '.day-card, .day-factor, .qualification-heading, .window-summary, #best-day-info',
+    STAGGERED: '.day-card, .day-factor',
+    pending: new Set(),
+    observer: null,
+
+    // A whole-number score that animates; screen readers always get the real value.
+    num(value) {
+        const n = Math.round(value);
+        return `<span class="count" data-count="${n}" aria-hidden="true" style="min-width:${String(n).length}ch">${n}</span><span class="visually-hidden">${n}</span>`;
+    },
+
+    // Style attribute for a bar that fills to `percent`.
+    fill(percent) {
+        return `data-fill="${percent}" style="width:${percent}%"`;
+    },
+
+    reduced() {
+        return typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches;
+    },
+
+    elements(root) {
+        return [...root.querySelectorAll('[data-count], [data-fill]')];
+    },
+
+    paint(el, ratio) {
+        if (el.dataset.count !== undefined) el.textContent = ratio >= 1 ? el.dataset.count : String(Math.round(+el.dataset.count * ratio));
+        else el.style.width = ratio >= 1 ? `${el.dataset.fill}%` : `${+el.dataset.fill * ratio}%`;
+    },
+
+    // Reset everything new under `root` to 0, then animate each group when the splash is gone and it scrolls into view.
+    run(root) {
+        if (!root || typeof document === 'undefined') return;
+        const els = this.elements(root);
+        if (!els.length || this.reduced() || typeof requestAnimationFrame !== 'function') { els.forEach(el => this.paint(el, 1)); return; }
+        const groups = new Map();
+        els.forEach(el => {
+            this.paint(el, 0);
+            const group = el.closest(this.GROUP) || el;
+            if (!groups.has(group)) groups.set(group, []);
+            groups.get(group).push(el);
+        });
+        const start = () => groups.forEach((list, group) => this.watch(group, list));
+        const splash = window.SkateSplash;
+        if (splash && typeof splash.whenGone === 'function') splash.whenGone(start);
+        else start();
+    },
+
+    watch(group, list) {
+        if (!group.isConnected) return;
+        group.countUpList = list;
+        if (typeof IntersectionObserver !== 'function') return this.animate(group);
+        if (!this.observer) {
+            this.observer = new IntersectionObserver(entries => entries.forEach(entry => {
+                if (!entry.isIntersecting) return;
+                this.observer.unobserve(entry.target);
+                this.pending.delete(entry.target);
+                this.animate(entry.target);
+            }), { rootMargin: '0px 0px -8% 0px' });
+        }
+        this.pending.forEach(g => { if (!g.isConnected) { this.observer.unobserve(g); this.pending.delete(g); } });
+        this.pending.add(group);
+        this.observer.observe(group);
+    },
+
+    animate(group) {
+        const list = (group.countUpList || []).filter(el => el.isConnected);
+        group.countUpList = null;
+        if (!list.length) return;
+        if (document.hidden) { list.forEach(el => this.paint(el, 1)); return; }
+        let delay = 0;
+        if (group.matches && group.matches(this.STAGGERED) && group.parentElement) {
+            delay = Math.min([...group.parentElement.children].indexOf(group), 8) * this.STAGGER;
+        }
+        let t0 = null;
+        const step = now => {
+            if (t0 === null) t0 = now + delay;
+            const p = Math.max(0, Math.min(1, (now - t0) / this.DURATION));
+            const eased = p >= 1 ? 1 : 1 - Math.pow(1 - p, 3);
+            list.forEach(el => { if (el.isConnected) this.paint(el, eased); });
+            if (p < 1 && list.some(el => el.isConnected)) requestAnimationFrame(step);
+        };
+        requestAnimationFrame(step);
+    }
+};
 
 function showToast(msg) {
     let t = document.getElementById('toast');
