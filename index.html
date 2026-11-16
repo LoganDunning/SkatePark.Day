@@ -62,9 +62,9 @@
     <link rel="preconnect" href="https://api.open-meteo.com" crossorigin>
     <link rel="preconnect" href="https://geocoding-api.open-meteo.com" crossorigin>
     <link rel="dns-prefetch" href="https://nominatim.openstreetmap.org">
-    <link rel="stylesheet" href="app.css?v=2026111604">
+    <link rel="stylesheet" href="app.css?v=2026111605">
 </head>
-<body id="top">
+<body id="top" class="app">
     <script>document.documentElement.setAttribute('data-theme','dark');</script>
     <div class="splash" id="splash" role="img" aria-label="best.skatepark.day">
         <div class="splash-stage">
@@ -122,24 +122,31 @@
                 <button type="button" class="theme-toggle" id="theme-toggle" aria-label="Toggle dark or light theme">
                     <span class="theme-toggle-label">Light</span>
                 </button>
-                <button type="button" class="hamburger-menu" id="menu-toggle" aria-expanded="false" aria-controls="site-menu">
+                <button type="button" class="hamburger-menu" id="menu-toggle" aria-expanded="false" aria-controls="site-menu" aria-haspopup="dialog">
                     <span class="menu-label">Menu</span>
                     <span class="hamburger-lines" aria-hidden="true"><span class="hamburger-line"></span><span class="hamburger-line"></span><span class="hamburger-line"></span></span>
                 </button>
             </div>
         </div>
-        <nav class="site-menu" id="site-menu" aria-label="Site menu">
-            <a href="#forecast-section"><span class="menu-num">01</span>Forecast</a>
-            <a href="#about-heading"><span class="menu-num">02</span>How it works</a>
-            <a href="#faq-heading"><span class="menu-num">03</span>FAQ</a>
+    </header>
+    <div class="flyout-backdrop" id="flyout-backdrop" hidden></div>
+    <aside class="flyout site-menu" id="site-menu" role="dialog" aria-modal="true" aria-label="Site menu" inert>
+        <div class="flyout-head"><span class="kicker">Menu</span><button type="button" class="flyout-close" data-close aria-label="Close menu">&times;</button></div>
+        <nav class="flyout-nav" aria-label="Site">
+            <a href="#top" data-menu="forecast"><span class="menu-num">01</span>Forecast</a>
+            <a href="#about-heading" data-info="about-heading"><span class="menu-num">02</span>How it works</a>
+            <a href="#faq-heading" data-info="faq-heading"><span class="menu-num">03</span>FAQ</a>
             <a href="https://github.com/LoganDunning/SkatePark.Day" target="_blank" rel="noopener noreferrer" class="github-icon"><span class="menu-num">04</span>Source on GitHub ↗</a>
             <a href="https://www.logandunning.com/" target="_blank" rel="noopener noreferrer" class="ld-logo" title="Lets Do Fun Things Everyday"><span class="menu-num">05</span>Logan Dunning ↗</a>
         </nav>
-    </header>
+        <div class="flyout-foot">
+            <button type="button" class="btn btn-solid flyout-login">Log in</button>
+            <p>&copy; 2025–2026 Social Dunn Right Inc.</p>
+        </div>
+    </aside>
 
     <main id="main" class="container">
         <section class="hero" aria-labelledby="page-title">
-            <div class="hero-mark" aria-hidden="true"><svg viewBox="0 0 42 32" width="84" height="64"><g fill="none" stroke-linecap="butt"><path class="bd-b" stroke="currentColor" stroke-width="1.9" d="M4 3v26h8.5a6.75 6.75 0 0 0 0-13.5H4M4 3h7.5a6.25 6.25 0 0 1 0 12.5"/><path class="bd-d" stroke="currentColor" stroke-width="1.1" opacity=".62" d="M23 3v19M23 3h3a13 13 0 0 1 0 26h-1.5"/></g></svg></div>
             <p class="kicker">Social Dunn Right Inc · 7-Day Skate Forecast</p>
             <h1 id="page-title"><span class="visually-hidden">Best Skate Park Day: </span><span class="best-word">best</span><span class="muted-text">.</span>skatepark<span class="muted-text">.</span>day</h1>
             <p id="best-skate-summary" class="lede">The Best Day to Skate this week is...</p>
@@ -149,12 +156,12 @@
                 <label for="location-search" class="visually-hidden">Location: search for a city</label>
                 <svg class="icon location-bar-icon" viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="M20 20l-4.3-4.3"/></svg>
                 <input type="search" id="location-search" enterkeyhint="search" class="location-search" placeholder="Search for a city or town" autocomplete="off">
+                <div class="bar-tools">
+                    <button type="button" id="locate-btn" class="bar-btn locate-btn" aria-label="Use my current location"><svg class="icon" viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.5 3.5L3.5 10.6l7.1 2.8 2.8 7.1z"/></svg><span class="bar-spinner" aria-hidden="true"></span></button>
+                    <button type="button" id="page-share" class="bar-btn page-share" aria-label="Share this forecast"><svg class="icon" viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 15V3M8 7l4-4 4 4"/><path d="M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-7"/></svg></button>
+                </div>
             </div>
-                <button type="button" id="page-share" class="page-share" aria-label="Share this forecast"><svg class="icon" viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 15V3M8 7l4-4 4 4"/><path d="M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-7"/></svg><span class="page-share-text">Share</span></button>
-            </div>
-            <div class="hero-actions">
-                <a href="#forecast-section" class="btn btn-solid">See the forecast</a>
-                <a href="#about-heading" class="btn">How it works</a>
+            <p id="locate-note" class="locate-note" role="status" aria-live="polite" hidden></p>
             </div>
         </section>
 
@@ -178,13 +185,18 @@
                 <div id="best-day" class="best-day">
                     <h2 id="forecast-heading" class="kicker"><svg class="icon" viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 4h8v5a4 4 0 0 1-8 0V4zM8 6H5a3 3 0 0 0 3 4M16 6h3a3 3 0 0 1-3 4M12 13v4M8.5 20h7M10 17h4v3h-4z"/></svg> Best Skate Day</h2>
                     <div id="best-day-info"></div>
-                    <section id="day-qualification" class="day-qualification" aria-labelledby="qualification-title" aria-live="polite"></section>
+                    <div id="time-chart" class="time-chart"></div>
                 </div>
-                <p class="forecast-grid-help">Your week · tap a day for its weather factors</p>
+                <p class="forecast-grid-help">Your week · tap a day for its time scores</p>
                 <div id="weather-grid" class="weather-grid"></div>
             </div>
         </section>
 
+
+    </main>
+    <aside class="flyout info-panel" id="info-panel" role="dialog" aria-modal="true" aria-label="How it works and FAQ" inert>
+        <div class="flyout-head"><span class="kicker">About</span><button type="button" class="flyout-close" data-close aria-label="Close">&times;</button></div>
+        <div class="flyout-scroll">
         <section class="about section" aria-labelledby="about-heading">
             <p class="kicker">01 — About</p>
             <h2 id="about-heading">Find the Best Skate Park Day This Week</h2>
@@ -208,9 +220,6 @@
             <h3>How does it know where I am?</h3>
             <p>It asks for your location. If you say no, it starts with Toronto, and you can search for any city or town.</p>
         </section>
-
-    </main>
-
         <footer class="site-footer">
             <div class="footer-inner">
             <div class="footer-marks">
@@ -218,9 +227,18 @@
                 <a href="https://www.logandunning.com/" target="_blank" rel="noopener noreferrer" title="Social Dunn Right Inc." class="mark-link"><span class="sdr-mark">SDR</span><span>Social Dunn Right Inc.</span></a>
             </div>
             <p>&copy; 2025–2026 <a href="https://www.logandunning.com/" target="_blank" rel="noopener noreferrer">Social Dunn Right Inc.</a> All rights reserved.</p>
-            <p class="footer-links"><a href="https://github.com/LoganDunning/SkatePark.Day" target="_blank" rel="noopener noreferrer">GitHub</a> <a href="#top">Back to top ↑</a></p>
+            <p class="footer-links"><a href="https://github.com/LoganDunning/SkatePark.Day" target="_blank" rel="noopener noreferrer">GitHub</a> <a href="#top" data-close>Close ✕</a></p>
             </div>
         </footer>
+        </div>
+    </aside>
+    <aside class="flyout day-sheet" id="day-sheet" role="dialog" aria-modal="true" aria-labelledby="qualification-title" inert>
+        <div class="flyout-head"><span class="kicker">Weather factors</span><button type="button" class="flyout-close" data-close aria-label="Close">&times;</button></div>
+        <div class="flyout-scroll">
+            <section id="day-qualification" class="day-qualification" aria-labelledby="qualification-title"></section>
+        </div>
+    </aside>
+
 
     <!-- Structured Data for SEO -->
     <script type="application/ld+json">
@@ -326,13 +344,8 @@
         function sync(){var t=cur();lbl.textContent=t==='dark'?'Light':'Dark';document.querySelector('meta[name="theme-color"]').content=t==='dark'?'#0B0B0C':'#F4F3EF';}
         btn.addEventListener('click',function(){var n=cur()==='dark'?'light':'dark';root.setAttribute('data-theme',n);sync();});
         sync();
-        var m=document.getElementById('menu-toggle'),hdr=document.querySelector('.site-header');
-        function setOpen(o){hdr.classList.toggle('menu-open',o);m.setAttribute('aria-expanded',o);}
-        m.addEventListener('click',function(){setOpen(!hdr.classList.contains('menu-open'));});
-        document.querySelectorAll('.site-menu a').forEach(function(a){a.addEventListener('click',function(){setOpen(false);});});
-        document.addEventListener('keydown',function(e){if(e.key==='Escape')setOpen(false);});
     })();
     </script>
-    <script src="app.js?v=2026111604" defer></script>
+    <script src="app.js?v=2026111605" defer></script>
 </body>
 </html>
