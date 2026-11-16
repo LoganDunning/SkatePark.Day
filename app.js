@@ -16,6 +16,7 @@ const ICONS = {
     pin: '<svg class="icon" viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 21s-6.5-6.1-6.5-11a6.5 6.5 0 0 1 13 0c0 4.9-6.5 11-6.5 11z"/><circle cx="12" cy="10" r="2.3"/></svg>',
     trophy: '<svg class="icon" viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 4h8v5a4 4 0 0 1-8 0V4zM8 6H5a3 3 0 0 0 3 4M16 6h3a3 3 0 0 1-3 4M12 13v4M8.5 20h7M10 17h4v3h-4z"/></svg>',
     hot: '<svg class="icon" viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 14.5V5a2 2 0 1 1 4 0v9.5a4 4 0 1 1-4 0z"/><path d="M12 11v6"/><path d="M18 5h2M18 9h2"/></svg>',
+    info: '<svg class="icon" viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/></svg>',
     share: '<svg class="icon" viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 15V3M8 7l4-4 4 4"/><path d="M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-7"/></svg>',
     cold: '<svg class="icon" viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 14.5V5a2 2 0 1 1 4 0v9.5a4 4 0 1 1-4 0z"/><path d="M12 15v2"/><path d="M18 7h3M19.5 5.5v3"/></svg>',
 };
@@ -945,15 +946,13 @@ class SkateParkDay {
         const bestDayInfo = document.getElementById('best-day-info');
         const day = this.bestDay;
         const index = this.days.indexOf(day);
-        const date = day.date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+        const date = day.date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
         const win = this.bestWindow(index);
-        const when = win && !win.none ? win.label : win ? win.reason : 'No time left today';
+        const when = win && !win.none ? this.shortBlockLabel(win.startHour, win.endHour) : win ? win.reason : 'No time left today';
         bestDayInfo.innerHTML = `
             <div class="best-summary">
-                <div class="best-when"><strong>${this.dayLabel(index)}</strong><span>${date}</span></div>
-                <div class="best-wx">${this.getWeatherIcon(day.weatherCode)}<span class="best-temp">${Math.round(day.tempMax)}°C</span></div>
-                <div class="best-meta"><span>${ICONS.wind} ${Math.round(day.maxHourlyWind)} km/h</span><span>${ICONS.clock} ${when}</span>${day.precipitation > 0 ? `<span>${ICONS.drop} ${day.precipitation}mm</span>` : ''}</div>
-                <div class="best-score"><span class="card-label">Score</span> <b>${CountUp.num(day.score)}</b><small>/100</small><span class="card-score-bar" aria-hidden="true"><span ${CountUp.fill(day.score)}></span></span></div>
+                <p class="best-when"><strong>${this.dayLabel(index)}</strong> <span>${date} · ${when}</span></p>
+                <p class="best-score">${CountUp.num(day.score)}<span class="visually-hidden"> out of 100</span></p>
             </div>`;
         CountUp.run(bestDayInfo);
     }
@@ -970,7 +969,7 @@ class SkateParkDay {
             <div class="chart-head">
                 <h3 class="chart-title" id="chart-title"></h3>
                 <div class="chart-actions">
-                    <button type="button" class="chart-btn" id="chart-why">Factors</button>
+                    <button type="button" class="chart-btn" id="chart-why">${ICONS.info}</button>
                     <button type="button" class="chart-btn chart-share" id="chart-share" aria-label="Share this day">${ICONS.share}</button>
                 </div>
             </div>
@@ -1014,7 +1013,7 @@ class SkateParkDay {
         panel.setAttribute('aria-labelledby', `day-tab-${index}`);
         panel.innerHTML = `<div class="chart-grid" aria-hidden="true"><span>100</span><span>50</span><span>0</span></div><div class="chart-bars">${bars}</div><div class="chart-tip" role="status" hidden></div>`;
         const title = document.getElementById('chart-title');
-        if (title) title.innerHTML = `<em>Time scores</em> <span>${this.dayLabel(index)} · day ${CountUp.num(day.score)}</span>`;
+        if (title) title.innerHTML = `<span class="chart-day">${day.date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}</span><span class="chart-meta">${this.getWeatherIcon(day.weatherCode)} ${Math.round(day.tempMax)}° · ${ICONS.wind} ${Math.round(day.maxHourlyWind)} km/h${day.precipitation > 0 ? ` · ${ICONS.drop} ${day.precipitation} mm` : ''}</span>`;
         const why = document.getElementById('chart-why');
         if (why) why.setAttribute('aria-label', `Weather factors for ${this.dayLabel(index)}`);
         const tip = panel.querySelector('.chart-tip');
@@ -1040,7 +1039,6 @@ class SkateParkDay {
         panel.querySelector('.chart-bars').onmouseleave = hide;
         panel.onfocusout = e => { if (!panel.contains(e.relatedTarget)) hide(); };
         CountUp.run(panel);
-        CountUp.run(title);
     }
 
     // One selected day everywhere: the card, the chart tab and the factors sheet.
@@ -1098,35 +1096,22 @@ class SkateParkDay {
             const date = day.date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
             const isBest = day === this.bestDay;
             const isSecondBest = day === secondBestDay && !isBest;
-            const isNoSkate = day.maxHourlyWind > 15 || day.score < 30;
+            const isNoSkate = day.score < 30;
             let cardClass = 'day-card';
-            let medalHtml = '';
-            if (isBest) {
-                cardClass += ' best';
-                medalHtml = '<div class="day-card-medal gold"></div>';
-            } else if (isSecondBest) {
-                cardClass += ' second-best';
-                medalHtml = '<div class="day-card-medal silver"></div>';
-            } else if (isNoSkate) {
-                cardClass += ' no-skate';
-            }
+            if (isBest) cardClass += ' best';
+            else if (isSecondBest) cardClass += ' second-best';
+            else if (isNoSkate) cardClass += ' no-skate';
             const win = this.bestWindow(index);
-            const windowText = !win ? 'None left' : win.none ? win.reason : '';
-            const windowHtml = win && !win.none
-                ? `<span class="card-window${win.score - day.score >= 20 ? ' standout' : ''}"><small class="card-label">Best</small><span class="card-window-time">${this.shortBlockLabel(win.startHour, win.endHour)}</span><span class="card-window-score">${CountUp.num(win.score)}</span></span>`
-                : `<span class="card-window empty"><small class="card-label">Best</small><span class="card-window-time">${windowText}</span></span>`;
+            const windowText = !win ? 'None left' : win.none ? (win.reason === 'Too windy all day' ? 'Too windy' : 'No window') : '';
+            const windowHtml = `<span class="card-time${win && !win.none ? '' : ' empty'}">${win && !win.none ? this.shortBlockLabel(win.startHour, win.endHour) : windowText}</span>`;
             const windowAria = win && !win.none ? `, best time ${win.label} scores ${win.score}` : `, ${(windowText || '').toLowerCase()}`;
             return `
                 <article class="${cardClass}">
                     ${this.weatherFxHtml(day)}
-                    ${medalHtml}
                     <button type="button" class="day-select" data-day="${index}" aria-pressed="false" aria-controls="chart-panel" aria-label="Show time scores for ${dayName}, ${date}: day score ${Math.round(day.score)}${windowAria}${isBest ? ', best day' : isSecondBest ? ', runner-up' : ''}">
-                        <span class="day-name"><span class="dn-long">${dayName}</span><span class="dn-short">${shortName} <b>${day.date.getDate()}</b></span></span>
-                        <span class="day-date">${date}</span>
-                        <span class="card-wx"><span class="weather-icon">${this.getWeatherIcon(day.weatherCode)}</span><span class="temp">${Math.round(day.tempMax)}°</span></span>
-                        <span class="card-wind">${ICONS.wind} ${Math.round(day.maxHourlyWind)} <small>km/h</small></span>
-                        <span class="card-score"><small class="card-label">Day</small> ${CountUp.num(day.score)}<small>/100</small></span>
-                        <span class="card-score-bar" aria-hidden="true"><span ${CountUp.fill(day.score)}></span></span>
+                        <span class="day-name">${shortName}${index === 0 ? '' : ` ${day.date.getDate()}`}</span>
+                        <span class="weather-icon">${this.getWeatherIcon(day.weatherCode)}</span>
+                        <span class="card-score">${CountUp.num(day.score)}</span>
                         ${windowHtml}
                     </button>
                 </article>`;
