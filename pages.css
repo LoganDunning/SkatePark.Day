@@ -96,3 +96,15 @@ tr.no-skate .row-score b{color:var(--muted)}
 .cta-row{display:flex;flex-wrap:wrap;gap:10px;margin:24px 0 0}
 .cta{display:inline-flex;align-items:center;height:44px;padding:0 18px;border-radius:22px;background:var(--accent);color:#0B0B0E;font-weight:600;text-decoration:none}
 .cta-ghost{background:transparent;color:var(--ink);border:1px solid var(--mid);font-weight:400}
+/* Park detail pages */
+.park-actions{margin:16px 0 0}
+.review-video{position:relative;margin:12px 0 0;aspect-ratio:16/9;background:var(--sel);border:1px solid var(--line);border-radius:12px;overflow:hidden}
+.review-video img,.review-video iframe{position:absolute;inset:0;width:100%;height:100%;border:0;object-fit:cover;z-index:0}
+.video-play{position:absolute;inset:0;z-index:1;display:flex;align-items:center;justify-content:center;text-decoration:none}
+.video-play:hover .video-btn,.video-play:focus-visible .video-btn{transform:scale(1.06)}
+.video-btn{position:relative;z-index:1;display:flex;align-items:center;justify-content:center;width:68px;height:68px;border-radius:50%;background:var(--accent);color:#0B0B0E;box-shadow:0 6px 20px rgba(0,0,0,.35);transition:transform .15s ease}
+.video-btn .ic{margin-left:3px}
+.park-main h3 a{color:inherit;text-decoration-color:var(--line-2)}
+.park-main h3 a:hover{text-decoration-color:var(--accent)}
+.also-list{grid-template-columns:1fr}
+.also-list li{justify-content:flex-start}

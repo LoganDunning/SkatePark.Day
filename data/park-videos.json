@@ -1,0 +1,40 @@
+{
+  "burlington-skatepark-on-new-street": {
+    "name": "Nelson Park Skateboard Area",
+    "city": "Burlington",
+    "lat": 43.35954,
+    "lon": -79.76276,
+    "videoId": "RfWpYMLHO4g",
+    "title": "Nelson Park Skateboard Area | 4183 New St, Burlington, ON L7L 1T3",
+    "duration": 131
+  },
+  "vaughan-skatepark-4": {
+    "name": "Stanley Greene Skatepark",
+    "city": "Vaughan",
+    "lat": 43.734,
+    "lon": -79.47699,
+    "videoId": "1lunxcoQ02U",
+    "title": "Stanley Greene Skatepark",
+    "duration": 106,
+    "googleReviewUrl": "https://www.google.com/maps/place/Stanley+Greene+Skatepark/@43.7341008,-79.4771506,17z/data=!3m1!4b1!4m6!3m5!1s0x882b31fedd8303a3:0x2763f93b10ab278e!8m2!3d43.7341008!4d-79.4771506!16s%2Fg%2F11jppsb2qx"
+  },
+  "oakville-skatepark-2": {
+    "name": "Sixteen Mile Sports Skate Park",
+    "city": "Oakville",
+    "lat": 43.47337,
+    "lon": -79.7465,
+    "videoId": "geYIZc8NitU",
+    "title": "Sixteen Mile Sports Skate Park at 3200 Neyagawa Blvd, Oakville, ON L6M 4L6",
+    "duration": 161,
+    "googleReviewUrl": "https://www.google.com/maps/place/Sixteen+Mile+Sports+Park+Playground/@43.4683995,-79.7535555,17z/data=!3m1!4b1!4m6!3m5!1s0x882b67002609011b:0xf20c52f6f4026f44!8m2!3d43.4683995!4d-79.7535555!16s%2Fg%2F11xdssyjqh"
+  },
+  "oakville-skatepark-3": {
+    "name": "Shell Park Skate Park",
+    "city": "Oakville",
+    "lat": 43.37975,
+    "lon": -79.71997,
+    "videoId": "608y7y1GXlw",
+    "title": "Shell Park Skate Park Oakville Ontario 3307 Lakeshore Rd W, Oakville, ON L6L 6S6",
+    "duration": 48
+  }
+}

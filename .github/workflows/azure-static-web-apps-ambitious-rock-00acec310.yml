@@ -35,8 +35,8 @@ jobs:
         env:
           TZ: America/Toronto
         run: node scripts/build-calendars.cjs
-      - name: Build city pages and sitemap
-        # Static /skateparks/ pages with this week's forecast baked in, plus sitemap.xml (never committed).
+      - name: Build city and park pages and sitemap
+        # Static /skateparks/ city and park pages with this week's forecast baked in, plus sitemap.xml (never committed).
         # Reuses the forecasts fetched for the calendar feeds. Without weather, pages build without the forecast.
         continue-on-error: true
         env:
