@@ -335,10 +335,15 @@ html.splash-on body{overflow:hidden}
 .factor-impact{font-family:var(--mono);font-size:.65rem;color:var(--muted);margin-top:4px}
 .day-factor.inactive .factor-meter{background:var(--faint)}
 .forecast-grid-help{font-family:var(--mono);font-size:.7rem;color:var(--muted);margin:18px 0 10px}
-/* Four cards then three, all devices. The second row expands to use the whole width. */
-.weather-grid{grid-template-columns:repeat(12,minmax(0,1fr));gap:10px;border:0}
-.day-card{grid-column:span 3;min-width:0;padding:0;border:1px solid var(--line);background:var(--panel);text-align:left;display:flex;flex-direction:column;opacity:1}
-.day-card:nth-child(n+5){grid-column:span 4}
+/* Seven equal-width cards. Wide screens: one row of seven. Narrower: four on top and
+   three centred below on the same column grid, so every card keeps the same width. */
+.weather-grid{grid-template-columns:repeat(8,minmax(0,1fr));gap:10px;border:0}
+.day-card{grid-column:span 2;min-width:0;padding:0;border:1px solid var(--line);background:var(--panel);text-align:left;display:flex;flex-direction:column;opacity:1}
+.day-card:nth-child(5){grid-column:2/span 2}
+@media(min-width:960px){
+  .weather-grid{grid-template-columns:repeat(7,minmax(0,1fr))}
+  .day-card,.day-card:nth-child(5){grid-column:auto}
+}
 .day-card.best,.day-card.second-best{padding:0;box-shadow:none}
 .day-card.best{border-color:var(--ink)}
 .day-card.second-best{border-color:var(--muted)}
