@@ -1,0 +1,46 @@
+{
+  "icon": {
+    "desktop": {
+      "regularIconTransformation": {
+        "type": "background",
+        "backgroundRadius": 0,
+        "backgroundColor": "#0B0B0C",
+        "imageScale": 1,
+        "brightness": 0
+      },
+      "darkIconType": "none",
+      "darkIconTransformation": {
+        "type": "none",
+        "backgroundRadius": 0,
+        "backgroundColor": "#0B0B0C",
+        "imageScale": 1,
+        "brightness": 0
+      }
+    },
+    "touch": {
+      "appTitle": "SkatePark.Day",
+      "transformation": {
+        "type": "background",
+        "backgroundColor": "#0B0B0C",
+        "backgroundRadius": 0,
+        "imageScale": 0.9,
+        "brightness": 0
+      }
+    },
+    "webAppManifest": {
+      "name": "SkatePark.Day",
+      "shortName": "SkatePark.Day",
+      "backgroundColor": "#0B0B0C",
+      "themeColor": "#0B0B0C",
+      "transformation": {
+        "type": "background",
+        "backgroundColor": "#0B0B0C",
+        "backgroundRadius": 0,
+        "imageScale": 0.8,
+        "brightness": 0
+      }
+    }
+  },
+  "path": "/",
+  "skipMetadataInjection": true
+}

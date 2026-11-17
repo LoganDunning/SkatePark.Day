@@ -64,7 +64,12 @@ SkatePark.Day/
 ├── index.html          # Main application file
 ├── app.css            # Styling and animations
 ├── app.js             # Core application logic
-├── favicon.svg        # Skateboard emoji favicon
+├── favicon.svg        # BD monogram favicon (master icon)
+├── favicon.ico        # Multi-size desktop favicon
+├── favicon-96x96.png  # PNG favicon
+├── apple-touch-icon.png  # 180x180 iOS home-screen icon
+├── web-app-manifest-192x192.png
+├── web-app-manifest-512x512.png
 ├── manifest.json      # PWA manifest
 ├── robots.txt         # SEO crawler instructions
 ├── sitemap.xml        # Site structure for search engines

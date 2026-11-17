@@ -50,6 +50,48 @@
       }
     },
     {
+      "route": "/apple-touch-icon.png",
+      "headers": {
+        "cache-control": "public, max-age=604800",
+        "x-content-type-options": "nosniff"
+      }
+    },
+    {
+      "route": "/favicon.ico",
+      "headers": {
+        "cache-control": "public, max-age=604800",
+        "x-content-type-options": "nosniff"
+      }
+    },
+    {
+      "route": "/favicon.svg",
+      "headers": {
+        "cache-control": "public, max-age=604800",
+        "x-content-type-options": "nosniff"
+      }
+    },
+    {
+      "route": "/favicon-96x96.png",
+      "headers": {
+        "cache-control": "public, max-age=604800",
+        "x-content-type-options": "nosniff"
+      }
+    },
+    {
+      "route": "/web-app-manifest-192x192.png",
+      "headers": {
+        "cache-control": "public, max-age=604800",
+        "x-content-type-options": "nosniff"
+      }
+    },
+    {
+      "route": "/web-app-manifest-512x512.png",
+      "headers": {
+        "cache-control": "public, max-age=604800",
+        "x-content-type-options": "nosniff"
+      }
+    },
+    {
       "route": "/manifest.json",
       "headers": {
         "cache-control": "public, max-age=86400",
@@ -96,6 +138,7 @@
     "apiRuntime": "node:20"
   },
   "mimeTypes": {
-    ".ics": "text/calendar; charset=utf-8"
+    ".ics": "text/calendar; charset=utf-8",
+    ".ico": "image/x-icon"
   }
 }

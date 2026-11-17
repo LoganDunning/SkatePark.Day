@@ -111,8 +111,11 @@ function shell({ title, description, canonical, crumbs, body, jsonld }) {
 <meta name="twitter:image" content="${SITE}img/share/default.jpg">
 <meta name="theme-color" content="#0B0B0E">
 <meta name="color-scheme" content="dark">
+<link rel="icon" type="image/png" href="/favicon-96x96.png" sizes="96x96">
 <link rel="icon" type="image/svg+xml" href="/favicon.svg">
-<link rel="apple-touch-icon" sizes="180x180" href="/img/apple-touch-icon.png">
+<link rel="shortcut icon" href="/favicon.ico">
+<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-title" content="SkatePark.Day">
 <link rel="manifest" href="/manifest.json">
 <link rel="preload" href="/fonts/space-grotesk-latin.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="/pages.css?v=${VERSION}">
