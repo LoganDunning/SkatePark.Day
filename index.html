@@ -2,7 +2,7 @@
 <html lang="en-CA" data-theme="dark">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <title>Best Skate Park Day: Skate Park Weather &amp; 7-Day Forecast</title>
     
     <!-- Favicon (generated with RealFaviconGenerator CLI) -->
@@ -12,7 +12,7 @@
     <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png?v=3">
     
     <!-- Mobile optimizations -->
-    <meta name="theme-color" content="#0B0B0C">
+    <meta name="theme-color" content="#000000">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -59,7 +59,7 @@
     <link rel="preconnect" href="https://api.open-meteo.com" crossorigin>
     <link rel="preconnect" href="https://geocoding-api.open-meteo.com" crossorigin>
     <link rel="dns-prefetch" href="https://nominatim.openstreetmap.org">
-    <link rel="stylesheet" href="app.css?v=2026111622">
+    <link rel="stylesheet" href="app.css?v=2026111714">
 </head>
 <body id="top" class="app v3">
     <script>document.documentElement.setAttribute('data-theme','dark');</script>
@@ -436,7 +436,7 @@
     (function(){
         var root=document.documentElement,btn=document.getElementById('theme-toggle'),lbl=btn.querySelector('.theme-toggle-label');
         function cur(){return root.getAttribute('data-theme')==='light'?'light':'dark';}
-        function sync(){var t=cur();lbl.textContent=t==='dark'?'Light':'Dark';document.querySelector('meta[name="theme-color"]').content=t==='dark'?'#0B0B0C':'#F4F3EF';}
+        function sync(){var t=cur();lbl.textContent=t==='dark'?'Light':'Dark';}
         btn.addEventListener('click',function(){var n=cur()==='dark'?'light':'dark';root.setAttribute('data-theme',n);sync();});
         sync();
     })();

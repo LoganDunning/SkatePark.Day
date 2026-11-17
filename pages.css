@@ -1,10 +1,11 @@
 /* Space Grotesk (SIL Open Font License), self-hosted so text never waits on a third-party stylesheet */
 @font-face{font-family:'Space Grotesk';font-style:normal;font-weight:300 700;font-display:swap;src:url('/fonts/space-grotesk-latin.woff2') format('woff2');unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}
 /* Static city pages (/skateparks/): same tokens, type and rows as the home screen */
-:root{--bg:#0B0B0E;--ink:#F3F1EA;--muted:#A09E98;--mid:#6B6A65;--line:#222226;--line-2:#2E2E33;--sel:#1A1A1E;--accent:#E8B55A}
+:root{--bg:#0B0B0E;--ink:#F3F1EA;--muted:#A09E98;--mid:#6B6A65;--line:#222226;--line-2:#2E2E33;--sel:#1A1A1E;--accent:#E8B55A;--safe-top:env(safe-area-inset-top, 0px)}
 *,*::before,*::after{box-sizing:border-box}
-html{-webkit-text-size-adjust:100%;scroll-padding-top:16px}
-body.pg{margin:0 auto;max-width:720px;padding:12px 20px 40px;background:var(--bg);color:var(--ink);font-family:'Space Grotesk',ui-sans-serif,system-ui,-apple-system,'Segoe UI',Arial,sans-serif;font-variant-numeric:tabular-nums;font-size:15px;line-height:1.55}
+html{-webkit-text-size-adjust:100%;scroll-padding-top:calc(16px + var(--safe-top));background:#000}
+html::before{content:"";position:fixed;top:0;left:0;right:0;height:var(--safe-top);background:#000;z-index:10000;pointer-events:none}
+body.pg{margin:0 auto;max-width:720px;padding:calc(12px + var(--safe-top)) 20px 40px;background:var(--bg);color:var(--ink);font-family:'Space Grotesk',ui-sans-serif,system-ui,-apple-system,'Segoe UI',Arial,sans-serif;font-variant-numeric:tabular-nums;font-size:15px;line-height:1.55}
 a{color:var(--ink);text-decoration-color:var(--mid);text-underline-offset:3px}
 a:hover{text-decoration-color:var(--accent)}
 a:focus-visible{outline:2px solid var(--ink);outline-offset:2px;border-radius:4px}
@@ -86,7 +87,7 @@ tr.no-skate .row-score b{color:var(--muted)}
 .pg-foot nav a{display:inline-flex;align-items:center;min-height:32px}
 .pg-foot p{margin:12px 0 0}
 @media (max-width:420px){
-  body.pg{padding:12px 16px 32px}
+  body.pg{padding:calc(12px + var(--safe-top)) 16px 32px}
   .hl-day,.hl-num b{font-size:44px;line-height:48px}
   .hl-time{font-size:26px;line-height:32px}
   .row-bar{display:none}

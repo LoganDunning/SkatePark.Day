@@ -8,6 +8,7 @@
   --sans:'Space Grotesk',ui-sans-serif,system-ui,-apple-system,'Segoe UI',sans-serif;
   --mono:ui-monospace,'SF Mono',Menlo,Consolas,monospace;
   --max:1060px;--pad:clamp(20px,5vw,48px);--sec:clamp(64px,9vw,116px);--t:.15s ease;
+  --safe-top:env(safe-area-inset-top, 0px);
   color-scheme:dark;
 }
 :root[data-theme="light"]{
@@ -19,7 +20,9 @@
 
 
 *{margin:0;padding:0;box-sizing:border-box}
-html{scroll-behavior:smooth;scroll-padding-top:72px;overflow-x:clip}
+html{scroll-behavior:smooth;scroll-padding-top:calc(72px + var(--safe-top));overflow-x:clip;background:var(--bg)}
+/* Solid black bar over the iOS PWA status area so page content never shows through. --safe-top is 0 outside a cover viewport. */
+html::before{content:"";position:fixed;top:0;left:0;right:0;height:var(--safe-top);background:#000;z-index:10000;pointer-events:none}
 .site-header{overflow-x:clip}
 body{font-family:var(--sans);font-weight:400;background:var(--bg);color:var(--ink);line-height:1.55;min-height:100vh;
   -webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;touch-action:manipulation;overflow-x:hidden;transition:background var(--t),color var(--t)}
@@ -30,7 +33,7 @@ a{color:inherit}
 .kicker{font-family:var(--mono);font-size:.68rem;letter-spacing:.22em;text-transform:uppercase;color:var(--muted);margin-bottom:18px}
 
 /* Header */
-.site-header{position:sticky;top:0;z-index:50;background:var(--hdr);backdrop-filter:blur(14px) saturate(140%);-webkit-backdrop-filter:blur(14px) saturate(140%);border-bottom:1px solid var(--line)}
+.site-header{position:sticky;top:0;z-index:50;padding-top:var(--safe-top);background:var(--bg);border-bottom:1px solid var(--line)}
 .site-header-inner{max-width:calc(var(--max) + 2*var(--pad));margin:0 auto;padding:0 var(--pad);height:60px;display:flex;align-items:center;justify-content:space-between}
 .brand{display:flex;align-items:center;gap:12px;text-decoration:none;color:var(--ink)}
 .brand-mark{display:block;color:var(--ink)}
@@ -279,7 +282,7 @@ h2.kicker{font-weight:400;line-height:inherit}
 
 /* First-visit splash */
 html.splash-on body{overflow:hidden}
-.splash{position:fixed;inset:0;z-index:9999;display:grid;place-items:center;padding:max(24px,env(safe-area-inset-top)) 24px max(24px,env(safe-area-inset-bottom));background:radial-gradient(125% 95% at 50% 38%,#18181B 0%,var(--bg) 62%);color:var(--ink);cursor:pointer;transition:opacity .35s ease;-webkit-tap-highlight-color:transparent}
+.splash{position:fixed;inset:0;z-index:9999;display:grid;place-items:center;padding:max(24px,var(--safe-top)) 24px max(24px,env(safe-area-inset-bottom));background:radial-gradient(125% 95% at 50% 38%,#18181B 0%,var(--bg) 62%);color:var(--ink);cursor:pointer;transition:opacity .35s ease;-webkit-tap-highlight-color:transparent}
 .splash:focus{outline:none}
 .splash.is-done{opacity:0;visibility:hidden;pointer-events:none}
 .splash-stage{display:grid;justify-items:center;gap:clamp(18px,4vmin,30px);transform-origin:50% 44%;will-change:transform,opacity,filter}
@@ -604,7 +607,7 @@ body.app{height:100vh;height:100dvh;min-height:0;display:flex;flex-direction:col
 }
 .flyout-backdrop.open{opacity:1}
 .flyout-backdrop[hidden]{display:none}
-.flyout,.flyout.site-menu{position:fixed;top:0;right:0;bottom:auto;z-index:200;height:100vh;height:100dvh;width:min(380px,88vw);display:flex;flex-direction:column;background:var(--panel);border-left:1px solid var(--line);border-bottom:0;opacity:1;transform:translateX(100%);visibility:hidden;transition:transform .28s cubic-bezier(.2,.8,.2,1),visibility 0s linear .28s}
+.flyout,.flyout.site-menu{position:fixed;top:0;right:0;bottom:auto;z-index:200;height:100vh;height:100dvh;width:min(380px,88vw);display:flex;flex-direction:column;padding-top:var(--safe-top);background:var(--panel);border-left:1px solid var(--line);border-bottom:0;opacity:1;transform:translateX(100%);visibility:hidden;transition:transform .28s cubic-bezier(.2,.8,.2,1),visibility 0s linear .28s}
 .flyout.open,.menu-open .flyout.site-menu{transform:none;visibility:visible;transition:transform .28s cubic-bezier(.2,.8,.2,1),visibility 0s}
 .info-panel,.day-sheet{width:min(560px,100vw)}
 .flyout-head{flex:none;display:flex;justify-content:space-between;align-items:center;height:52px;padding:0 6px 0 24px;border-bottom:1px solid var(--line)}
