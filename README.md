@@ -64,7 +64,7 @@ SkatePark.Day/
 ├── index.html          # Main application file
 ├── app.css            # Styling and animations
 ├── app.js             # Core application logic
-├── favicon.svg        # BD monogram favicon (master icon)
+├── favicon.svg        # BD monogram favicon (vector for small tab icons)
 ├── favicon.ico        # Multi-size desktop favicon
 ├── favicon-96x96.png  # PNG favicon
 ├── apple-touch-icon.png  # 180x180 iOS home-screen icon
@@ -74,7 +74,7 @@ SkatePark.Day/
 ├── robots.txt         # SEO crawler instructions
 ├── sitemap.xml        # Site structure for search engines
 ├── CLAUDE.md          # Development guidance
-├── img/               # Weather condition SVG icons
+├── img/               # Weather icons, BD photo source and favicon master
 │   ├── clear.svg
 │   ├── cloudy.svg
 │   ├── drizzle.svg
