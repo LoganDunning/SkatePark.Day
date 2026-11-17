@@ -23,7 +23,7 @@
         "type": "background",
         "backgroundColor": "#0B0B0C",
         "backgroundRadius": 0,
-        "imageScale": 0.9,
+        "imageScale": 1,
         "brightness": 0
       }
     },
@@ -36,7 +36,7 @@
         "type": "background",
         "backgroundColor": "#0B0B0C",
         "backgroundRadius": 0,
-        "imageScale": 0.8,
+        "imageScale": 1,
         "brightness": 0
       }
     }
