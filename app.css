@@ -868,7 +868,7 @@ html.flyout-lock,html.flyout-lock body{overflow:hidden}
 /* Header */
 .v3 .site-header{position:relative;background:none;border:0;-webkit-backdrop-filter:none;backdrop-filter:none}
 .v3 .site-header-inner{height:44px;max-width:none;padding:0 12px}
-.v3 .wordmark{font-size:17px;line-height:24px;letter-spacing:-.01em;color:var(--ink);text-decoration:none;font-family:inherit;gap:0;display:inline}
+.v3 .wordmark{font-size:17px;line-height:24px;letter-spacing:-.01em;color:var(--ink);text-decoration:none;font-family:inherit;gap:10px;display:inline-flex;align-items:center}.v3 .brand-mark{display:block;flex:none;color:var(--ink)}
 .v3 .wordmark strong{font-weight:700}
 .v3 .header-actions{gap:0}
 .v3 .hd-btn{display:flex;align-items:center;justify-content:center;width:44px;height:44px;padding:0;border:0;background:transparent;color:var(--ink);cursor:pointer;letter-spacing:0}

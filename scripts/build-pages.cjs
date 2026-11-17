@@ -15,7 +15,7 @@ const { ROOT, SITE, newApp, slugify, parkList, forecasts, cellOf } = require('./
 const OUT = path.join(ROOT, 'skateparks');
 const BRAND = 'best.skatepark.day';
 const VERSION = (fs.readFileSync(path.join(ROOT, 'index.html'), 'utf8').match(/app\.css\?v=(\d+)/) || [])[1] || '1';
-const PAGE_CSS = '2026111618';
+const PAGE_CSS = '2026111622';
 
 // The site's own weather icons.
 const ctx = vm.createContext({ document: { addEventListener() {} }, console: { log() {} }, URLSearchParams });
@@ -180,7 +180,7 @@ ${jsonld.map(ld).join('\n')}
 </head>
 <body class="pg">
 <header class="pg-header">
-<a class="wordmark" href="/"><strong>best</strong>.skatepark.day</a>
+<a class="wordmark" href="/"><svg class="brand-mark" viewBox="0 0 42 32" width="34" height="26" aria-hidden="true"><g fill="none" stroke-linecap="butt"><path class="bd-b" stroke="currentColor" stroke-width="1.9" d="M4 3v26h8.5a6.75 6.75 0 0 0 0-13.5H4M4 3h7.5a6.25 6.25 0 0 1 0 12.5"/><path class="bd-d" stroke="currentColor" stroke-width="1.1" opacity=".62" d="M23 3v19M23 3h3a13 13 0 0 1 0 26h-1.5"/></g></svg><span><strong>best</strong>.skatepark.day</span></a>
 <a class="pg-live" href="/">Live forecast ${ICON_ARROW}</a>
 </header>
 <nav class="crumbs" aria-label="Breadcrumb"><ol>${crumbs.map((c, i) => i === crumbs.length - 1 ? `<li aria-current="page">${esc(c.name)}</li>` : `<li><a href="${c.href}">${esc(c.name)}</a></li>`).join('')}</ol></nav>
