@@ -333,6 +333,9 @@ document.addEventListener("click", function (e) {
   f.title = play.getAttribute("data-title") || "Review video";
   f.allow = "accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen";
   f.setAttribute("allowfullscreen", "");
+  // YouTube Error 153 if the embed request has no Referer. The site sends
+  // Referrer-Policy: no-referrer, so set a policy on this iframe only.
+  f.referrerPolicy = "strict-origin-when-cross-origin";
   box.replaceChildren(f);
 }, true);
 </script>`;
