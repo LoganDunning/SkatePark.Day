@@ -16,6 +16,7 @@ const OUT = path.join(ROOT, 'skateparks');
 const BRAND = 'best.skatepark.day';
 const VERSION = (fs.readFileSync(path.join(ROOT, 'index.html'), 'utf8').match(/app\.css\?v=(\d+)/) || [])[1] || '1';
 const PAGE_CSS = '2026111622';
+const ICON_V = '3';
 
 // The site's own weather icons.
 const ctx = vm.createContext({ document: { addEventListener() {} }, console: { log() {} }, URLSearchParams });
@@ -100,7 +101,7 @@ function redirectPage(to, name) {
 <link rel="canonical" href="${url}">
 <meta http-equiv="refresh" content="0;url=${to}">
 <meta name="robots" content="noindex">
-<link rel="icon" type="image/svg+xml" href="/favicon.svg">
+<link rel="icon" type="image/svg+xml" href="/favicon.svg?v=${ICON_V}">
 </head>
 <body>
 <p>This skate park page has moved to <a href="${to}">${esc(name)}</a>.</p>
@@ -191,12 +192,12 @@ ${image ? '' : `<meta property="og:image:width" content="1200">
 <meta name="twitter:image" content="${esc(ogImage)}">
 <meta name="theme-color" content="#0B0B0E">
 <meta name="color-scheme" content="dark">
-<link rel="icon" type="image/png" href="/favicon-96x96.png" sizes="96x96">
-<link rel="icon" type="image/svg+xml" href="/favicon.svg">
-<link rel="shortcut icon" href="/favicon.ico">
-<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+<link rel="icon" type="image/png" href="/favicon-96x96.png?v=${ICON_V}" sizes="96x96">
+<link rel="icon" type="image/svg+xml" href="/favicon.svg?v=${ICON_V}">
+<link rel="shortcut icon" href="/favicon.ico?v=${ICON_V}">
+<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png?v=${ICON_V}">
 <meta name="apple-mobile-web-app-title" content="SkatePark.Day">
-<link rel="manifest" href="/manifest.json">
+<link rel="manifest" href="/manifest.json?v=${ICON_V}">
 <link rel="preload" href="/fonts/space-grotesk-latin.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="/pages.css?v=${PAGE_CSS}">
 ${jsonld.map(ld).join('\n')}
