@@ -1,7 +1,7 @@
 // Park detail slugs and the review-video mapping in data/park-videos.json.
 const assert = require('node:assert/strict');
 const { parkList, slugify } = require('../scripts/build-calendars.cjs');
-const { cities, parkHref, parkName, parkPage, attachVideos, loadVideoEntries, MATCH_KM } = require('../scripts/build-pages.cjs');
+const { cities, parkHref, parkName, parkPage, attachVideos, loadVideoEntries, redirectPage, MATCH_KM } = require('../scripts/build-pages.cjs');
 
 const parks = parkList();
 assert.equal(new Set(parks.map(p => p.slug)).size, parks.length, 'park slugs are unique');
@@ -30,26 +30,34 @@ for (const e of entries) {
     assert.ok(!used.has(park.slug), `slug ${park.slug} is only used once`);
     used.add(park.slug);
     if (e.slug) assert.equal(park.slug, e.slug, `stored slug still matches ${e.slug}`);
+    if (e.pageSlug) assert.equal(park.pageSlug, e.pageSlug, `page slug ${e.pageSlug}`);
     const city = all.find(c => c.parks.includes(park));
     assert.ok(city, 'attached park belongs to a city');
     assert.equal(city.slug, slugify(city.name));
-    assert.equal(parkHref(city, park), `/skateparks/${city.slug}/${park.slug}/`);
+    assert.equal(parkHref(city, park), `/skateparks/${city.slug}/${park.pageSlug || park.slug}/`);
     assert.ok(!parkHref(city, park).includes('//skateparks'));
     if (e.name) assert.equal(parkName(park), e.name);
     if (e.googleReviewUrl) assert.equal(park.video.googleReviewUrl, e.googleReviewUrl);
 }
 
-// Known starting set: four videos matched, review links only where Logan left a review.
+// Videos are matched to parks, with friendly page slugs and review links only where Logan left a review.
 const expect = {
-    '608y7y1GXlw': { slug: 'oakville-skatepark-3', review: false },
-    'geYIZc8NitU': { slug: 'oakville-skatepark-2', review: true },
-    'RfWpYMLHO4g': { slug: 'burlington-skatepark-on-new-street', review: false },
-    '1lunxcoQ02U': { slug: 'vaughan-skatepark-4', review: true }
+    '608y7y1GXlw': { slug: 'oakville-skatepark-3', pageSlug: 'shell-park', city: 'oakville', review: false },
+    'geYIZc8NitU': { slug: 'oakville-skatepark-2', pageSlug: 'sixteen-mile', city: 'oakville', review: true },
+    'RfWpYMLHO4g': { slug: 'burlington-skatepark-on-new-street', pageSlug: 'nelson-park', city: 'burlington', review: false },
+    '1lunxcoQ02U': { slug: 'vaughan-skatepark-4', pageSlug: 'stanley-greene', city: 'vaughan', review: true },
+    'Obsfl_wrgR8': { slug: 'toronto-earl-bales-skate-park', pageSlug: 'earl-bales', city: 'toronto', review: true },
+    '8GwjW7BtW4c': { slug: 'caledon-southfields-skatepark', pageSlug: 'southfields', city: 'caledon', review: false },
+    'FJDmjoLQjEo': { slug: 'mississauga-zonta-meadows-skate-park', pageSlug: 'zonta-meadows', city: 'mississauga', review: true }
 };
 for (const [id, exp] of Object.entries(expect)) {
     const park = attached.find(p => p.video.videoId === id);
     assert.ok(park, `video ${id} is mapped`);
     assert.equal(park.slug, exp.slug);
+    assert.equal(park.pageSlug, exp.pageSlug);
+    const city = all.find(c => c.parks.includes(park));
+    assert.equal(city.slug, exp.city);
+    assert.equal(parkHref(city, park), `/skateparks/${exp.city}/${exp.pageSlug}/`);
     assert.equal(Boolean(park.video.googleReviewUrl), exp.review, `review url for ${id}`);
 }
 
@@ -57,7 +65,9 @@ for (const [id, exp] of Object.entries(expect)) {
 const oak = all.find(c => c.slug === 'oakville');
 const shell = oak.parks.find(p => p.slug === 'oakville-skatepark-3');
 const glen = oak.parks.find(p => p.slug === 'oakville-glen-abbey-skatepark');
+assert.equal(shell.pageSlug, 'shell-park');
 const shellHtml = parkPage(oak, shell, null, 'Mon Nov 16, 6:00 PM');
+assert.match(shellHtml, /rel="canonical" href="https:\/\/best\.skatepark\.day\/skateparks\/oakville\/shell-park\//);
 assert.match(shellHtml, /Watch the review/);
 assert.match(shellHtml, /data-yt="608y7y1GXlw"/);
 assert.match(shellHtml, /youtube-nocookie\.com\/embed\/608y7y1GXlw/);
@@ -82,5 +92,29 @@ const before = attached.map(p => p.video.videoId).sort().join(',');
 attachVideos(located, entries);
 assert.equal(located.filter(p => p.video).map(p => p.video.videoId).sort().join(','), before);
 assert.ok(MATCH_KM <= 0.25);
+
+// Old generic URLs get a canonical + refresh page so existing links keep working.
+const shellRedirect = redirectPage('/skateparks/oakville/shell-park/', 'Shell Park Skate Park');
+assert.match(shellRedirect, /rel="canonical" href="https:\/\/best\.skatepark\.day\/skateparks\/oakville\/shell-park\//);
+assert.match(shellRedirect, /http-equiv="refresh" content="0;url=\/skateparks\/oakville\/shell-park\//);
+assert.match(shellRedirect, /href="\/skateparks\/oakville\/shell-park\/"/);
+
+// Friendly page slugs are unique within a city and do not collide with another park's slug.
+for (const city of all) {
+    const pageSlugs = city.parks.map(p => p.pageSlug);
+    assert.equal(new Set(pageSlugs).size, pageSlugs.length, `page slugs unique in ${city.slug}`);
+    for (const p of city.parks) {
+        assert.ok(!city.parks.some(o => o !== p && o.slug === p.pageSlug), `page slug ${p.pageSlug} is free in ${city.slug}`);
+    }
+}
+
+// Manual parks (not in OSM) are in the dataset and would not be dropped by a merge.
+const manual = require('../data/manual-parks.json');
+assert.ok(manual.parks.length >= 3);
+for (const m of manual.parks) {
+    const hit = located.find(p => Math.abs(p.lat - m.lat) < 1e-4 && Math.abs(p.lon - m.lon) < 1e-4);
+    assert.ok(hit, `${m.n} is in the park list`);
+    assert.equal(hit.city, m.c);
+}
 
 console.log(`park video mapping checks passed (${entries.length} videos, ${located.length} parks)`);

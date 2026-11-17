@@ -2,6 +2,26 @@
   "trailingSlash": "auto",
   "routes": [
     {
+      "route": "/skateparks/oakville/oakville-skatepark-3",
+      "redirect": "/skateparks/oakville/shell-park/",
+      "statusCode": 301
+    },
+    {
+      "route": "/skateparks/oakville/oakville-skatepark-2",
+      "redirect": "/skateparks/oakville/sixteen-mile/",
+      "statusCode": 301
+    },
+    {
+      "route": "/skateparks/burlington/burlington-skatepark-on-new-street",
+      "redirect": "/skateparks/burlington/nelson-park/",
+      "statusCode": 301
+    },
+    {
+      "route": "/skateparks/vaughan/vaughan-skatepark-4",
+      "redirect": "/skateparks/vaughan/stanley-greene/",
+      "statusCode": 301
+    },
+    {
       "route": "/share",
       "rewrite": "/api/share"
     },

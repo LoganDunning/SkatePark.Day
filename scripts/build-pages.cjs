@@ -40,7 +40,8 @@ const MATCH_KM = 0.25;
 const ytWatch = id => `https://www.youtube.com/watch?v=${id}`;
 const ytThumb = id => `https://i.ytimg.com/vi/${id}/hqdefault.jpg`;
 const ytEmbed = id => `https://www.youtube-nocookie.com/embed/${id}`;
-const parkHref = (city, park) => `/skateparks/${city.slug}/${park.slug}/`;
+const parkPath = (city, park) => `${city.slug}/${park.pageSlug || park.slug}`;
+const parkHref = (city, park) => `/skateparks/${parkPath(city, park)}/`;
 const parkName = park => park.displayName || park.label;
 const dirUrl = p => `https://www.google.com/maps/dir/?api=1&destination=${(+p.lat).toFixed(5)},${(+p.lon).toFixed(5)}`;
 function isoDuration(sec) {
@@ -60,6 +61,7 @@ function attachVideos(parks, entries = loadVideoEntries()) {
     for (const p of parks) {
         p.video = null;
         p.displayName = p.label;
+        p.pageSlug = p.slug;
     }
     const bySlug = new Map(parks.map(p => [p.slug, p]));
     const used = new Set();
@@ -82,8 +84,29 @@ function attachVideos(parks, entries = loadVideoEntries()) {
             googleReviewUrl: e.googleReviewUrl || null
         };
         if (name) park.displayName = name;
+        if (e.pageSlug) park.pageSlug = slugify(e.pageSlug);
     }
     return unmatched;
+}
+
+function redirectPage(to, name) {
+    const url = SITE.replace(/\/$/, '') + to;
+    return `<!DOCTYPE html>
+<html lang="en-CA">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Redirecting to ${esc(name)}</title>
+<link rel="canonical" href="${url}">
+<meta http-equiv="refresh" content="0;url=${to}">
+<meta name="robots" content="noindex">
+<link rel="icon" type="image/svg+xml" href="/favicon.svg">
+</head>
+<body>
+<p>This skate park page has moved to <a href="${to}">${esc(name)}</a>.</p>
+</body>
+</html>
+`;
 }
 
 
@@ -462,7 +485,7 @@ ${letters.map(l => `<section class="letter" aria-labelledby="l-${l}"><h2 id="l-$
 function sitemap(all, day) {
     const urls = [{ loc: SITE, freq: 'daily', pri: '1.0' }, { loc: `${SITE}skateparks/`, freq: 'daily', pri: '0.8' }]
         .concat(all.map(c => ({ loc: `${SITE}skateparks/${c.slug}/`, freq: 'daily', pri: '0.6' })))
-        .concat(all.flatMap(c => c.parks.map(p => ({ loc: `${SITE}skateparks/${c.slug}/${p.slug}/`, freq: 'daily', pri: '0.5' }))));
+        .concat(all.flatMap(c => c.parks.map(p => ({ loc: `${SITE.replace(/\/$/, '')}${parkHref(c, p)}`, freq: 'daily', pri: '0.5' }))));
     return `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
 ${urls.map(u => `  <url><loc>${u.loc}</loc><lastmod>${day}</lastmod><changefreq>${u.freq}</changefreq><priority>${u.pri}</priority></url>`).join('\n')}
@@ -496,9 +519,14 @@ async function main() {
             let pw = null;
             try { pw = week({ lat: p.lat, lon: p.lon, name: parkName(p) }, weather.get(p.cell)); } catch (e) { pw = null; }
             if (pw) parkForecast++;
-            const dir = path.join(OUT, c.slug, p.slug);
+            const dir = path.join(OUT, c.slug, p.pageSlug || p.slug);
             fs.mkdirSync(dir, { recursive: true });
             fs.writeFileSync(path.join(dir, 'index.html'), parkPage(c, p, pw, updated));
+            if (p.pageSlug && p.pageSlug !== p.slug) {
+                const legacy = path.join(OUT, c.slug, p.slug);
+                fs.mkdirSync(legacy, { recursive: true });
+                fs.writeFileSync(path.join(legacy, 'index.html'), redirectPage(parkHref(c, p), parkName(p)));
+            }
         }
     }
     fs.writeFileSync(path.join(OUT, 'index.html'), hubPage(all, weeks, updated));
@@ -507,4 +535,4 @@ async function main() {
 }
 
 if (require.main === module) main().catch(e => { console.error(e); process.exit(1); });
-module.exports = { cities, week, parkPage, parkHref, parkName, attachVideos, loadVideoEntries, isoDuration, MATCH_KM };
+module.exports = { cities, week, parkPage, parkHref, parkPath, parkName, attachVideos, loadVideoEntries, isoDuration, redirectPage, MATCH_KM };

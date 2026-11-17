@@ -32,6 +32,7 @@
   <url><loc>https://best.skatepark.day/skateparks/burk-s-falls/</loc><lastmod>2026-11-16</lastmod><changefreq>daily</changefreq><priority>0.6</priority></url>
   <url><loc>https://best.skatepark.day/skateparks/burlington/</loc><lastmod>2026-11-16</lastmod><changefreq>daily</changefreq><priority>0.6</priority></url>
   <url><loc>https://best.skatepark.day/skateparks/caesarea/</loc><lastmod>2026-11-16</lastmod><changefreq>daily</changefreq><priority>0.6</priority></url>
+  <url><loc>https://best.skatepark.day/skateparks/caledon/</loc><lastmod>2026-11-16</lastmod><changefreq>daily</changefreq><priority>0.6</priority></url>
   <url><loc>https://best.skatepark.day/skateparks/caledonia/</loc><lastmod>2026-11-16</lastmod><changefreq>daily</changefreq><priority>0.6</priority></url>
   <url><loc>https://best.skatepark.day/skateparks/callander/</loc><lastmod>2026-11-16</lastmod><changefreq>daily</changefreq><priority>0.6</priority></url>
   <url><loc>https://best.skatepark.day/skateparks/cambridge/</loc><lastmod>2026-11-16</lastmod><changefreq>daily</changefreq><priority>0.6</priority></url>
@@ -246,8 +247,9 @@
   <url><loc>https://best.skatepark.day/skateparks/burlington/burlington-skatepark-4/</loc><lastmod>2026-11-16</lastmod><changefreq>daily</changefreq><priority>0.5</priority></url>
   <url><loc>https://best.skatepark.day/skateparks/burlington/burlington-skatepark-5/</loc><lastmod>2026-11-16</lastmod><changefreq>daily</changefreq><priority>0.5</priority></url>
   <url><loc>https://best.skatepark.day/skateparks/burlington/burlington-skatepark-6/</loc><lastmod>2026-11-16</lastmod><changefreq>daily</changefreq><priority>0.5</priority></url>
-  <url><loc>https://best.skatepark.day/skateparks/burlington/burlington-skatepark-on-new-street/</loc><lastmod>2026-11-16</lastmod><changefreq>daily</changefreq><priority>0.5</priority></url>
+  <url><loc>https://best.skatepark.day/skateparks/burlington/nelson-park/</loc><lastmod>2026-11-16</lastmod><changefreq>daily</changefreq><priority>0.5</priority></url>
   <url><loc>https://best.skatepark.day/skateparks/caesarea/caesarea-skatepark/</loc><lastmod>2026-11-16</lastmod><changefreq>daily</changefreq><priority>0.5</priority></url>
+  <url><loc>https://best.skatepark.day/skateparks/caledon/southfields/</loc><lastmod>2026-11-16</lastmod><changefreq>daily</changefreq><priority>0.5</priority></url>
   <url><loc>https://best.skatepark.day/skateparks/caledonia/caledonia-skate-park/</loc><lastmod>2026-11-16</lastmod><changefreq>daily</changefreq><priority>0.5</priority></url>
   <url><loc>https://best.skatepark.day/skateparks/caledonia/caledonia-skatepark/</loc><lastmod>2026-11-16</lastmod><changefreq>daily</changefreq><priority>0.5</priority></url>
   <url><loc>https://best.skatepark.day/skateparks/callander/callander-skatepark/</loc><lastmod>2026-11-16</lastmod><changefreq>daily</changefreq><priority>0.5</priority></url>
@@ -377,6 +379,7 @@
   <url><loc>https://best.skatepark.day/skateparks/mississauga/mississauga-skatepark-6/</loc><lastmod>2026-11-16</lastmod><changefreq>daily</changefreq><priority>0.5</priority></url>
   <url><loc>https://best.skatepark.day/skateparks/mississauga/mississauga-skatepark-7/</loc><lastmod>2026-11-16</lastmod><changefreq>daily</changefreq><priority>0.5</priority></url>
   <url><loc>https://best.skatepark.day/skateparks/mississauga/mississauga-skatepark-8/</loc><lastmod>2026-11-16</lastmod><changefreq>daily</changefreq><priority>0.5</priority></url>
+  <url><loc>https://best.skatepark.day/skateparks/mississauga/zonta-meadows/</loc><lastmod>2026-11-16</lastmod><changefreq>daily</changefreq><priority>0.5</priority></url>
   <url><loc>https://best.skatepark.day/skateparks/mitchell/mitchell-all-wheels-park/</loc><lastmod>2026-11-16</lastmod><changefreq>daily</changefreq><priority>0.5</priority></url>
   <url><loc>https://best.skatepark.day/skateparks/morriston/morriston-skatepark/</loc><lastmod>2026-11-16</lastmod><changefreq>daily</changefreq><priority>0.5</priority></url>
   <url><loc>https://best.skatepark.day/skateparks/mount-forest/mount-forest-skatepark/</loc><lastmod>2026-11-16</lastmod><changefreq>daily</changefreq><priority>0.5</priority></url>
@@ -392,8 +395,8 @@
   <url><loc>https://best.skatepark.day/skateparks/northbrook/northbrook-skatepark/</loc><lastmod>2026-11-16</lastmod><changefreq>daily</changefreq><priority>0.5</priority></url>
   <url><loc>https://best.skatepark.day/skateparks/oakville/oakville-glen-abbey-skatepark/</loc><lastmod>2026-11-16</lastmod><changefreq>daily</changefreq><priority>0.5</priority></url>
   <url><loc>https://best.skatepark.day/skateparks/oakville/oakville-skatepark/</loc><lastmod>2026-11-16</lastmod><changefreq>daily</changefreq><priority>0.5</priority></url>
-  <url><loc>https://best.skatepark.day/skateparks/oakville/oakville-skatepark-2/</loc><lastmod>2026-11-16</lastmod><changefreq>daily</changefreq><priority>0.5</priority></url>
-  <url><loc>https://best.skatepark.day/skateparks/oakville/oakville-skatepark-3/</loc><lastmod>2026-11-16</lastmod><changefreq>daily</changefreq><priority>0.5</priority></url>
+  <url><loc>https://best.skatepark.day/skateparks/oakville/sixteen-mile/</loc><lastmod>2026-11-16</lastmod><changefreq>daily</changefreq><priority>0.5</priority></url>
+  <url><loc>https://best.skatepark.day/skateparks/oakville/shell-park/</loc><lastmod>2026-11-16</lastmod><changefreq>daily</changefreq><priority>0.5</priority></url>
   <url><loc>https://best.skatepark.day/skateparks/ohsweken-oshwe-ken/ohsweken-oshwe-ken-skatepark/</loc><lastmod>2026-11-16</lastmod><changefreq>daily</changefreq><priority>0.5</priority></url>
   <url><loc>https://best.skatepark.day/skateparks/omemee/omemee-skatepark/</loc><lastmod>2026-11-16</lastmod><changefreq>daily</changefreq><priority>0.5</priority></url>
   <url><loc>https://best.skatepark.day/skateparks/orangeville/orangeville-skatepark/</loc><lastmod>2026-11-16</lastmod><changefreq>daily</changefreq><priority>0.5</priority></url>
@@ -491,6 +494,7 @@
   <url><loc>https://best.skatepark.day/skateparks/toronto/toronto-6skates/</loc><lastmod>2026-11-16</lastmod><changefreq>daily</changefreq><priority>0.5</priority></url>
   <url><loc>https://best.skatepark.day/skateparks/toronto/toronto-adrift/</loc><lastmod>2026-11-16</lastmod><changefreq>daily</changefreq><priority>0.5</priority></url>
   <url><loc>https://best.skatepark.day/skateparks/toronto/toronto-beach-skateboard-park/</loc><lastmod>2026-11-16</lastmod><changefreq>daily</changefreq><priority>0.5</priority></url>
+  <url><loc>https://best.skatepark.day/skateparks/toronto/earl-bales/</loc><lastmod>2026-11-16</lastmod><changefreq>daily</changefreq><priority>0.5</priority></url>
   <url><loc>https://best.skatepark.day/skateparks/toronto/toronto-east-york-skateboard-park/</loc><lastmod>2026-11-16</lastmod><changefreq>daily</changefreq><priority>0.5</priority></url>
   <url><loc>https://best.skatepark.day/skateparks/toronto/toronto-longboard-living/</loc><lastmod>2026-11-16</lastmod><changefreq>daily</changefreq><priority>0.5</priority></url>
   <url><loc>https://best.skatepark.day/skateparks/toronto/toronto-skatepark/</loc><lastmod>2026-11-16</lastmod><changefreq>daily</changefreq><priority>0.5</priority></url>
@@ -509,7 +513,7 @@
   <url><loc>https://best.skatepark.day/skateparks/vaughan/vaughan-skatepark/</loc><lastmod>2026-11-16</lastmod><changefreq>daily</changefreq><priority>0.5</priority></url>
   <url><loc>https://best.skatepark.day/skateparks/vaughan/vaughan-skatepark-2/</loc><lastmod>2026-11-16</lastmod><changefreq>daily</changefreq><priority>0.5</priority></url>
   <url><loc>https://best.skatepark.day/skateparks/vaughan/vaughan-skatepark-3/</loc><lastmod>2026-11-16</lastmod><changefreq>daily</changefreq><priority>0.5</priority></url>
-  <url><loc>https://best.skatepark.day/skateparks/vaughan/vaughan-skatepark-4/</loc><lastmod>2026-11-16</lastmod><changefreq>daily</changefreq><priority>0.5</priority></url>
+  <url><loc>https://best.skatepark.day/skateparks/vaughan/stanley-greene/</loc><lastmod>2026-11-16</lastmod><changefreq>daily</changefreq><priority>0.5</priority></url>
   <url><loc>https://best.skatepark.day/skateparks/vienna/vienna-skatepark/</loc><lastmod>2026-11-16</lastmod><changefreq>daily</changefreq><priority>0.5</priority></url>
   <url><loc>https://best.skatepark.day/skateparks/virgil/virgil-skatepark/</loc><lastmod>2026-11-16</lastmod><changefreq>daily</changefreq><priority>0.5</priority></url>
   <url><loc>https://best.skatepark.day/skateparks/wallaceburg/wallaceburg-skate-park/</loc><lastmod>2026-11-16</lastmod><changefreq>daily</changefreq><priority>0.5</priority></url>
