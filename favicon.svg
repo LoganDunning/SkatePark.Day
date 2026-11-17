@@ -1,7 +1,14 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32">
+  <title>SkatePark.Day</title>
   <rect width="32" height="32" fill="#0B0B0C"/>
-  <g fill="none" stroke-linecap="butt" stroke-linejoin="miter" transform="translate(2.535 5.979) scale(0.62629)">
-    <path stroke="#F1F0EC" stroke-width="3.832" d="M4 3v26h8.5a6.75 6.75 0 0 0 0-13.5H4M4 3h7.5a6.25 6.25 0 0 1 0 12.5"/>
-    <path stroke="#F1F0EC" stroke-width="2.555" opacity=".8" d="M23 3v19M23 3h3a13 13 0 0 1 0 26h-1.5"/>
+  <!-- Clean vector of the BD photo mark. Strokes are thickened so the
+       monogram stays legible at 16px tab size. Raster icons use the
+       cropped photo in img/favicon-master.png instead. -->
+  <g fill="none" stroke-linecap="butt" stroke-linejoin="miter">
+    <path stroke="#F1F0EC" stroke-width="2.850" d="M 5.465 10.707 V 21.293"/>
+    <path stroke="#F1F0EC" stroke-width="2.850" d="M 5.465 10.707 H 11.797 A 2.535 2.535 0 0 1 11.797 15.777"/>
+    <path stroke="#F1F0EC" stroke-width="2.850" d="M 5.465 15.777 H 12.253 A 2.758 2.758 0 0 1 12.253 21.293 H 5.465"/>
+    <path stroke="#F1F0EC" stroke-width="2.718" d="M 17.090 10.707 V 19.553"/>
+    <path stroke="#F1F0EC" stroke-width="2.718" d="M 17.090 10.707 H 21.258 A 5.293 5.293 0 0 1 21.258 21.293 H 17.090"/>
   </g>
 </svg>
