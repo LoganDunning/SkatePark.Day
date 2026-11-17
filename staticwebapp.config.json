@@ -72,14 +72,14 @@
     {
       "route": "/apple-touch-icon.png",
       "headers": {
-        "cache-control": "public, max-age=604800",
+        "cache-control": "public, max-age=86400",
         "x-content-type-options": "nosniff"
       }
     },
     {
       "route": "/favicon.ico",
       "headers": {
-        "cache-control": "public, max-age=604800",
+        "cache-control": "public, max-age=86400",
         "x-content-type-options": "nosniff"
       }
     },
