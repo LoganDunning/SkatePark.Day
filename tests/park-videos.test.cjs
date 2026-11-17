@@ -76,6 +76,7 @@ assert.match(shellHtml, /"@type":"VideoObject"/);
 assert.match(shellHtml, /Shell Park Skate Park/);
 assert.doesNotMatch(shellHtml, /Read Logan's Google review/);
 assert.match(shellHtml, /<iframe[\s\S]*<\/iframe>|replaceChildren\(f\)/);
+assert.match(shellHtml, /referrerPolicy\s*=\s*["']strict-origin-when-cross-origin["']/);
 
 const sixteen = oak.parks.find(p => p.slug === 'oakville-skatepark-2');
 const sixteenHtml = parkPage(oak, sixteen, null, 'Mon Nov 16, 6:00 PM');
