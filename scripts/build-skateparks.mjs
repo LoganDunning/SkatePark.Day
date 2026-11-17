@@ -3,6 +3,8 @@
 import { writeFileSync, mkdirSync, readFileSync, existsSync } from 'node:fs';
 
 const OUT = 'data/skateparks-on.json';
+const MANUAL = 'data/manual-parks.json';
+const MANUAL_MATCH_KM = 0.15;
 const MIRRORS = [
   'https://overpass-api.de/api/interpreter',
   'https://overpass.private.coffee/api/interpreter',
@@ -109,6 +111,26 @@ const parks = elements.filter((e) => !isPlace(e)).map((e) => {
   if (seen.has(k)) return false;
   seen.add(k); return true;
 }).sort((a, b) => a.lat - b.lat || a.lon - b.lon);
+
+function mergeManual(parks) {
+  if (!existsSync(MANUAL)) return parks;
+  const raw = JSON.parse(readFileSync(MANUAL, 'utf8'));
+  const extra = Array.isArray(raw) ? raw : raw.parks || [];
+  let added = 0, skipped = 0;
+  for (const m of extra) {
+    if (m.lat == null || m.lon == null || !m.n) continue;
+    const entry = { n: String(m.n).trim(), lat: r5(m.lat), lon: r5(m.lon), ...(m.c ? { c: String(m.c).trim() } : {}) };
+    const near = parks.find((p) => km(p, entry) <= MANUAL_MATCH_KM);
+    if (near) { skipped++; continue; }
+    parks.push(entry);
+    added++;
+  }
+  parks.sort((a, b) => a.lat - b.lat || a.lon - b.lon);
+  if (added || skipped) console.log(`Manual parks: added ${added}, already present ${skipped}`);
+  return parks;
+}
+
+mergeManual(parks);
 
 let prev = 0;
 if (existsSync(OUT)) { try { prev = JSON.parse(readFileSync(OUT, 'utf8')).length; } catch {} }

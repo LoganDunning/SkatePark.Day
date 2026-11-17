@@ -1,0 +1,26 @@
+{
+  "description": "Parks not yet in OpenStreetMap. scripts/build-skateparks.mjs merges these into data/skateparks-on.json after the OSM build so the weekly refresh does not drop them. If OSM later maps a park within 150 m, the OSM copy is kept and the manual entry is skipped.",
+  "parks": [
+    {
+      "n": "Earl Bales Skate Park",
+      "lat": 43.75326,
+      "lon": -79.43583,
+      "c": "Toronto",
+      "source": "Google Maps place pin from Logan Dunning's review (43.753262, -79.4358294), 4169 Bathurst St / Lansing, North York."
+    },
+    {
+      "n": "Zonta Meadows Skate Park",
+      "lat": 43.58686,
+      "lon": -79.65167,
+      "c": "Mississauga",
+      "source": "Google Maps place pin from Logan Dunning's review (43.5868607, -79.6516722), 410 Rathburn Rd W, Mississauga. This is not the Guelph park of a similar memory; the review, video title and city listing all place it in Mississauga."
+    },
+    {
+      "n": "Southfields Skatepark",
+      "lat": 43.75663,
+      "lon": -79.82711,
+      "c": "Caledon",
+      "source": "225 Dougall Ave, Caledon, at Southfields Community Centre. Skatepark-specific coordinates 43.756629, -79.827108 (the community centre itself is about 20 m southeast at 43.75644, -79.82696). Town of Caledon placed the park in the greenspace adjacent to Dougall Ave."
+    }
+  ]
+}
