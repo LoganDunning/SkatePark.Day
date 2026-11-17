@@ -15,7 +15,7 @@ const { ROOT, SITE, newApp, slugify, parkList, forecasts, cellOf } = require('./
 const OUT = path.join(ROOT, 'skateparks');
 const BRAND = 'best.skatepark.day';
 const VERSION = (fs.readFileSync(path.join(ROOT, 'index.html'), 'utf8').match(/app\.css\?v=(\d+)/) || [])[1] || '1';
-const PAGE_CSS = '2026111622';
+const PAGE_CSS = '2026111714';
 const ICON_V = '3';
 
 // The site's own weather icons.
@@ -96,7 +96,7 @@ function redirectPage(to, name) {
 <html lang="en-CA">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Redirecting to ${esc(name)}</title>
 <link rel="canonical" href="${url}">
 <meta http-equiv="refresh" content="0;url=${to}">
@@ -170,7 +170,7 @@ function shell({ title, description, canonical, crumbs, body, jsonld, image, scr
 <html lang="en-CA">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>${esc(title)}</title>
 <meta name="description" content="${esc(description)}">
 <meta name="robots" content="index, follow, max-image-preview:large">
@@ -190,8 +190,11 @@ ${image ? '' : `<meta property="og:image:width" content="1200">
 <meta name="twitter:title" content="${esc(title)}">
 <meta name="twitter:description" content="${esc(description)}">
 <meta name="twitter:image" content="${esc(ogImage)}">
-<meta name="theme-color" content="#0B0B0E">
+<meta name="theme-color" content="#000000">
 <meta name="color-scheme" content="dark">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <link rel="icon" type="image/png" href="/favicon-96x96.png?v=${ICON_V}" sizes="96x96">
 <link rel="icon" type="image/svg+xml" href="/favicon.svg?v=${ICON_V}">
 <link rel="shortcut icon" href="/favicon.ico?v=${ICON_V}">
