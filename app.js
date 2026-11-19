@@ -1831,6 +1831,8 @@ const CalendarFeed = {
             if (!this.pop.hidden && !this.pop.contains(e.target) && !this.btn.contains(e.target)) this.close(false);
         });
         document.addEventListener('keydown', e => { if (e.key === 'Escape' && !this.pop.hidden) { e.stopPropagation(); this.close(); } }, true);
+        const hash = location.hash.slice(1);
+        if (hash === 'calendar' || hash === 'cal-pop') setTimeout(() => this.open(), 0);
     },
 
     feeds() {
