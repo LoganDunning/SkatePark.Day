@@ -11,11 +11,12 @@ const fs = require('node:fs');
 const path = require('node:path');
 const vm = require('node:vm');
 const { ROOT, SITE, newApp, slugify, parkList, forecasts, cellOf } = require('./build-calendars.cjs');
+const chrome = require('./site-chrome.cjs');
 
 const OUT = path.join(ROOT, 'skateparks');
 const BRAND = 'best.skatepark.day';
 const VERSION = (fs.readFileSync(path.join(ROOT, 'index.html'), 'utf8').match(/app\.css\?v=(\d+)/) || [])[1] || '1';
-const PAGE_CSS = '2026111714';
+const PAGE_CSS = '2026111910';
 const ICON_V = '3';
 
 // The site's own weather icons.
@@ -163,13 +164,14 @@ function week(city, weather) {
 const ICON_PIN = '<svg class="ic" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 21s-7-6.2-7-11.5A7 7 0 0 1 19 9.5C19 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/></svg>';
 const ICON_ARROW = '<svg class="ic" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="9 18 15 12 9 6"/></svg>';
 
-function shell({ title, description, canonical, crumbs, body, jsonld, image, scripts }) {
+function shell({ title, description, canonical, crumbs, body, jsonld, image, scripts, cal }) {
     const url = SITE.replace(/\/$/, '') + canonical;
     const ogImage = image || `${SITE}img/share/default.jpg`;
     return `<!DOCTYPE html>
-<html lang="en-CA">
+<html lang="en-CA" data-theme="dark">
 <head>
 <meta charset="UTF-8">
+${chrome.themeBootScript()}
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>${esc(title)}</title>
 <meta name="description" content="${esc(description)}">
@@ -191,7 +193,7 @@ ${image ? '' : `<meta property="og:image:width" content="1200">
 <meta name="twitter:description" content="${esc(description)}">
 <meta name="twitter:image" content="${esc(ogImage)}">
 <meta name="theme-color" content="#000000">
-<meta name="color-scheme" content="dark">
+<meta name="color-scheme" content="dark light">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -205,11 +207,15 @@ ${image ? '' : `<meta property="og:image:width" content="1200">
 <link rel="stylesheet" href="/pages.css?v=${PAGE_CSS}">
 ${jsonld.map(ld).join('\n')}
 </head>
-<body class="pg">
-<header class="pg-header">
-<a class="wordmark" href="/"><svg class="brand-mark" viewBox="0 0 42 32" width="34" height="26" aria-hidden="true"><g fill="none" stroke-linecap="butt"><path class="bd-b" stroke="currentColor" stroke-width="1.9" d="M4 3v26h8.5a6.75 6.75 0 0 0 0-13.5H4M4 3h7.5a6.25 6.25 0 0 1 0 12.5"/><path class="bd-d" stroke="currentColor" stroke-width="1.1" opacity=".62" d="M23 3v19M23 3h3a13 13 0 0 1 0 26h-1.5"/></g></svg><span><strong>best</strong>.skatepark.day</span></a>
-<a class="pg-live" href="/">Live forecast ${ICON_ARROW}</a>
+<body class="pg"${chrome.calAttrs(cal)}>
+<header class="site-header">
+<div class="site-header-inner">
+<a class="brand wordmark" href="/" aria-label="best.skatepark.day home"><svg class="brand-mark" viewBox="0 0 42 32" width="34" height="26" aria-hidden="true"><g fill="none" stroke-linecap="butt"><path class="bd-b" stroke="currentColor" stroke-width="1.9" d="M4 3v26h8.5a6.75 6.75 0 0 0 0-13.5H4M4 3h7.5a6.25 6.25 0 0 1 0 12.5"/><path class="bd-d" stroke="currentColor" stroke-width="1.1" opacity=".62" d="M23 3v19M23 3h3a13 13 0 0 1 0 26h-1.5"/></g></svg><span><strong>best</strong>.skatepark.day</span></a>
+${chrome.headerActionsHtml()}
+</div>
 </header>
+${chrome.chromeHtml({ home: false })}
+<div class="pg-wrap">
 <nav class="crumbs" aria-label="Breadcrumb"><ol>${crumbs.map((c, i) => i === crumbs.length - 1 ? `<li aria-current="page">${esc(c.name)}</li>` : `<li><a href="${c.href}">${esc(c.name)}</a></li>`).join('')}</ol></nav>
 <main>
 ${body}
@@ -218,7 +224,9 @@ ${body}
 <nav aria-label="More"><a href="/">7-day skate forecast</a><a href="/skateparks/">Ontario skate parks by city</a><a href="/#faq-heading">FAQ</a><a href="https://github.com/LoganDunning/SkatePark.Day" rel="noopener">Source on GitHub</a></nav>
 <p>© 2025–2026 Social Dunn Right Inc. Forecast data from Open-Meteo, park locations from OpenStreetMap contributors.</p>
 </footer>
+</div>
 ${scripts || ''}
+<script src="/site-chrome.js?v=${PAGE_CSS}" defer></script>
 </body>
 </html>
 `;
@@ -315,7 +323,7 @@ ${parksHtml}
             }
         ]
     }];
-    return shell({ title, description, canonical: href, crumbs, body, jsonld });
+    return shell({ title, description, canonical: href, crumbs, body, jsonld, cal: { lat: city.lat, lon: city.lon, label: where } });
 }
 
 
@@ -453,7 +461,8 @@ ${others ? `<section class="nearby" aria-labelledby="also-h"><h2 id="also-h">Oth
         title, description, canonical: href, crumbs, body,
         jsonld: [{ '@context': 'https://schema.org', '@graph': graph }],
         image: park.video ? ytThumb(park.video.videoId) : undefined,
-        scripts: park.video ? VIDEO_SCRIPT : ''
+        scripts: park.video ? VIDEO_SCRIPT : '',
+        cal: { slug: park.slug, name, lat: park.lat, lon: park.lon, label: name }
     });
 }
 
@@ -542,4 +551,4 @@ async function main() {
 }
 
 if (require.main === module) main().catch(e => { console.error(e); process.exit(1); });
-module.exports = { cities, week, parkPage, parkHref, parkPath, parkName, attachVideos, loadVideoEntries, isoDuration, redirectPage, MATCH_KM };
+module.exports = { cities, week, parkPage, cityPage, hubPage, parkHref, parkPath, parkName, attachVideos, loadVideoEntries, isoDuration, redirectPage, MATCH_KM, PAGE_CSS };

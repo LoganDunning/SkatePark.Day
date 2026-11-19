@@ -2,6 +2,7 @@
 <html lang="en-CA" data-theme="dark">
 <head>
     <meta charset="UTF-8">
+    <script>(function(){try{var t=localStorage.getItem('skatepark-theme');if(t==='light'||t==='dark')document.documentElement.setAttribute('data-theme',t);}catch(e){}})();</script>
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <title>Best Skate Park Day: Skate Park Weather &amp; 7-Day Forecast</title>
     
@@ -59,10 +60,9 @@
     <link rel="preconnect" href="https://api.open-meteo.com" crossorigin>
     <link rel="preconnect" href="https://geocoding-api.open-meteo.com" crossorigin>
     <link rel="dns-prefetch" href="https://nominatim.openstreetmap.org">
-    <link rel="stylesheet" href="app.css?v=2026111714">
+    <link rel="stylesheet" href="app.css?v=2026111910">
 </head>
 <body id="top" class="app v3">
-    <script>document.documentElement.setAttribute('data-theme','dark');</script>
     <div class="splash" id="splash" role="img" aria-label="best.skatepark.day">
         <div class="splash-stage">
             <div class="splash-markwrap">
@@ -437,10 +437,10 @@
         var root=document.documentElement,btn=document.getElementById('theme-toggle'),lbl=btn.querySelector('.theme-toggle-label');
         function cur(){return root.getAttribute('data-theme')==='light'?'light':'dark';}
         function sync(){var t=cur();lbl.textContent=t==='dark'?'Light':'Dark';}
-        btn.addEventListener('click',function(){var n=cur()==='dark'?'light':'dark';root.setAttribute('data-theme',n);sync();});
+        btn.addEventListener('click',function(){var n=cur()==='dark'?'light':'dark';root.setAttribute('data-theme',n);try{localStorage.setItem('skatepark-theme',n);}catch(e){}sync();});
         sync();
     })();
     </script>
-    <script src="app.js?v=2026111610" defer></script>
+    <script src="app.js?v=2026111910" defer></script>
 </body>
 </html>
