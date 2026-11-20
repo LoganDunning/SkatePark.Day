@@ -54,6 +54,11 @@
             var title = document.title || 'best.skatepark.day';
             var desc = document.querySelector('meta[name="description"]');
             var data = { title: title, text: (desc && desc.content) || title, url: location.href };
+            var snap = window.ShareSnapshot;
+            if (snap) {
+                await snap.share({ title: data.title, text: data.text, url: data.url, card: snap.cardForPage(document) }, { toast: showToast });
+                return;
+            }
             if (navigator.share) {
                 try { await navigator.share(data); return; }
                 catch (err) { if (err && err.name === 'AbortError') return; }
