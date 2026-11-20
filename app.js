@@ -1560,12 +1560,22 @@ class SkateParkDay {
     }
 
     sharePage() {
-        if (!this.bestDay) return this.shareText({ title: 'best.skatepark.day', text: 'Find the best day to skate this week', url: SITE_URL });
-        const i = this.days.indexOf(this.bestDay);
-        const date = this.bestDay.date.toLocaleDateString('en-US', { month: 'long', day: 'numeric' });
-        const time = this.bestTimeBlocks && this.bestTimeBlocks[0] ? ' at ' + this.bestTimeBlocks[0].label : '';
-        const block = this.bestTimeBlocks && this.bestTimeBlocks[0];
-        this.shareText({ title: 'best.skatepark.day', text: `Best day to skate this week near ${this.locationLabel()}: ${this.dayLabel(i)}, ${date}${time} (${Math.round(this.bestDay.tempMax)}°C, score ${Math.round(this.bestDay.score)}/100)`, url: this.shareLink(i, { block, best: true }) });
+        const snap = typeof ShareSnapshot !== 'undefined' ? ShareSnapshot : null;
+        let data;
+        if (!this.bestDay) {
+            data = { title: 'best.skatepark.day', text: 'Find the best day to skate this week', url: SITE_URL };
+        } else {
+            const i = this.days.indexOf(this.bestDay);
+            const date = this.bestDay.date.toLocaleDateString('en-US', { month: 'long', day: 'numeric' });
+            const time = this.bestTimeBlocks && this.bestTimeBlocks[0] ? ' at ' + this.bestTimeBlocks[0].label : '';
+            const block = this.bestTimeBlocks && this.bestTimeBlocks[0];
+            data = { title: 'best.skatepark.day', text: `Best day to skate this week near ${this.locationLabel()}: ${this.dayLabel(i)}, ${date}${time} (${Math.round(this.bestDay.tempMax)}°C, score ${Math.round(this.bestDay.score)}/100)`, url: this.shareLink(i, { block, best: true }) };
+        }
+        if (snap) {
+            const card = this.bestDay ? snap.assembleFromApp(this) : snap.assembleBranded({ title: 'best.skatepark.day', subtitle: 'Find the best day to skate this week', url: SITE_URL });
+            return snap.share({ ...data, card }, { toast: showToast });
+        }
+        return this.shareText(data);
     }
 
     async shareText(data) {

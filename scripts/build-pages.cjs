@@ -16,7 +16,7 @@ const chrome = require('./site-chrome.cjs');
 const OUT = path.join(ROOT, 'skateparks');
 const BRAND = 'best.skatepark.day';
 const VERSION = (fs.readFileSync(path.join(ROOT, 'index.html'), 'utf8').match(/app\.css\?v=(\d+)/) || [])[1] || '1';
-const PAGE_CSS = '2026111910';
+const PAGE_CSS = '2026112015';
 const ICON_V = '3';
 
 // The site's own weather icons.
@@ -226,6 +226,7 @@ ${body}
 </footer>
 </div>
 ${scripts || ''}
+<script src="/share-snapshot.js?v=${PAGE_CSS}" defer></script>
 <script src="/site-chrome.js?v=${PAGE_CSS}" defer></script>
 </body>
 </html>

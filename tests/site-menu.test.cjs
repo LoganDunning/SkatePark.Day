@@ -65,6 +65,9 @@ assert.match(indexHtml, /localStorage\.setItem\('skatepark-theme'/);
 assert.doesNotMatch(indexHtml, /setAttribute\('data-theme','dark'\)/);
 
 assertMenu(indexHtml, { home: true });
+assert.match(indexHtml, /share-snapshot\.js\?v=2026112015/);
+assert.match(indexHtml, /app\.js\?v=2026112015/);
+assert.match(indexHtml, /app\.css\?v=2026112015/);
 
 // The committed home menu is the shared home markup (whitespace-insensitive).
 function squash(s) { return s.replace(/>\s+</g, '><').replace(/\s+/g, ' ').trim(); }
