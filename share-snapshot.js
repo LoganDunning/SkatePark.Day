@@ -24,6 +24,21 @@
     var PATH_B = 'M4 3v26h8.5a6.75 6.75 0 0 0 0-13.5H4M4 3h7.5a6.25 6.25 0 0 1 0 12.5';
     var PATH_D = 'M23 3v19M23 3h3a13 13 0 0 1 0 26h-1.5';
     var PATH_PIN = 'M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z';
+    // Same 24x24 strokes as the site's weather SVGs in app.js.
+    var WX_ICONS = {
+        sun: { circle: [12, 12, 4], paths: ['M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4'] },
+        partly: { paths: ['M8 3v1.5M3.5 8H5M4.8 4.8l1 1M11.2 4.8l-1 1', 'M5.6 10.6A3 3 0 1 1 10.9 7.6', 'M9 20h8.5a3.5 3.5 0 0 0 .5-6.96A5 5 0 0 0 8.4 14 3 3 0 0 0 9 20z'] },
+        cloud: { paths: ['M7 18h10a4 4 0 0 0 .6-7.95A6 6 0 0 0 6.1 11 3.5 3.5 0 0 0 7 18z'] },
+        fog: { paths: ['M4 9h16M3 13h18M5 17h14M8 21h8'] },
+        drizzle: { paths: ['M7 15h10a4 4 0 0 0 .6-7.95A6 6 0 0 0 6.1 8 3.5 3.5 0 0 0 7 15z', 'M9 18v1M13 18v1M17 18v1'] },
+        rain: { paths: ['M7 14h10a4 4 0 0 0 .6-7.95A6 6 0 0 0 6.1 7 3.5 3.5 0 0 0 7 14z', 'M8 17l-1 3M12 17l-1 3M16 17l-1 3'] },
+        snow: { paths: ['M7 14h10a4 4 0 0 0 .6-7.95A6 6 0 0 0 6.1 7 3.5 3.5 0 0 0 7 14z', 'M8 18h.01M12 20h.01M16 18h.01M10 22h.01M14 22h.01'] },
+        storm: { paths: ['M7 14h10a4 4 0 0 0 .6-7.95A6 6 0 0 0 6.1 7 3.5 3.5 0 0 0 7 14z', 'M12.5 14L10 18h4l-2.5 4'] }
+    };
+    var SCORE_SUFFIX = '/100';
+    var SCORE_SUFFIX_GAP = 6;
+    var FOOTER_GAP = 56;
+    var FOOTER_BOTTOM = 48;
 
     function withUrl(text, url) {
         if (!url) return text || '';
@@ -334,7 +349,8 @@
         var c = String(condition || '').toLowerCase();
         if (/storm/.test(c)) return 'storm';
         if (/snow/.test(c)) return 'snow';
-        if (/rain|shower|drizzle/.test(c)) return 'rain';
+        if (/drizzle/.test(c)) return 'drizzle';
+        if (/rain|shower/.test(c)) return 'rain';
         if (/fog/.test(c)) return 'fog';
         if (/cloud/.test(c) && /partly|mostly/.test(c)) return 'partly';
         if (/cloud/.test(c)) return 'cloud';
@@ -344,79 +360,67 @@
 
     function drawWxIcon(ctx, x, y, size, condition) {
         var kind = iconKind(condition);
-        var cx = x + size / 2, cy = y + size / 2;
+        var icon = WX_ICONS[kind] || WX_ICONS.partly;
         ctx.save();
+        ctx.translate(x, y);
+        ctx.scale(size / 24, size / 24);
         ctx.strokeStyle = COLORS.muted;
         ctx.fillStyle = COLORS.muted;
-        ctx.lineWidth = Math.max(1.5, size * 0.08);
+        ctx.lineWidth = 1.5;
         ctx.lineCap = 'round';
         ctx.lineJoin = 'round';
-        if (kind === 'sun' || kind === 'partly') {
-            var sr = kind === 'sun' ? size * 0.22 : size * 0.16;
-            var sx = kind === 'sun' ? cx : cx - size * 0.12;
-            var sy = kind === 'sun' ? cy : cy - size * 0.12;
+        if (icon.circle) {
             ctx.beginPath();
-            ctx.arc(sx, sy, sr, 0, Math.PI * 2);
-            ctx.stroke();
-            var rays = 8, r1 = sr + size * 0.08, r2 = sr + size * 0.18;
-            for (var i = 0; i < rays; i++) {
-                var a = (Math.PI * 2 * i) / rays - Math.PI / 2;
-                ctx.beginPath();
-                ctx.moveTo(sx + Math.cos(a) * r1, sy + Math.sin(a) * r1);
-                ctx.lineTo(sx + Math.cos(a) * r2, sy + Math.sin(a) * r2);
-                ctx.stroke();
-            }
-        }
-        if (kind !== 'sun') {
-            var ox = kind === 'partly' ? size * 0.06 : 0;
-            var oy = kind === 'partly' ? size * 0.1 : 0;
-            ctx.beginPath();
-            ctx.arc(cx - size * 0.16 + ox, cy + size * 0.04 + oy, size * 0.2, Math.PI * 0.5, Math.PI * 1.5);
-            ctx.arc(cx + size * 0.02 + ox, cy - size * 0.08 + oy, size * 0.22, Math.PI * 1.1, Math.PI * 1.95);
-            ctx.arc(cx + size * 0.2 + ox, cy + size * 0.04 + oy, size * 0.18, Math.PI * 1.5, Math.PI * 0.5);
-            ctx.closePath();
+            ctx.arc(icon.circle[0], icon.circle[1], icon.circle[2], 0, Math.PI * 2);
             ctx.stroke();
         }
-        if (kind === 'rain' || kind === 'storm' || kind === 'snow') {
-            for (var d = 0; d < 3; d++) {
-                var dx = cx - size * 0.14 + d * size * 0.14;
-                ctx.beginPath();
-                if (kind === 'snow') {
-                    ctx.arc(dx, y + size * 0.86, size * 0.04, 0, Math.PI * 2);
-                    ctx.stroke();
-                } else {
-                    ctx.moveTo(dx, y + size * 0.72);
-                    ctx.lineTo(dx - size * 0.04, y + size * 0.92);
-                    ctx.stroke();
-                }
-            }
-        }
-        if (kind === 'storm') {
+        if (typeof Path2D === 'function') {
+            (icon.paths || []).forEach(function (d) { ctx.stroke(new Path2D(d)); });
+        } else if (icon.circle) {
+            // Path2D unavailable: the circle already drawn is enough of a mark.
+        } else {
             ctx.beginPath();
-            ctx.moveTo(cx + size * 0.02, cy - size * 0.02);
-            ctx.lineTo(cx - size * 0.06, cy + size * 0.16);
-            ctx.lineTo(cx + size * 0.04, cy + size * 0.16);
-            ctx.lineTo(cx - size * 0.04, cy + size * 0.34);
+            ctx.arc(12, 12, 6, 0, Math.PI * 2);
             ctx.stroke();
-        }
-        if (kind === 'fog') {
-            for (var f = 0; f < 3; f++) {
-                ctx.beginPath();
-                ctx.moveTo(x + size * 0.15, y + size * 0.38 + f * size * 0.18);
-                ctx.lineTo(x + size * 0.85, y + size * 0.38 + f * size * 0.18);
-                ctx.stroke();
-            }
         }
         ctx.restore();
     }
 
+    function weatherItems(card) {
+        var items = [];
+        if (card.tempC != null) items.push({ text: card.tempC + '°C', tone: 'ink', dot: false });
+        if (card.condition) items.push({ text: card.condition, tone: 'muted', dot: false });
+        if (card.wind != null) items.push({ text: 'Wind ' + card.wind + ' km/h', tone: 'muted', dot: items.length > 0 });
+        if (card.rain != null) items.push({ text: 'Rain ' + card.rain + ' mm', tone: 'muted', dot: items.length > 0 });
+        return items;
+    }
+
     function weatherLine(card) {
-        var parts = [];
-        if (card.tempC != null) parts.push(card.tempC + '°C');
-        if (card.condition) parts.push(card.condition);
-        if (card.wind != null) parts.push('Wind ' + card.wind + ' km/h');
-        if (card.rain != null) parts.push('Rain ' + card.rain + ' mm');
-        return parts;
+        return weatherItems(card).map(function (item) { return item.text; });
+    }
+
+    // Right-aligned score + "/100", baseline-aligned, with a gap so the suffix
+    // sits to the right of the numeral instead of on top of it.
+    function scorePlacement(suffixWidth, gap, rightX) {
+        gap = gap == null ? SCORE_SUFFIX_GAP : gap;
+        return { scoreX: rightX - suffixWidth - gap, suffixX: rightX };
+    }
+
+    function forecastContentBottom(card) {
+        var y = 52 + 110;
+        if (card && card.location) y += 80 + 48;
+        y += 44 + 186;
+        if (weatherLine(card || {}).length) y += 64;
+        if (card && card.hours && card.hours.length) y += 16 + 16 + 220 + 36;
+        else y += 28;
+        y += 28 + 24;
+        y += ((card && card.week) || []).length * 80;
+        return y;
+    }
+
+    function cardHeight(card) {
+        if (!card || card.kind !== 'forecast') return BRANDED_HEIGHT;
+        return forecastContentBottom(card) + FOOTER_GAP + FOOTER_BOTTOM;
     }
 
     function drawWordmark(ctx, x, y, size) {
@@ -435,7 +439,7 @@
         card = card || assembleBranded({});
         var forecast = card.kind === 'forecast';
         var w = WIDTH;
-        var h = forecast ? HEIGHT : BRANDED_HEIGHT;
+        var h = cardHeight(card);
         var canvas = document.createElement('canvas');
         canvas.width = w;
         canvas.height = h;
@@ -517,33 +521,45 @@
         ctx.fillText(timeText, x, y + 102);
 
         var score = String(num(card.score));
+        var scoreFont = fontSpec('600', 96);
+        var suffixFont = fontSpec('400', 28);
         ctx.textAlign = 'right';
-        ctx.fillStyle = COLORS.accent;
-        ctx.font = fontSpec('600', 96);
-        ctx.fillText(score, x + contentW, y);
-        ctx.fillStyle = COLORS.muted;
-        ctx.font = fontSpec('400', 28);
         ctx.textBaseline = 'alphabetic';
-        ctx.fillText('/100', x + contentW, y + 96);
+        ctx.font = scoreFont;
+        var ascent = 76;
+        try {
+            var sm = ctx.measureText(score);
+            if (sm && sm.actualBoundingBoxAscent) ascent = sm.actualBoundingBoxAscent;
+        } catch (e) {}
+        var scoreBase = y + ascent;
+        ctx.font = suffixFont;
+        var suffixW = ctx.measureText(SCORE_SUFFIX).width;
+        var place = scorePlacement(suffixW, SCORE_SUFFIX_GAP, x + contentW);
+        ctx.font = scoreFont;
+        ctx.fillStyle = COLORS.accent;
+        ctx.fillText(score, place.scoreX, scoreBase);
+        ctx.fillStyle = COLORS.muted;
+        ctx.font = suffixFont;
+        ctx.fillText(SCORE_SUFFIX, place.suffixX, scoreBase);
         ctx.textAlign = 'left';
         ctx.textBaseline = 'top';
         y += 186;
 
-        var wx = weatherLine(card);
+        var wx = weatherItems(card);
         if (wx.length) {
             drawWxIcon(ctx, x, y - 4, 40, card.condition);
             var wxX = x + 48;
             ctx.textBaseline = 'middle';
             ctx.font = fontSpec('400', 28);
-            wx.forEach(function (part, i) {
-                if (i) {
+            wx.forEach(function (item) {
+                if (item.dot) {
                     ctx.fillStyle = COLORS.muted;
                     ctx.fillText('·', wxX, y + 18);
                     wxX += ctx.measureText('·').width + 14;
                 }
-                ctx.fillStyle = i === 0 && card.tempC != null ? COLORS.ink : COLORS.muted;
-                ctx.fillText(part, wxX, y + 18);
-                wxX += ctx.measureText(part).width + 14;
+                ctx.fillStyle = item.tone === 'ink' ? COLORS.ink : COLORS.muted;
+                ctx.fillText(item.text, wxX, y + 18);
+                wxX += ctx.measureText(item.text).width + 14;
             });
             y += 64;
         }
@@ -700,6 +716,28 @@
         return new Blob([text], { type: type });
     }
 
+    // Build the object passed to navigator.share.
+    // iOS iMessage unfurls both the `url` field and any URL inside `text`,
+    // which produced two identical preview cards. For file shares, put the
+    // URL in `text` once and omit `url`. If the platform rejects that shape,
+    // fall back to `url` plus URL-free `text` — still one occurrence.
+    function shareFields(payload, mode) {
+        payload = payload || {};
+        var title = payload.title || 'best.skatepark.day';
+        var url = payload.url || '';
+        var text = payload.text || '';
+        var file = payload.file || null;
+        var data = { title: title };
+        if (mode === 'files-url') {
+            data.text = text;
+            if (url) data.url = url;
+        } else {
+            data.text = withUrl(text, url);
+        }
+        if (file && mode !== 'text') data.files = [file];
+        return data;
+    }
+
     async function shareOrCopy(payload, env) {
         env = env || {};
         var title = payload.title || 'best.skatepark.day';
@@ -716,11 +754,21 @@
         var ClipboardItemCtor = env.ClipboardItem || (typeof ClipboardItem === 'function' ? ClipboardItem : null);
 
         if (file && share && canShareFilesWith(canShare, file)) {
-            try {
-                await share({ title: title, text: text, url: url, files: [file] });
-                return { method: 'share-files' };
-            } catch (err) {
-                if (err && err.name === 'AbortError') return { method: 'aborted' };
+            var modes = ['files-text', 'files-url'];
+            for (var mi = 0; mi < modes.length; mi++) {
+                var data = shareFields(payload, modes[mi]);
+                var allowed = true;
+                if (canShare) {
+                    try { allowed = !!canShare(data); }
+                    catch (e) { allowed = false; }
+                }
+                if (!allowed) continue;
+                try {
+                    await share(data);
+                    return { method: 'share-files', fields: data };
+                } catch (err) {
+                    if (err && err.name === 'AbortError') return { method: 'aborted' };
+                }
             }
         }
 
@@ -808,6 +856,10 @@
         FILE_NAME: FILE_NAME,
         COLORS: COLORS,
         withUrl: withUrl,
+        shareFields: shareFields,
+        scorePlacement: scorePlacement,
+        weatherItems: weatherItems,
+        cardHeight: cardHeight,
         assembleForecast: assembleForecast,
         assembleBranded: assembleBranded,
         assembleFromApp: assembleFromApp,
