@@ -16,7 +16,7 @@ const chrome = require('./site-chrome.cjs');
 const OUT = path.join(ROOT, 'skateparks');
 const BRAND = 'best.skatepark.day';
 const VERSION = (fs.readFileSync(path.join(ROOT, 'index.html'), 'utf8').match(/app\.css\?v=(\d+)/) || [])[1] || '1';
-const PAGE_CSS = '2026112015';
+const PAGE_CSS = '2026112018';
 const ICON_V = '3';
 
 // The site's own weather icons.

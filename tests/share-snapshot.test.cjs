@@ -1,5 +1,5 @@
 const assert = require('node:assert/strict');
-const { assembleForecast, assembleBranded, assembleFromApp, assembleFromPage, withUrl, canShareFilesWith, shareOrCopy, htmlForClipboard, SITE } = require('../share-snapshot.js');
+const { assembleForecast, assembleBranded, assembleFromApp, assembleFromPage, withUrl, canShareFilesWith, shareOrCopy, shareFields, scorePlacement, weatherItems, cardHeight, htmlForClipboard, SITE, HEIGHT } = require('../share-snapshot.js');
 
 function dateOn(offset) {
     const d = new Date(2026, 10, 20, 12, 0, 0);
@@ -182,9 +182,11 @@ async function main() {
     });
     assert.equal(shareFiles.method, 'share-files');
     assert.equal(shared.files[0], file);
-    assert.equal(shared.url, payload.url);
+    assert.equal(shared.url, undefined);
     assert.match(shared.text, /best\.skatepark\.day\/share/);
     assert.match(shared.text, /Best day in Milton/);
+    assert.equal((shared.text.match(/https:\/\/best\.skatepark\.day\/share\?best=1/g) || []).length, 1);
+    assert.equal(Object.prototype.hasOwnProperty.call(shared, 'url'), false);
 
     const aborted = await shareOrCopy(payload, {
         canShare: () => true,
@@ -224,6 +226,60 @@ async function main() {
     const html = htmlForClipboard(payload.url, 'data:image/png;base64,abc');
     assert.match(html, /<img src="data:image\/png;base64,abc"/);
     assert.match(html, /href="https:\/\/best\.skatepark\.day\/share\?best=1"/);
+
+    // Preferred iOS payload: URL lives in text once, `url` is omitted.
+    const longText = 'Best day to skate this week near Milton, Ontario: Today, November 20 at 4pm-6pm (16°C, score 78/100)';
+    const fileFields = shareFields({ title: 'best.skatepark.day', text: longText, url: payload.url, file }, 'files-text');
+    assert.equal(fileFields.title, 'best.skatepark.day');
+    assert.equal(fileFields.text, longText + '\n' + payload.url);
+    assert.equal(fileFields.url, undefined);
+    assert.equal(Object.prototype.hasOwnProperty.call(fileFields, 'url'), false);
+    assert.equal(fileFields.files[0], file);
+    assert.equal((fileFields.text.match(/https:\/\/best\.skatepark\.day\/share\?best=1/g) || []).length, 1);
+
+    // Fallback: URL in `url` only, not repeated inside text.
+    const urlFields = shareFields({ title: 'best.skatepark.day', text: longText, url: payload.url, file }, 'files-url');
+    assert.equal(urlFields.text, longText);
+    assert.equal(urlFields.url, payload.url);
+    assert.ok(!urlFields.text.includes(payload.url));
+
+    // If the platform rejects the no-`url` shape, fall back without duplicating the link.
+    let fallbackShared;
+    const fallback = await shareOrCopy(payload, {
+        canShare: (d) => {
+            if (!d || !d.files) return false;
+            if (!d.title && !d.text && !d.url) return true; // files-only support probe
+            return !!d.url; // reject the no-`url` shape
+        },
+        share: async (d) => { fallbackShared = d; },
+        toast: () => { throw new Error('no toast on share'); }
+    });
+    assert.equal(fallback.method, 'share-files');
+    assert.equal(fallbackShared.url, payload.url);
+    assert.equal(fallbackShared.text, 'Best day in Milton');
+    assert.ok(!fallbackShared.text.includes(payload.url));
+
+    const wx = weatherItems({ tempC: 16, condition: 'Clear', wind: 17, rain: 1.2 });
+    assert.deepEqual(wx.map((i) => [i.text, i.dot, i.tone]), [
+        ['16°C', false, 'ink'],
+        ['Clear', false, 'muted'],
+        ['Wind 17 km/h', true, 'muted'],
+        ['Rain 1.2 mm', true, 'muted']
+    ]);
+    const windOnly = weatherItems({ wind: 17 });
+    assert.equal(windOnly[0].dot, false);
+
+    const place = scorePlacement(40, 6, 700);
+    assert.equal(place.suffixX, 700);
+    assert.equal(place.scoreX, 700 - 40 - 6);
+    assert.ok(place.scoreX < place.suffixX);
+
+    const tall = cardHeight(card);
+    assert.equal(cardHeight(branded), 1000);
+    assert.ok(tall < HEIGHT);
+    assert.equal(tall, 52 + 110 + 80 + 48 + 44 + 186 + 64 + 16 + 16 + 220 + 36 + 28 + 24 + 7 * 80 + 56 + 48);
+    const short = cardHeight(assembleForecast({ location: '', dayName: 'Today', score: 78, hours: [], week: [] }));
+    assert.ok(short < tall);
 
 }
 
